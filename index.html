@@ -350,15 +350,48 @@
   .shipping-summary .col:last-child{text-align:right;}
   .shipping-summary .total{font-weight:700; font-size:16px;}
 
-  .avatar{width:56px;height:56px;border-radius:50%;background:#e5e5e5;flex-shrink:0;}
+  .avatar-wrap{position:relative; width:80px; height:80px; flex-shrink:0;}
+  .avatar{
+    width:80px;height:80px;border-radius:50%;flex-shrink:0;
+    background-image:
+      linear-gradient(45deg, #e5e5e5 25%, transparent 25%, transparent 75%, #e5e5e5 75%, #e5e5e5),
+      linear-gradient(45deg, #e5e5e5 25%, transparent 25%, transparent 75%, #e5e5e5 75%, #e5e5e5);
+    background-size:12px 12px;
+    background-position:0 0, 6px 6px;
+    background-color:#f5f5f5;
+  }
+  .avatar-camera-btn{
+    position:absolute; left:-2px; bottom:-2px;
+    width:28px; height:28px; border-radius:50%;
+    background:var(--brand); border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:#fff; padding:0;
+  }
+  .avatar-camera-btn .material-symbols-rounded{font-size:15px; font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;}
   .author-row{display:flex; gap:16px; margin-bottom:20px;}
-  .social-row{display:flex; gap:10px; align-items:center;}
+  .social-row{display:flex; gap:10px; align-items:center; margin-bottom:10px;}
+  .select-wrap{position:relative; width:140px; flex-shrink:0;}
   .social-row select{
-    border:1px solid var(--border-input); border-radius:4px; padding:10px; font-size:14px; width:140px;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    border:1px solid var(--border-input); border-radius:4px;
+    padding:10px 36px 10px 12px; font-size:14px; width:100%; background:#fff;
+  }
+  .select-chevron{
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    pointer-events:none; color:var(--subtle); display:flex; align-items:center; justify-content:center;
+  }
+  .select-chevron .material-symbols-rounded{
+    font-size:20px; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
   }
   .social-row input{flex:1;}
-  .social-row .del{cursor:pointer; color:var(--subtle); font-size:18px; width:24px; text-align:center;}
-  .link-add{color:var(--brand); font-weight:600; font-size:15px; cursor:pointer; display:inline-flex; gap:6px; align-items:center;}
+  .del-btn{
+    flex-shrink:0; width:42px; height:42px;
+    border:1px solid var(--border-bold); border-radius:4px; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--bold);
+  }
+  .del-btn:hover{background:var(--gray-subtler);}
+  .del-btn .material-symbols-rounded{font-size:20px; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
 
   .required-pill{
     display:inline-flex; align-items:center; background:var(--danger-bg); color:var(--danger);
@@ -368,7 +401,10 @@
   .payment-row p{margin:0 0 4px; font-size:16px; line-height:1.4;}
   .payment-row .lead{font-weight:700;}
   .payment-row .sub{color:var(--subtle); font-weight:400;}
-  .payment-row a{color:var(--link); font-weight:600; text-decoration:underline; white-space:nowrap;}
+  .payment-row a{color:var(--link); font-weight:600; white-space:nowrap;}
+  .link-with-icon{display:inline-flex; align-items:center; gap:4px; text-decoration:none; color:inherit;}
+  .link-with-icon .link-text{text-decoration:underline;}
+  .link-with-icon .material-symbols-rounded{font-size:20px; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
 
   .footer-bar{
     position:fixed; bottom:0; left:0; right:0; z-index:10;
@@ -380,7 +416,7 @@
   }
   .footer-bar .status{font-size:14px; color:var(--subtle);}
   .footer-bar .actions{display:flex; gap:8px; align-items:center;}
-  .footer-bar a.preview-link{color:var(--disabled); font-weight:600; text-decoration:underline; font-size:16px; margin-right:8px;}
+  .footer-bar a.preview-link{color:var(--disabled); font-weight:600; font-size:16px; margin-right:8px;}
 
   /* --- Optimize listing drawer --- */
   .overlay{
@@ -700,26 +736,41 @@
     <div class="section">
       <div class="section-header"><h2>Author profile</h2></div>
       <div class="author-row">
-        <div class="avatar"></div>
+        <div class="avatar-wrap">
+          <div class="avatar"></div>
+          <button class="avatar-camera-btn" type="button" title="Upload photo">
+            <span class="material-symbols-rounded">photo_camera</span>
+          </button>
+        </div>
       </div>
-      <div class="field">
+      <div class="field-row">
         <label>About the author</label>
-        <textarea placeholder="What inspired you to write this book? What's your background as a writer?" maxlength="1000"></textarea>
-        <div class="count">24/1000</div>
+        <div class="field-body">
+          <textarea placeholder="What inspired you to write this book? What's your background as a writer?" maxlength="1000"></textarea>
+          <div class="count">24/1000</div>
+        </div>
       </div>
-      <div class="field">
+      <div class="field-row">
         <label>Social links</label>
-        <div class="social-row">
-          <select><option>Instagram</option><option>Website</option><option>TikTok</option></select>
-          <input type="text" placeholder="Profile URL">
-          <span class="del">🗑</span>
+        <div class="field-body">
+          <div class="social-row">
+            <div class="select-wrap">
+              <select><option>Instagram</option><option>Website</option><option>TikTok</option></select>
+              <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
+            </div>
+            <input type="text" placeholder="Profile URL">
+            <button class="del-btn" type="button" title="Remove link"><span class="material-symbols-rounded">delete</span></button>
+          </div>
+          <div class="social-row">
+            <div class="select-wrap">
+              <select><option>Website</option><option>Instagram</option><option>TikTok</option></select>
+              <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
+            </div>
+            <input type="text" placeholder="Profile URL">
+            <button class="del-btn" type="button" title="Remove link"><span class="material-symbols-rounded">delete</span></button>
+          </div>
+          <button class="btn btn-outline-brand" style="align-self:flex-start;">+ Add link</button>
         </div>
-        <div class="social-row">
-          <select><option>Website</option><option>Instagram</option><option>TikTok</option></select>
-          <input type="text" placeholder="Profile URL">
-          <span class="del">🗑</span>
-        </div>
-        <span class="link-add">+ Add link</span>
       </div>
     </div>
 
@@ -733,7 +784,10 @@
           <p class="lead">Add how you'll get paid and your taxpayer information.</p>
           <p class="sub">Required before your checkout link can go live.</p>
         </div>
-        <a href="#" onclick="return false;">Set up payment ↗</a>
+        <a href="#" class="link-with-icon" onclick="return false;">
+          <span class="link-text">Set up payment</span>
+          <span class="material-symbols-rounded">open_in_new</span>
+        </a>
       </div>
     </div>
   </div>
@@ -744,7 +798,10 @@
   <div class="footer-bar-inner">
     <div class="status">You have no unsaved changes</div>
     <div class="actions">
-      <a href="#" class="preview-link" onclick="return false;">Preview ↗</a>
+      <a href="#" class="preview-link link-with-icon" onclick="return false;">
+        <span class="link-text">Preview</span>
+        <span class="material-symbols-rounded">open_in_new</span>
+      </a>
       <button class="btn btn-outline-brand">Save as draft</button>
       <button class="btn btn-disabled">Go live</button>
     </div>
@@ -824,7 +881,7 @@
         <div class="checkbox" id="checkTitle"></div>
         <div class="suggestion-body">
           <label>Listing title</label>
-          <div class="suggestion-field">Pride and Preconceptions, Gift Edition</div>
+          <input type="text" class="suggestion-field" id="titleSuggestionInput" value="Pride and Preconceptions, Gift Edition">
         </div>
       </div>
 
@@ -832,14 +889,16 @@
         <div class="checkbox" id="checkAbout"></div>
         <div class="suggestion-body">
           <label>About the book</label>
-          <div class="suggestion-field" style="max-height:220px; overflow-y:auto;">
-            <p style="margin:0 0 12px;">Can you fall for the right person when you've already decided everything about them is wrong?</p>
-            <p style="margin:0 0 12px;">Elara Vance is a landscape architect who relies on sharp first impressions. When tech entrepreneur Julian Cross arrives to turn her town's historic community garden into a corporate campus, she instantly writes him off as arrogant, cold, and profit-driven. Julian sees Elara as an impractical idealist blocking essential economic progress.</p>
-            <p style="margin:0 0 12px;">Forced to negotiate, their meetings are a masterclass in sharp retorts. Elara is convinced Julian treats people like equations; Julian believes Elara's pride won't let her compromise.</p>
-            <p style="margin:0 0 12px;">But as forced proximity blurs the lines of their rivalry, they discover unexpected depth beneath each other's armor. To find common ground, they must tear down the hardest walls of all: the preconceptions they built around one another.</p>
-            <p style="margin:0;">A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride and Preconceptions explores the delightful danger of judging a book by its cover—and the courage it takes to be proven wrong.</p>
-          </div>
-          <div class="hint" style="text-align:right;">1058/1466</div>
+          <textarea class="suggestion-field" id="aboutSuggestionInput" style="height:220px;">Can you fall for the right person when you've already decided everything about them is wrong?
+
+Elara Vance is a landscape architect who relies on sharp first impressions. When tech entrepreneur Julian Cross arrives to turn her town's historic community garden into a corporate campus, she instantly writes him off as arrogant, cold, and profit-driven. Julian sees Elara as an impractical idealist blocking essential economic progress.
+
+Forced to negotiate, their meetings are a masterclass in sharp retorts. Elara is convinced Julian treats people like equations; Julian believes Elara's pride won't let her compromise.
+
+But as forced proximity blurs the lines of their rivalry, they discover unexpected depth beneath each other's armor. To find common ground, they must tear down the hardest walls of all: the preconceptions they built around one another.
+
+A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride and Preconceptions explores the delightful danger of judging a book by its cover—and the courage it takes to be proven wrong.</textarea>
+          <div class="hint" id="aboutSuggestionCount" style="text-align:right;">1058/1466</div>
         </div>
       </div>
 
@@ -970,21 +1029,22 @@
     state.aboutChecked = !state.aboutChecked;
     checkAbout.classList.toggle('checked', state.aboutChecked);
   });
+  document.getElementById('aboutSuggestionInput').addEventListener('input', e=>{
+    document.getElementById('aboutSuggestionCount').textContent = e.target.value.length + '/1466';
+  });
 
   document.getElementById('applyBtn').addEventListener('click', ()=>{
     if(state.titleChecked){
       const t = document.getElementById('listingTitle');
-      t.value = "Pride and Preconceptions, Gift Edition";
+      t.value = document.getElementById('titleSuggestionInput').value;
       t.closest('.field-body').classList.add('flash');
       document.getElementById('titleCount').textContent = t.value.length + '/40';
     }
     if(state.aboutChecked){
       const a = document.getElementById('aboutBook');
-      a.value = document.querySelector('#stepResults .suggestion-field').nextSibling ? '' : '';
-      const aboutText = "Can you fall for the right person when you've already decided everything about them is wrong?\n\nElara Vance is a landscape architect who relies on sharp first impressions. When tech entrepreneur Julian Cross arrives to turn her town's historic community garden into a corporate campus, she instantly writes him off as arrogant, cold, and profit-driven. Julian sees Elara as an impractical idealist blocking essential economic progress.\n\nForced to negotiate, their meetings are a masterclass in sharp retorts. Elara is convinced Julian treats people like equations; Julian believes Elara's pride won't let her compromise.\n\nBut as forced proximity blurs the lines of their rivalry, they discover unexpected depth beneath each other's armor. To find common ground, they must tear down the hardest walls of all: the preconceptions they built around one another.\n\nA witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride and Preconceptions explores the delightful danger of judging a book by its cover—and the courage it takes to be proven wrong.";
-      a.value = aboutText;
+      a.value = document.getElementById('aboutSuggestionInput').value;
       a.closest('.field-body').classList.add('flash');
-      document.getElementById('aboutCount').textContent = aboutText.length + '/1466';
+      document.getElementById('aboutCount').textContent = a.value.length + '/1466';
     }
     if(state.keywordsSelected.size > 0){
       state.keywordsSelected.forEach(kw=>{
