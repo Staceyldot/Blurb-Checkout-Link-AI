@@ -241,19 +241,6 @@
   .info-icon:hover .tooltip-popup, .info-icon:focus .tooltip-popup, .info-icon:focus-within .tooltip-popup{
     opacity:1; transform:scale(1);
   }
-  .input-with-ai{display:flex; gap:8px; align-items:flex-start;}
-  .input-with-ai input, .input-with-ai textarea{flex:1;}
-  .ai-field-btn{
-    flex-shrink:0; width:42px; height:42px;
-    border:2px solid transparent; border-radius:4px;
-    background:
-      linear-gradient(#fff, #fff) padding-box,
-      linear-gradient(120deg, #7a3fbb 0%, #262a63 50%, #1478ad 100%) border-box;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-  }
-  .ai-field-btn:hover{filter:brightness(0.97);}
-  .ai-field-btn .material-symbols-rounded{font-size:20px;}
   input[type=text], textarea{
     width:100%;
     font-family:var(--font-sans);
@@ -593,12 +580,7 @@
           </span>
         </label>
         <div class="field-body">
-          <div class="input-with-ai">
-            <input type="text" id="listingTitle" value="Pride and Preconceptions" maxlength="40">
-            <button class="ai-field-btn" type="button" id="titleAiBtn" title="Get AI suggestions for this field">
-              <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
-            </button>
-          </div>
+          <input type="text" id="listingTitle" value="Pride and Preconceptions" maxlength="40">
           <div class="count" id="titleCount">24/40</div>
         </div>
       </div>
@@ -606,12 +588,7 @@
       <div class="field-row">
         <label>About the book</label>
         <div class="field-body">
-          <div class="input-with-ai">
-            <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
-            <button class="ai-field-btn" type="button" id="aboutAiBtn" title="Get AI suggestions for this field">
-              <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
-            </button>
-          </div>
+          <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
           <div class="count" id="aboutCount">0/1466</div>
         </div>
       </div>
@@ -624,12 +601,7 @@
           </span>
         </label>
         <div class="field-body">
-          <div class="input-with-ai">
-            <input type="text" id="keywordsField" placeholder="Add a keyword...">
-            <button class="ai-field-btn" type="button" id="keywordsAiBtn" title="Get AI suggestions for this field">
-              <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
-            </button>
-          </div>
+          <input type="text" id="keywordsField" placeholder="Add a keyword...">
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
         </div>
@@ -914,12 +886,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('openOptimize').addEventListener('click', ()=>{
     showStep(stepPrompt);
     openDrawer();
-  });
-  ['titleAiBtn','aboutAiBtn','keywordsAiBtn'].forEach(id=>{
-    document.getElementById(id).addEventListener('click', ()=>{
-      showStep(stepPrompt);
-      openDrawer();
-    });
   });
   document.getElementById('closePrompt').addEventListener('click', closeDrawer);
   document.getElementById('cancelPrompt').addEventListener('click', closeDrawer);
