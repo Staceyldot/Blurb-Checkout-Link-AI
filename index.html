@@ -19,7 +19,7 @@
     font-size:20px; line-height:1;
   }
   .ts-grad-icon{
-    background:linear-gradient(120deg, #7a3fbb 0%, #262a63 50%, #1478ad 100%);
+    background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
     -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; color:transparent;
   }
@@ -47,6 +47,9 @@
     --surface:#ffffff;
     --gray-subtler:#f7f7f7;
     --ai-purple:#7a3dc4;
+    --ai-mid:#0d5a84;
+    --panel-width:360px;
+    --footer-bar-right:0px;
     --font-sans: "Proxima Nova", "Jost", Arial, sans-serif;
     --font-heading: "Futura PT", "Mulish", Georgia, sans-serif;
     --font-mono: "Roboto Mono", "Courier New", monospace;
@@ -58,10 +61,6 @@
     color:var(--bold);
     background:#f2f2f2;
   }
-  html.drawer-open, html.drawer-open body{
-    overflow:hidden;
-    height:100%;
-  }
   .topnav{
     background:#e2e2e2;
     color:#888;
@@ -70,13 +69,35 @@
     padding:10px 0;
     letter-spacing:.02em;
   }
+  .demo-mode-picker{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-shrink:0;
+  }
+  .demo-mode-picker label{
+    font-weight:600;
+    color:var(--bold);
+    white-space:nowrap;
+  }
+  .demo-mode-picker .select-wrap{width:200px;}
+  .demo-mode-picker select{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    border:1px solid var(--border-input); border-radius:4px;
+    padding:6px 32px 6px 10px; font-size:13px; width:100%; background:#fff; color:var(--bold);
+    font-family:var(--font-sans);
+  }
+  .demo-mode-picker .select-chevron .material-symbols-rounded{font-size:18px;}
   .demo-banner{
     background:#f5f5f5;
     border-bottom:1px solid var(--border-subtle);
     padding:12px 80px;
     font-size:14px;
     color:var(--bold);
-    text-align:center;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
   }
   .demo-banner strong{font-weight:700;}
   .app-shell{
@@ -279,7 +300,7 @@
     color:var(--bold);
     background:
       linear-gradient(#fff, #fff) padding-box,
-      linear-gradient(120deg, #7a3fbb 0%, #262a63 50%, #1478ad 100%) border-box;
+      linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%) border-box;
   }
   .btn-primary{background:var(--brand); color:#fff;}
   .btn-disabled{background:#dcdcdc; color:var(--disabled); cursor:not-allowed;}
@@ -382,8 +403,9 @@
   .link-with-icon .material-symbols-rounded{font-size:20px; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
 
   .footer-bar{
-    position:fixed; bottom:0; left:0; right:0; z-index:10;
+    position:fixed; bottom:0; left:0; right:var(--footer-bar-right, 0px); z-index:10;
     background:#fff; border-top:1px solid var(--border-subtle);
+    transition:right .22s ease;
   }
   .footer-bar-inner{
     display:flex; align-items:center; justify-content:space-between;
@@ -393,21 +415,22 @@
   .footer-bar .actions{display:flex; gap:8px; align-items:center;}
   .footer-bar a.preview-link{color:var(--disabled); font-weight:600; font-size:16px; margin-right:8px;}
 
-  /* --- Optimize listing drawer --- */
-  .overlay{
-    position:fixed; inset:0; background:rgba(41,41,41,.42);
-    opacity:0; pointer-events:none; transition:opacity .18s ease;
-    z-index:40;
-  }
-  .overlay.open{opacity:1; pointer-events:auto;}
-
+  /* --- Optimize listing side panel ---
+     Sits as a flex sibling of the sidenav/page (not a fixed overlay), so opening it
+     pushes/shrinks the main content instead of floating on top of it. It stretches to
+     match the row's full height (like the sidenav) rather than capping at 100vh, since
+     capping at 100vh made its bottom render off-screen until the page was scrolled past
+     the panel's own natural offset below the demo banner/topnav. */
   .drawer{
-    position:fixed; top:0; right:0; bottom:0; width:480px; max-width:92vw;
-    background:#fff; box-shadow:-8px 0 24px rgba(0,0,0,.16);
-    transform:translateX(100%); transition:transform .22s ease;
-    z-index:50; display:flex; flex-direction:column;
+    flex-shrink:0;
+    width:0; overflow:hidden;
+    background:#fff; border-left:0 solid var(--border-subtle);
+    transition:width .22s ease, border-left-width .22s ease;
   }
-  .drawer.open{transform:translateX(0);}
+  .drawer.open{width:var(--panel-width); border-left-width:1px;}
+  .drawer-inner{
+    width:var(--panel-width); height:100%; display:flex; flex-direction:column;
+  }
   .drawer-header{
     display:flex; align-items:center; gap:10px; padding:24px 32px;
     border-bottom:1px solid var(--border-subtle); flex-shrink:0;
@@ -420,10 +443,15 @@
     padding:4px;
   }
   .drawer-body{
-    padding:24px 32px; overflow-y:auto; flex:1; min-height:0; display:flex; flex-direction:column; gap:20px;
+    padding:24px 32px; flex:1; min-height:0; display:flex; flex-direction:column; gap:20px;
+  }
+  /* Pins the panel's own action row (Cancel/Apply, plus the pill bar in Results) to the
+     bottom of the viewport as the page scrolls, mirroring .footer-bar's own stickiness. */
+  .drawer-sticky-bottom{
+    position:sticky; bottom:0; background:#fff; flex-shrink:0;
   }
   .drawer-footer{
-    border-top:1px solid var(--border-subtle); padding:20px 32px; flex-shrink:0;
+    border-top:1px solid var(--border-subtle); padding:16px 32px; flex-shrink:0;
   }
   .drawer-footer .row{display:flex; gap:8px; justify-content:flex-end;}
   .drawer-footer .disclaimer{
@@ -431,34 +459,52 @@
   }
 
   .prompt-copy{font-size:16px; line-height:1.4; margin:0;}
-  .prompt-box{
-    display:flex; gap:8px; align-items:center;
-  }
-  .prompt-box textarea{flex:1; min-height:96px;}
-  .prompt-static{
-    flex:1; min-width:0; border:1px solid var(--border-input); border-radius:4px; padding:10px 12px;
-    font-size:16px; line-height:1.4; background:#fff;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
 
-  .suggestion-row{
+  .suggestion-group{display:flex; flex-direction:column; gap:8px;}
+  .suggestion-group label{font-size:16px; font-weight:600; display:block;}
+  .suggestion-cards{display:flex; flex-direction:column; gap:10px;}
+  .suggestion-card{
     display:flex; gap:10px; align-items:flex-start; cursor:pointer;
+    border:1px solid var(--border-subtle); border-radius:8px; padding:16px;
   }
-  .checkbox{
-    width:22px;height:22px; border:2px solid var(--border-input); border-radius:4px;
-    flex-shrink:0; margin-top:2px; position:relative; cursor:pointer; background:#fff;
-  }
-  .checkbox.checked{background:var(--brand); border-color:var(--brand);}
-  .checkbox.checked::after{
-    content:""; position:absolute; left:6px; top:2px; width:6px; height:11px;
-    border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);
-  }
-  .suggestion-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:8px;}
-  .suggestion-body label{font-size:16px; font-weight:600; display:block;}
+  .suggestion-card:hover{background:var(--gray-subtler);}
+  .suggestion-card-body{flex:1; min-width:0;}
   .suggestion-field{
     border:1px solid var(--border-input); border-radius:4px; padding:10px 12px; font-size:16px;
-    line-height:1.4; background:#fff;
+    line-height:1.4; background:#fff; width:100%;
   }
+  .suggestion-card.selectable .radio-icon{
+    font-size:22px; color:var(--border-input); flex-shrink:0; margin-top:1px;
+  }
+  .suggestion-card.selectable.selected{
+    border-color:var(--brand); border-width:2px; padding:15px;
+  }
+  .suggestion-card.selectable.selected .radio-icon{color:var(--brand);}
+
+  .prompt-pill-wrap{padding:16px 32px 0; flex-shrink:0;}
+  .prompt-pill-bar{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--border-input); border-radius:100px;
+    padding:8px 8px 8px 18px;
+  }
+  .prompt-pill-bar input{
+    flex:1; min-width:0; border:none; outline:none; background:transparent;
+    font-family:var(--font-sans); font-size:15px; color:var(--bold); padding:6px 0;
+  }
+  .pill-action-btn{
+    flex-shrink:0; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
+    background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pill-action-btn:hover{filter:brightness(0.95);}
+  .pill-action-btn:disabled{opacity:.5; cursor:default;}
+  .pill-action-btn .material-symbols-rounded{
+    font-size:20px; color:#fff; font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
+  }
+  .prompt-pill-bar input:disabled{opacity:.6;}
+
+  .inline-thinking{display:flex; align-items:center; gap:8px; padding:0 4px 14px;}
+  .inline-thinking .ts-thinking-label{font-size:14px;}
 
   .kw-label-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
   .kw-label-row label{font-size:16px; font-weight:600;}
@@ -526,7 +572,20 @@
 </head>
 <body>
 
-<div class="demo-banner"><strong>Demo mode</strong> — Optimize listing uses pre-written sample suggestions, not live AI.</div>
+<div class="demo-banner">
+  <span><strong>Demo mode</strong> — Optimize listing uses pre-written sample suggestions, not live AI.</span>
+  <div class="demo-mode-picker">
+    <label for="demoPhase">Iteration</label>
+    <div class="select-wrap">
+      <select id="demoPhase">
+        <option value="1" selected>Iteration 1</option>
+        <option value="2">Iteration 2</option>
+        <option value="3">Iteration 3</option>
+      </select>
+      <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
+    </div>
+  </div>
+</div>
 <div class="topnav">Top nav placeholder</div>
 
 <div class="app-shell">
@@ -723,6 +782,117 @@
     </div>
   </div>
   </div>
+
+  <!-- Optimize listing side panel: flex sibling of sidenav/page, not an overlay -->
+  <div class="drawer" id="drawer" data-phase="1">
+    <div class="drawer-inner">
+
+      <!-- STEP 1: prompt -->
+      <div id="stepPrompt" class="drawer-body-wrap" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div class="drawer-header">
+          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+          <h3>Optimize listing</h3>
+          <button class="close" id="closePrompt">✕</button>
+        </div>
+        <div class="drawer-body" style="flex:1;">
+          <p class="prompt-copy">Help us get it right. What's your book about?</p>
+          <textarea id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:220px;"></textarea>
+        </div>
+        <div class="drawer-sticky-bottom">
+          <div class="drawer-footer">
+            <div class="row">
+              <button class="btn btn-outline-bold" id="cancelPrompt">Cancel</button>
+              <button class="btn btn-disabled" id="continueBtn" disabled>Continue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: thinking -->
+      <div id="stepThinking" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div class="drawer-header">
+          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+          <h3>Optimize listing</h3>
+          <button class="close" id="closeThinking">✕</button>
+        </div>
+        <div class="think-wrap">
+          <div class="ts-stars">
+            <svg viewBox="0 0 100 100" width="0" height="0" style="position:absolute;">
+              <defs>
+                <linearGradient id="ts-star-a" x1="8%" y1="0%" x2="92%" y2="100%">
+                  <stop offset="0%" stop-color="#7a3dc4"/>
+                  <stop offset="50%" stop-color="#0d5a84"/>
+                  <stop offset="100%" stop-color="#107eb1"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <svg class="ts-star-1" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg class="ts-star-2" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg class="ts-star-3" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ts-thinking-label">
+            <span>Thinking</span>
+            <span class="dot">.</span>
+            <span class="dot">.</span>
+            <span class="dot">.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: results -->
+      <div id="stepResults" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div class="drawer-header">
+          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+          <h3>Optimize listing</h3>
+          <button class="close" id="closeResults">✕</button>
+        </div>
+        <div class="drawer-body">
+          <p class="prompt-copy">Here's what we came up with. Check what you'd like to use.</p>
+
+          <div class="suggestion-group">
+            <label>Listing title</label>
+            <div class="suggestion-cards" id="titleCards"></div>
+          </div>
+
+          <div class="suggestion-group">
+            <label>About the book</label>
+            <div class="suggestion-cards" id="aboutCards"></div>
+          </div>
+
+          <div>
+            <div class="kw-label-row">
+              <label>Keywords</label>
+              <span class="kw-count" id="kwCount"></span>
+            </div>
+            <div class="chip-group" id="chipGroup"></div>
+          </div>
+        </div>
+        <div class="drawer-sticky-bottom">
+          <div class="prompt-pill-wrap">
+            <div class="inline-thinking hidden" id="inlineThinking">
+              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+              <span class="ts-thinking-label"><span>Thinking</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>
+            </div>
+            <div class="prompt-pill-bar">
+              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+              <input type="text" id="refinePromptInput" placeholder="Try something different...">
+              <button class="pill-action-btn" id="pillActionBtn" type="button" title="Regenerate">
+                <span class="material-symbols-rounded" id="pillActionIcon">refresh</span>
+              </button>
+            </div>
+          </div>
+          <div class="drawer-footer">
+            <div class="row">
+              <button class="btn btn-outline-bold" id="cancelResults">Cancel</button>
+              <button class="btn btn-primary" id="applyBtn">Apply selected</button>
+            </div>
+            <div class="disclaimer">Suggestions generated with AI. Review before applying.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <div class="footer-bar">
@@ -739,88 +909,16 @@
   </div>
 </div>
 
-<!-- Optimize listing drawer -->
-<div class="overlay" id="overlay"></div>
-<div class="drawer" id="drawer">
-
-  <!-- STEP 1: prompt -->
-  <div id="stepPrompt" class="drawer-body-wrap" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-    <div class="drawer-header">
-      <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-      <h3>Optimize listing</h3>
-      <button class="close" id="closePrompt">✕</button>
-    </div>
-    <div class="drawer-body" style="flex:1;">
-      <p class="prompt-copy">Help us get it right. What's your book about?</p>
-      <textarea id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:220px;"></textarea>
-    </div>
-    <div class="drawer-footer">
-      <div class="row">
-        <button class="btn btn-outline-bold" id="cancelPrompt">Cancel</button>
-        <button class="btn btn-disabled" id="continueBtn" disabled>Continue</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 2: thinking -->
-  <div id="stepThinking" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-    <div class="drawer-header">
-      <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-      <h3>Optimize listing</h3>
-      <button class="close" id="closeThinking">✕</button>
-    </div>
-    <div class="think-wrap">
-      <div class="ts-stars">
-        <svg viewBox="0 0 100 100" width="0" height="0" style="position:absolute;">
-          <defs>
-            <linearGradient id="ts-star-a" x1="8%" y1="0%" x2="92%" y2="100%">
-              <stop offset="0%" stop-color="#7a3fbb"/>
-              <stop offset="50%" stop-color="#262a63"/>
-              <stop offset="100%" stop-color="#1478ad"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <svg class="ts-star-1" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
-        <svg class="ts-star-2" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
-        <svg class="ts-star-3" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="ts-thinking-label">
-        <span>Thinking</span>
-        <span class="dot">.</span>
-        <span class="dot">.</span>
-        <span class="dot">.</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 3: results -->
-  <div id="stepResults" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-    <div class="drawer-header">
-      <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-      <h3>Optimize listing</h3>
-      <button class="close" id="closeResults">✕</button>
-    </div>
-    <div class="drawer-body">
-      <p class="prompt-copy">Here's what we came up with. Check what you'd like to use.</p>
-
-      <div class="prompt-box">
-        <div class="prompt-static" id="promptEcho"></div>
-        <button class="btn btn-outline-brand" id="editPrompt" style="white-space:nowrap;">Edit prompt</button>
-      </div>
-
-      <div class="suggestion-row" data-check="title">
-        <div class="checkbox" id="checkTitle"></div>
-        <div class="suggestion-body">
-          <label>Listing title</label>
-          <input type="text" class="suggestion-field" id="titleSuggestionInput" value="Pride and Preconceptions, Gift Edition">
-        </div>
-      </div>
-
-      <div class="suggestion-row" data-check="about">
-        <div class="checkbox" id="checkAbout"></div>
-        <div class="suggestion-body">
-          <label>About the book</label>
-          <textarea class="suggestion-field" id="aboutSuggestionInput" style="height:220px;">Can you fall for the right person when you've already decided everything about them is wrong?
+<script>
+  const KEYWORDS = ["contemporary romance","enemies to lovers","slow burn","second chances","first impressions","small town romance","women's fiction"];
+  const mockSuggestions = {
+    title: [
+      "Pride and Preconceptions, Gift Edition",
+      "Pride and Preconceptions — A Modern Rom-Com",
+      "Pride and Preconceptions: Second Chances Edition"
+    ],
+    description: [
+      `Can you fall for the right person when you've already decided everything about them is wrong?
 
 Elara Vance is a landscape architect who relies on sharp first impressions. When tech entrepreneur Julian Cross arrives to turn her town's historic community garden into a corporate campus, she instantly writes him off as arrogant, cold, and profit-driven. Julian sees Elara as an impractical idealist blocking essential economic progress.
 
@@ -828,54 +926,62 @@ Forced to negotiate, their meetings are a masterclass in sharp retorts. Elara is
 
 But as forced proximity blurs the lines of their rivalry, they discover unexpected depth beneath each other's armor. To find common ground, they must tear down the hardest walls of all: the preconceptions they built around one another.
 
-A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride and Preconceptions explores the delightful danger of judging a book by its cover—and the courage it takes to be proven wrong.</textarea>
-          <div class="hint" id="aboutSuggestionCount" style="text-align:right;">1058/1466</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="kw-label-row">
-          <label>Keywords</label>
-          <span class="kw-count" id="kwCount"></span>
-        </div>
-        <div class="chip-group" id="chipGroup"></div>
-      </div>
-    </div>
-    <div class="drawer-footer">
-      <div class="row">
-        <button class="btn btn-outline-bold" id="cancelResults">Cancel</button>
-        <button class="btn btn-primary" id="applyBtn">Apply selected</button>
-      </div>
-      <div class="disclaimer">Suggestions generated with AI. Review before applying.</div>
-    </div>
-  </div>
-</div>
-
-<script>
-  const KEYWORDS = ["contemporary romance","enemies to lovers","slow burn","second chances","first impressions","small town romance","women's fiction"];
+A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride and Preconceptions explores the delightful danger of judging a book by its cover—and the courage it takes to be proven wrong.`,
+      "A witty, modern retelling for anyone who loves banter, slow burns, and a second chance at love.",
+      "Perfect for gifting: a warm, funny story about second chances and happy endings."
+    ]
+  };
   const state = {
     titleChecked:false,
     aboutChecked:false,
+    titleSelectedIndex:0,
+    aboutSelectedIndex:0,
     keywordsSelected:new Set()
   };
 
-  const overlay = document.getElementById('overlay');
   const drawer = document.getElementById('drawer');
   const stepPrompt = document.getElementById('stepPrompt');
   const stepThinking = document.getElementById('stepThinking');
   const stepResults = document.getElementById('stepResults');
   const promptInput = document.getElementById('promptInput');
   const continueBtn = document.getElementById('continueBtn');
+  const demoPhaseSelect = document.getElementById('demoPhase');
+
+  const rootEl = document.documentElement;
+  function updateFooterBarOffset(){
+    if(!document.body.classList.contains('panel-open')){
+      rootEl.style.setProperty('--footer-bar-right', '0px');
+      return;
+    }
+    const panelWidth = parseFloat(getComputedStyle(rootEl).getPropertyValue('--panel-width')) || 0;
+    const shellRight = document.querySelector('.app-shell').getBoundingClientRect().right;
+    const viewportGap = window.innerWidth - shellRight;
+    rootEl.style.setProperty('--footer-bar-right', (viewportGap + panelWidth) + 'px');
+  }
+  window.addEventListener('resize', updateFooterBarOffset);
+
+  // overflow:hidden clips the width transition (so the panel looks like it slides
+  // into view), but left on permanently it would also trap position:sticky
+  // descendants (like .drawer-sticky-bottom) into sticking relative to the drawer
+  // itself instead of the viewport. So it's only held during the transition, then
+  // released once fully open.
+  drawer.addEventListener('transitionend', (e)=>{
+    if(e.propertyName === 'width' && drawer.classList.contains('open')){
+      drawer.style.overflow = 'visible';
+    }
+  });
 
   function openDrawer(){
-    overlay.classList.add('open');
+    drawer.style.overflow = 'hidden';
     drawer.classList.add('open');
-    document.documentElement.classList.add('drawer-open');
+    document.body.classList.add('panel-open');
+    updateFooterBarOffset();
   }
   function closeDrawer(){
-    overlay.classList.remove('open');
+    drawer.style.overflow = 'hidden';
     drawer.classList.remove('open');
-    document.documentElement.classList.remove('drawer-open');
+    document.body.classList.remove('panel-open');
+    updateFooterBarOffset();
   }
   function showStep(step){
     stepPrompt.classList.add('hidden');
@@ -893,7 +999,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('closeThinking').addEventListener('click', closeDrawer);
   document.getElementById('closeResults').addEventListener('click', closeDrawer);
   document.getElementById('cancelResults').addEventListener('click', closeDrawer);
-  overlay.addEventListener('click', closeDrawer);
 
   promptInput.addEventListener('input', ()=>{
     const has = promptInput.value.trim().length > 0;
@@ -912,19 +1017,180 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(continueBtn.disabled) return;
     showStep(stepThinking);
     setTimeout(()=>{
-      document.getElementById('promptEcho').textContent = promptInput.value.trim();
       state.titleChecked = true;
       state.aboutChecked = true;
-      checkTitle.classList.add('checked');
-      checkAbout.classList.add('checked');
+      state.titleSelectedIndex = 0;
+      state.aboutSelectedIndex = 0;
+      renderTitleSuggestions();
+      renderAboutSuggestions();
       KEYWORDS.forEach(kw => state.keywordsSelected.add(kw));
       renderChips();
       showStep(stepResults);
     }, 1200);
   });
 
-  document.getElementById('editPrompt').addEventListener('click', ()=>{
-    showStep(stepPrompt);
+  function buildCheckboxCard(field, text, checkboxId, inputId, isTextarea){
+    const card = document.createElement('div');
+    card.className = 'suggestion-card selectable';
+    card.innerHTML = isTextarea
+      ? `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
+         <div class="suggestion-card-body">
+           <textarea class="suggestion-field" id="${inputId}" style="height:220px;"></textarea>
+           <div class="hint suggestion-count" style="text-align:right; margin-top:8px;"></div>
+         </div>`
+      : `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
+         <div class="suggestion-card-body">
+           <input type="text" class="suggestion-field" id="${inputId}">
+         </div>`;
+    const fieldEl = card.querySelector('.suggestion-field');
+    fieldEl.value = text;
+    const icon = card.querySelector(`#${checkboxId}`);
+    const checkedKey = field === 'title' ? 'titleChecked' : 'aboutChecked';
+    const applyCheckedState = ()=>{
+      const checked = state[checkedKey];
+      card.classList.toggle('selected', checked);
+      icon.textContent = checked ? 'check_circle' : 'radio_button_unchecked';
+    };
+    applyCheckedState();
+    if(isTextarea){
+      const countEl = card.querySelector('.suggestion-count');
+      const updateCount = ()=> countEl.textContent = fieldEl.value.length + '/1466';
+      updateCount();
+      fieldEl.addEventListener('input', updateCount);
+    }
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest('.suggestion-field')) return;
+      state[checkedKey] = !state[checkedKey];
+      applyCheckedState();
+    });
+    return card;
+  }
+
+  function buildSelectableCard(field, index, text, isTextarea){
+    const card = document.createElement('div');
+    card.className = 'suggestion-card selectable';
+    card.dataset.index = index;
+    const fieldId = (field === 'title' ? 'titleSuggestionInput-' : 'aboutSuggestionInput-') + index;
+    card.innerHTML = isTextarea
+      ? `<span class="material-symbols-rounded radio-icon">radio_button_unchecked</span>
+         <div class="suggestion-card-body">
+           <textarea class="suggestion-field" id="${fieldId}" style="height:160px;"></textarea>
+           <div class="hint suggestion-count" style="text-align:right; margin-top:8px;"></div>
+         </div>`
+      : `<span class="material-symbols-rounded radio-icon">radio_button_unchecked</span>
+         <div class="suggestion-card-body">
+           <input type="text" class="suggestion-field" id="${fieldId}">
+         </div>`;
+    const fieldEl = card.querySelector('.suggestion-field');
+    fieldEl.value = text;
+    if(isTextarea){
+      const countEl = card.querySelector('.suggestion-count');
+      const updateCount = ()=> countEl.textContent = fieldEl.value.length + '/1466';
+      updateCount();
+      fieldEl.addEventListener('input', updateCount);
+    }
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest('.suggestion-field')) return;
+      if(field === 'title') state.titleSelectedIndex = index;
+      else state.aboutSelectedIndex = index;
+      updateSelectionUI(field);
+    });
+    return card;
+  }
+
+  function updateSelectionUI(field){
+    const container = document.getElementById(field === 'title' ? 'titleCards' : 'aboutCards');
+    const selectedIndex = field === 'title' ? state.titleSelectedIndex : state.aboutSelectedIndex;
+    container.querySelectorAll('.suggestion-card.selectable').forEach(card=>{
+      const isSelected = Number(card.dataset.index) === selectedIndex;
+      card.classList.toggle('selected', isSelected);
+      card.querySelector('.radio-icon').textContent = isSelected ? 'check_circle' : 'radio_button_unchecked';
+    });
+  }
+
+  function renderTitleSuggestions(){
+    const container = document.getElementById('titleCards');
+    container.innerHTML = '';
+    if(drawer.dataset.phase === '1'){
+      container.appendChild(buildCheckboxCard('title', mockSuggestions.title[0], 'checkTitle', 'titleSuggestionInput', false));
+    } else {
+      if(state.titleSelectedIndex == null) state.titleSelectedIndex = 0;
+      mockSuggestions.title.forEach((text, i)=>{
+        container.appendChild(buildSelectableCard('title', i, text, false));
+      });
+      updateSelectionUI('title');
+    }
+  }
+
+  function renderAboutSuggestions(){
+    const container = document.getElementById('aboutCards');
+    container.innerHTML = '';
+    if(drawer.dataset.phase === '1'){
+      container.appendChild(buildCheckboxCard('about', mockSuggestions.description[0], 'checkAbout', 'aboutSuggestionInput', true));
+    } else {
+      if(state.aboutSelectedIndex == null) state.aboutSelectedIndex = 0;
+      mockSuggestions.description.forEach((text, i)=>{
+        container.appendChild(buildSelectableCard('about', i, text, true));
+      });
+      updateSelectionUI('about');
+    }
+  }
+
+  const refinePromptInput = document.getElementById('refinePromptInput');
+  const pillActionBtn = document.getElementById('pillActionBtn');
+  const pillActionIcon = document.getElementById('pillActionIcon');
+  const inlineThinking = document.getElementById('inlineThinking');
+
+  function resetAndRerenderSuggestions(){
+    state.titleChecked = true;
+    state.aboutChecked = true;
+    state.titleSelectedIndex = 0;
+    state.aboutSelectedIndex = 0;
+    renderTitleSuggestions();
+    renderAboutSuggestions();
+    refinePromptInput.value = '';
+  }
+
+  function regenerate(){
+    if(drawer.dataset.phase === '3'){
+      // Ideal-state framing: regenerate inline instead of leaving the results view.
+      inlineThinking.classList.remove('hidden');
+      pillActionBtn.disabled = true;
+      refinePromptInput.disabled = true;
+      setTimeout(()=>{
+        resetAndRerenderSuggestions();
+        inlineThinking.classList.add('hidden');
+        pillActionBtn.disabled = false;
+        refinePromptInput.disabled = false;
+      }, 900);
+    } else {
+      showStep(stepThinking);
+      setTimeout(()=>{
+        resetAndRerenderSuggestions();
+        showStep(stepResults);
+      }, 900);
+    }
+  }
+  pillActionBtn.addEventListener('click', regenerate);
+  refinePromptInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      regenerate();
+    }
+  });
+
+  function updatePillIcon(){
+    pillActionIcon.textContent = drawer.dataset.phase === '3' ? 'arrow_upward' : 'refresh';
+  }
+  updatePillIcon();
+
+  demoPhaseSelect.addEventListener('change', ()=>{
+    drawer.dataset.phase = demoPhaseSelect.value;
+    updatePillIcon();
+    if(document.getElementById('titleCards').children.length){
+      renderTitleSuggestions();
+      renderAboutSuggestions();
+    }
   });
 
   function renderChips(){
@@ -949,30 +1215,21 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('kwCount').textContent = n > 0 ? `${n} of ${KEYWORDS.length} selected` : '';
   }
 
-  const checkTitle = document.getElementById('checkTitle');
-  const checkAbout = document.getElementById('checkAbout');
-  checkTitle.addEventListener('click', ()=>{
-    state.titleChecked = !state.titleChecked;
-    checkTitle.classList.toggle('checked', state.titleChecked);
-  });
-  checkAbout.addEventListener('click', ()=>{
-    state.aboutChecked = !state.aboutChecked;
-    checkAbout.classList.toggle('checked', state.aboutChecked);
-  });
-  document.getElementById('aboutSuggestionInput').addEventListener('input', e=>{
-    document.getElementById('aboutSuggestionCount').textContent = e.target.value.length + '/1466';
-  });
-
   document.getElementById('applyBtn').addEventListener('click', ()=>{
-    if(state.titleChecked){
+    const phase = drawer.dataset.phase;
+    const applyTitle = phase === '1' ? state.titleChecked : true;
+    const applyAbout = phase === '1' ? state.aboutChecked : true;
+    const titleFieldId = phase === '1' ? 'titleSuggestionInput' : `titleSuggestionInput-${state.titleSelectedIndex}`;
+    const aboutFieldId = phase === '1' ? 'aboutSuggestionInput' : `aboutSuggestionInput-${state.aboutSelectedIndex}`;
+    if(applyTitle){
       const t = document.getElementById('listingTitle');
-      t.value = document.getElementById('titleSuggestionInput').value;
+      t.value = document.getElementById(titleFieldId).value;
       t.closest('.field-body').classList.add('flash');
       document.getElementById('titleCount').textContent = t.value.length + '/40';
     }
-    if(state.aboutChecked){
+    if(applyAbout){
       const a = document.getElementById('aboutBook');
-      a.value = document.getElementById('aboutSuggestionInput').value;
+      a.value = document.getElementById(aboutFieldId).value;
       a.closest('.field-body').classList.add('flash');
       document.getElementById('aboutCount').textContent = a.value.length + '/1466';
     }
