@@ -559,6 +559,53 @@
     50%,100%{opacity:1;}
   }
 
+  /* --- Iteration A / D: inline, ambient AI per field ---
+     No side panel. The sparkle/draft-link lives directly on the field itself. */
+  .inline-ai-wrap{position:relative;}
+  .inline-ai-icon-btn{
+    position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:4px;
+    border:none; background:none; display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .inline-ai-icon-btn:hover{background:var(--gray-subtler);}
+  .inline-ai-icon-btn .material-symbols-rounded{font-size:20px;}
+  textarea.has-inline-ai, input.has-inline-ai{padding-right:40px;}
+
+  .inline-draft-popover{
+    display:none; margin-top:8px; border:1px solid var(--brand); border-radius:8px;
+    background:#fff; padding:14px 16px;
+  }
+  .inline-draft-popover.open{display:block;}
+  .inline-draft-popover p{font-size:15px; line-height:1.5; margin:0 0 10px; color:var(--subtle); white-space:pre-line;}
+  .inline-draft-popover .row{display:flex; gap:8px;}
+  .inline-draft-popover .row .spacer{flex:1;}
+
+  .inline-draft-link{
+    display:inline-flex; align-items:center; gap:6px; border:none; background:none; cursor:pointer;
+    color:var(--bold); font-family:var(--font-sans); font-size:14px; font-weight:600; padding:0; margin-top:8px;
+  }
+  .inline-draft-link .material-symbols-rounded{font-size:18px;}
+
+  .inline-ai-attribution{
+    display:flex; align-items:center; gap:6px; font-size:13px; color:var(--subtle); margin-top:8px;
+  }
+  .inline-ai-attribution .material-symbols-rounded{font-size:16px;}
+  .inline-ai-attribution button{
+    border:none; background:none; padding:0; font-size:13px; font-weight:600; color:var(--link);
+    text-decoration:underline; cursor:pointer; font-family:var(--font-sans);
+  }
+
+  .kw-suggest-btn{
+    display:inline-flex; align-items:center; gap:6px; border:none; background:none; cursor:pointer;
+    color:var(--bold); font-family:var(--font-sans); font-size:13px; font-weight:600; padding:0;
+    margin-left:10px;
+  }
+  .kw-suggest-btn .material-symbols-rounded{font-size:16px;}
+  .kw-suggest-row{display:flex; align-items:center; flex-wrap:wrap;}
+
+  .mode-1-2-3, .mode-a-d{}
+  .hidden-mode{display:none !important;}
+
   .flash{
     animation:flashbg 1.4s ease;
   }
@@ -626,11 +673,16 @@
     <div class="section no-divider">
       <div class="section-header">
         <h2>Listing content</h2>
-        <button class="btn btn-outline-ai" id="openOptimize">
+        <button class="btn btn-outline-ai mode-1-2-3" id="openOptimize">
           <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
           Optimize listing
         </button>
+        <button class="btn btn-outline-ai mode-a-d hidden-mode" id="bulkGenerate">
+          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+          Generate all with AI
+        </button>
       </div>
+      <p class="hint mode-a-d hidden-mode" style="margin:-8px 0 20px;">Fills every empty field below at once. Each one stays editable and can be redrafted on its own.</p>
 
       <div class="field-row">
         <label class="label-with-info">Listing title
@@ -640,30 +692,78 @@
           </span>
         </label>
         <div class="field-body">
-          <input type="text" id="listingTitle" value="Pride and Preconceptions" maxlength="40">
+          <div class="inline-ai-wrap">
+            <input type="text" id="listingTitle" value="Pride and Preconceptions" maxlength="40">
+            <button class="inline-ai-icon-btn mode-a hidden-mode" id="titleInlineIconBtn" type="button" title="Improve with AI">
+              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+            </button>
+          </div>
           <div class="count" id="titleCount">24/40</div>
+          <div class="inline-draft-popover" id="titleDraftPopover">
+            <p id="titleDraftText"></p>
+            <div class="row">
+              <button class="btn btn-primary" id="titleInsertBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Insert</button>
+              <button class="btn btn-outline-bold" id="titleTryAgainBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Try again</button>
+              <span class="spacer"></span>
+              <button class="btn btn-outline-bold" id="titleDismissBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Dismiss</button>
+            </div>
+          </div>
+          <button class="inline-draft-link mode-d hidden-mode" id="titleDraftLinkD" type="button">
+            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Draft this with AI
+          </button>
+          <div class="inline-ai-attribution mode-d hidden-mode" id="titleAttrD" style="display:none;">
+            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+            <span>Drafted with AI &middot;</span>
+            <button id="titleRedraftD">Draft again</button>
+          </div>
         </div>
       </div>
 
       <div class="field-row">
         <label>About the book</label>
         <div class="field-body">
-          <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
+          <div class="inline-ai-wrap">
+            <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
+            <button class="inline-ai-icon-btn mode-a hidden-mode" id="aboutInlineIconBtn" type="button" title="Improve with AI">
+              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+            </button>
+          </div>
           <div class="count" id="aboutCount">0/1466</div>
+          <div class="inline-draft-popover" id="aboutDraftPopover">
+            <p id="aboutDraftText"></p>
+            <div class="row">
+              <button class="btn btn-primary" id="aboutInsertBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Insert</button>
+              <button class="btn btn-outline-bold" id="aboutTryAgainBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Try again</button>
+              <span class="spacer"></span>
+              <button class="btn btn-outline-bold" id="aboutDismissBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Dismiss</button>
+            </div>
+          </div>
+          <button class="inline-draft-link mode-d hidden-mode" id="aboutDraftLinkD" type="button">
+            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Draft this with AI
+          </button>
+          <div class="inline-ai-attribution mode-d hidden-mode" id="aboutAttrD" style="display:none;">
+            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+            <span>Drafted with AI &middot;</span>
+            <button id="aboutRedraftD">Draft again</button>
+          </div>
         </div>
       </div>
 
       <div class="field-row">
-        <label class="label-with-info">Keywords
+        <label class="label-with-info kw-suggest-row">Keywords
           <span class="info-icon" tabindex="0">
             <span class="material-symbols-rounded">info</span>
             <span class="tooltip-popup" role="tooltip">Keywords help buyers find your book on Google.</span>
           </span>
+          <button class="kw-suggest-btn mode-a-d hidden-mode" id="kwSuggestBtn" type="button">
+            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Suggest keywords
+          </button>
         </label>
         <div class="field-body">
           <input type="text" id="keywordsField" placeholder="Add a keyword...">
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
+          <div class="chip-group mode-a-d hidden-mode" id="kwSuggestChips" style="margin-top:8px;"></div>
         </div>
       </div>
     </div>
@@ -1184,14 +1284,134 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   }
   updatePillIcon();
 
-  demoPhaseSelect.addEventListener('change', ()=>{
-    drawer.dataset.phase = demoPhaseSelect.value;
+  // --- Iteration A / D: inline field-level AI (no side panel) ---
+  const titleVariants = [mockSuggestions.title[0], mockSuggestions.title[1], mockSuggestions.title[2]];
+  const aboutVariants = [mockSuggestions.description[1], mockSuggestions.description[2], "A charming rom-com about pride, first impressions, and finding love where you least expect it."];
+  let titleVariantIdx = 0, aboutVariantIdx = 0;
+
+  function isFieldEmpty(el){ return el.value.trim().length === 0; }
+
+  // Iteration A: icon opens an inline popover under the field
+  function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn){
+    let idx = 0;
+    const iconBtn = document.getElementById(iconBtnId);
+    const popover = document.getElementById(popoverId);
+    const textEl = document.getElementById(textId);
+    iconBtn.addEventListener('click', ()=>{
+      textEl.textContent = variants[idx];
+      popover.classList.toggle('open');
+    });
+    return {
+      insert(){ inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); },
+      tryAgain(){ idx = (idx + 1) % variants.length; textEl.textContent = variants[idx]; },
+      dismiss(){ popover.classList.remove('open'); },
+      generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } }
+    };
+  }
+  const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
+    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40');
+  document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
+  document.getElementById('titleTryAgainBtn').addEventListener('click', titleA.tryAgain);
+  document.getElementById('titleDismissBtn').addEventListener('click', titleA.dismiss);
+
+  const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
+    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
+  document.getElementById('aboutInsertBtn').addEventListener('click', aboutA.insert);
+  document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
+  document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
+
+  // Iteration D: quiet link fills the field in place, replaced by an attribution line
+  function wireInlineD(linkId, attrId, redraftId, inputEl, variants, countUpdateFn){
+    let idx = 0;
+    const link = document.getElementById(linkId);
+    const attr = document.getElementById(attrId);
+    const redraftBtn = document.getElementById(redraftId);
+    function draft(){
+      inputEl.value = variants[idx];
+      if(countUpdateFn) countUpdateFn();
+      link.style.display = 'none';
+      attr.style.display = 'flex';
+    }
+    link.addEventListener('click', draft);
+    redraftBtn.addEventListener('click', ()=>{
+      idx = (idx + 1) % variants.length;
+      inputEl.value = variants[idx];
+      if(countUpdateFn) countUpdateFn();
+    });
+    return { generateIfEmpty(){ if(isFieldEmpty(inputEl)) draft(); } };
+  }
+  const titleD = wireInlineD('titleDraftLinkD','titleAttrD','titleRedraftD', document.getElementById('listingTitle'), titleVariants,
+    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40');
+  const aboutD = wireInlineD('aboutDraftLinkD','aboutAttrD','aboutRedraftD', document.getElementById('aboutBook'), aboutVariants,
+    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
+
+  // Keywords: inline "Suggest keywords" reveals chips; clicking a chip adds it directly
+  // (tops up remaining empty slots only, same rule as the bulk button).
+  document.getElementById('kwSuggestBtn').addEventListener('click', renderKwSuggestChips);
+  function renderKwSuggestChips(){
+    const wrap = document.getElementById('kwSuggestChips');
+    wrap.style.display = 'flex';
+    wrap.innerHTML = '';
+    KEYWORDS.filter(kw => !mainKeywords.includes(kw)).forEach(kw=>{
+      if(mainKeywords.length >= 7) return;
+      const chip = document.createElement('div');
+      chip.className = 'chip unselected';
+      chip.innerHTML = `<span>${kw}</span><span class="icon">+</span>`;
+      chip.addEventListener('click', ()=>{
+        if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
+        renderMainKeywords();
+        renderKwSuggestChips();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  // Bulk "Generate all with AI": only fills empty fields; tops up remaining keyword slots.
+  document.getElementById('bulkGenerate').addEventListener('click', ()=>{
+    const mode = drawer.dataset.phase;
+    if(mode === '2'){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
+    else { titleD.generateIfEmpty(); aboutD.generateIfEmpty(); }
+    KEYWORDS.forEach(kw=>{
+      if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
+    });
+    renderMainKeywords();
+    if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
+    updateBulkGenerateState();
+  });
+  function updateBulkGenerateState(){
+    const allFull = !isFieldEmpty(document.getElementById('listingTitle'))
+      && !isFieldEmpty(document.getElementById('aboutBook'))
+      && mainKeywords.length >= 7;
+    const btn = document.getElementById('bulkGenerate');
+    btn.disabled = allFull;
+    btn.className = 'btn mode-a-d ' + (allFull ? 'btn-disabled' : 'btn-outline-ai') + (drawer.dataset.phase==='2'||drawer.dataset.phase==='3' ? '' : ' hidden-mode');
+  }
+  document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
+  document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
+
+  // --- Mode switching across all five iterations ---
+  function applyDemoMode(){
+    const val = demoPhaseSelect.value;
+    drawer.dataset.phase = val;
+    const isPanelMode = (val === '1');
+    const isA = val === '2';
+    const isD = val === '3';
+
+    document.querySelectorAll('.mode-1-2-3').forEach(el => el.classList.toggle('hidden-mode', !isPanelMode));
+    document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
+    document.querySelectorAll('.mode-a').forEach(el => el.classList.toggle('hidden-mode', !isA));
+    document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
+
+    if(!isPanelMode && drawer.classList.contains('open')) closeDrawer();
     updatePillIcon();
     if(document.getElementById('titleCards').children.length){
       renderTitleSuggestions();
       renderAboutSuggestions();
     }
-  });
+    updateBulkGenerateState();
+  }
+  demoPhaseSelect.addEventListener('change', applyDemoMode);
+  applyDemoMode();
 
   function renderChips(){
     const group = document.getElementById('chipGroup');
