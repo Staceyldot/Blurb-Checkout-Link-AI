@@ -156,6 +156,7 @@
     margin-bottom:8px;
   }
   .breadcrumb span{color:var(--subtle);}
+  .breadcrumb span.breadcrumb-current{color:var(--disabled);}
   h1.title{
     font-family:var(--font-heading);
     font-size:32px;
@@ -425,7 +426,7 @@
   .drawer{
     flex-shrink:0;
     width:0; overflow:hidden;
-    background:#fff; border-left:0 solid var(--border-subtle);
+    background:#F3F0FD; border-left:0 solid var(--border-subtle);
     transition:width .22s ease, border-left-width .22s ease;
   }
   .drawer.open{width:var(--panel-width); border-left-width:1px;}
@@ -439,7 +440,7 @@
   .drawer-header h3{
     font-family:var(--font-heading); font-size:20px; margin:0; flex:1;
   }
-  .drawer-header .close{
+  .close{
     cursor:pointer; border:none; background:none; font-size:20px; color:var(--subtle); line-height:1;
     padding:4px;
   }
@@ -449,7 +450,7 @@
   /* Pins the panel's own action row (Cancel/Apply, plus the pill bar in Results) to the
      bottom of the viewport as the page scrolls, mirroring .footer-bar's own stickiness. */
   .drawer-sticky-bottom{
-    position:sticky; bottom:0; background:#fff; flex-shrink:0;
+    position:sticky; bottom:0; background:#F3F0FD; flex-shrink:0;
   }
   .drawer-footer{
     border-top:1px solid var(--border-subtle); padding:16px 32px; flex-shrink:0;
@@ -487,6 +488,7 @@
     display:flex; align-items:center; gap:10px;
     border:1px solid var(--border-input); border-radius:100px;
     padding:8px 8px 8px 18px;
+    background:#fff;
   }
   .prompt-pill-bar input{
     flex:1; min-width:0; border:none; outline:none; background:transparent;
@@ -691,7 +693,7 @@
 
   <div class="page">
   <div class="container">
-    <div class="breadcrumb">Checkout links <span>&gt;</span> Pride and Preconceptions</div>
+    <div class="breadcrumb">Checkout links <span>&gt;</span> <span class="breadcrumb-current">Pride and Preconceptions</span></div>
     <h1 class="title">Pride and Preconceptions</h1>
 
     <!-- Book details -->
@@ -967,20 +969,19 @@
 
       <!-- STEP 1: prompt -->
       <div id="stepPrompt" class="drawer-body-wrap" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-        <div class="drawer-header">
-          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-          <h3>Optimize listing</h3>
+        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
           <button class="close" id="closePrompt">✕</button>
         </div>
-        <div class="drawer-body" style="flex:1;">
-          <p class="prompt-copy">Help us get it right. What's your book about?</p>
-          <textarea id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:220px;"></textarea>
-        </div>
+        <div class="drawer-body" style="flex:1;"></div>
         <div class="drawer-sticky-bottom">
-          <div class="drawer-footer">
-            <div class="row">
-              <button class="btn btn-outline-bold" id="cancelPrompt">Cancel</button>
-              <button class="btn btn-disabled" id="continueBtn" disabled>Continue</button>
+          <div class="prompt-pill-wrap" style="padding-bottom:24px;">
+            <p class="prompt-copy" style="margin:0 0 8px;">Help us get it right. What's your book about?</p>
+            <div class="prompt-pill-bar">
+              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+              <input type="text" id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone">
+              <button class="pill-action-btn" id="continueBtn" type="button" title="Generate" disabled>
+                <span class="material-symbols-rounded">arrow_upward</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1019,9 +1020,7 @@
 
       <!-- STEP 3: results -->
       <div id="stepResults" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-        <div class="drawer-header">
-          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-          <h3>Optimize listing</h3>
+        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
           <button class="close" id="closeResults">✕</button>
         </div>
         <div class="drawer-body">
@@ -1173,15 +1172,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     openDrawer();
   });
   document.getElementById('closePrompt').addEventListener('click', closeDrawer);
-  document.getElementById('cancelPrompt').addEventListener('click', closeDrawer);
   document.getElementById('closeThinking').addEventListener('click', closeDrawer);
   document.getElementById('closeResults').addEventListener('click', closeDrawer);
   document.getElementById('cancelResults').addEventListener('click', closeDrawer);
 
   promptInput.addEventListener('input', ()=>{
-    const has = promptInput.value.trim().length > 0;
-    continueBtn.disabled = !has;
-    continueBtn.className = has ? 'btn btn-outline-brand' : 'btn btn-disabled';
+    continueBtn.disabled = promptInput.value.trim().length === 0;
   });
 
   promptInput.addEventListener('click', ()=>{
