@@ -609,6 +609,43 @@
   .flash{
     animation:flashbg 1.4s ease;
   }
+
+  /* --- Iteration 2 (Grammarly-style flag layer): rule-based flagging (no AI
+     call) finds one weak sentence; clicking triggers a single AI rewrite
+     call scoped to just that sentence. */
+  .about-rich{
+    width:100%; box-sizing:border-box; min-height:64px; border:1px solid var(--gray-line);
+    border-radius:6px; padding:10px 12px; font-family:var(--font-sans); font-size:15px;
+    line-height:1.6; color:var(--bold); background:#fff;
+  }
+  .about-rich:focus{outline:2px solid var(--brand); outline-offset:-1px;}
+  .flag-underline{border-bottom:2px dotted var(--ai-purple); cursor:pointer;}
+  .flag-popover{
+    display:none; margin-top:8px; border:1px solid var(--brand); border-radius:8px;
+    background:#fff; padding:12px 14px;
+  }
+  .flag-popover.open{display:block;}
+  .flag-popover .label{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--subtle); margin:0 0 6px;}
+  .flag-popover .label .material-symbols-rounded{font-size:15px;}
+  .flag-popover p.suggestion{font-size:14px; margin:0 0 8px; color:var(--bold);}
+  .flag-popover .row{display:flex; gap:6px;}
+
+  /* --- Iteration 3 (Hemingway-style highlight layer): whole passage
+     color-coded by sentence length; one button rewrites only the flagged
+     sentences. */
+  .hl-clear{background:rgba(46,125,50,0.10); border-radius:3px;}
+  .hl-amber{background:rgba(199,119,0,0.16); border-radius:3px;}
+  .clarity-check-link{
+    display:inline-flex; align-items:center; gap:6px; border:none; background:none; cursor:pointer;
+    color:var(--bold); font-family:var(--font-sans); font-size:13px; font-weight:600; padding:0; margin-top:8px;
+  }
+  .clarity-check-link .material-symbols-rounded{font-size:16px;}
+  .clarity-legend{display:flex; gap:14px; margin-top:8px; font-size:12px; color:var(--subtle);}
+  .clarity-legend .dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle;}
+  .clarity-legend .dot.clear{background:#2e7d32;}
+  .clarity-legend .dot.amber{background:#c77700;}
+  .tighten-btn{margin-top:10px;}
+
   @keyframes flashbg{
     0%{background:#eaf6fc;}
     100%{background:transparent;}
@@ -737,6 +774,20 @@
             </button>
           </div>
           <div class="count" id="aboutCount">0/1466</div>
+
+          <!-- Iteration 2 (Grammarly-style flag layer): rule-based check flags one
+               weak sentence; clicking the sparkle icon on non-empty text opens this
+               instead of the full-draft popover. One AI call rewrites just it. -->
+          <div class="flag-popover" id="grammarlyFlagPopover">
+            <p class="label"><span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>Clearer phrasing</p>
+            <p class="suggestion" id="grammarlyOriginal" style="color:var(--subtle); font-size:13px;"></p>
+            <p class="suggestion" id="grammarlySuggestion"></p>
+            <div class="row">
+              <button class="btn btn-primary" id="grammarlyAcceptBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Accept</button>
+              <button class="btn btn-outline-bold" id="grammarlyDismissBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Dismiss</button>
+            </div>
+          </div>
+
           <div class="inline-draft-popover" id="aboutDraftPopover">
             <p id="aboutDraftText"></p>
             <div class="row">
@@ -753,6 +804,24 @@
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
             <span>Drafted with AI &middot;</span>
             <button id="aboutRedraftD">Draft again</button>
+          </div>
+
+          <!-- Iteration 3 (Hemingway-style highlight layer): rule-based check
+               color-codes the whole passage; one button rewrites only the
+               flagged sentences. -->
+          <button class="clarity-check-link mode-5 hidden-mode" id="clarityCheckLink" type="button">
+            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Check for clarity
+          </button>
+          <div class="about-rich mode-5 hidden-mode" id="aboutRich" style="display:none;"></div>
+          <div class="clarity-legend mode-5 hidden-mode" id="clarityLegend" style="display:none;">
+            <span><span class="dot clear"></span>Clear</span>
+            <span><span class="dot amber"></span>Could tighten</span>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary tighten-btn mode-5 hidden-mode" id="tightenBtn" style="display:none; padding:8px 16px; font-size:14px; min-width:auto;">
+              <span class="material-symbols-rounded ts-grad-icon" style="font-size:16px; vertical-align:-3px; margin-right:4px;">auto_awesome</span>Tighten flagged sentences
+            </button>
+            <button class="clarity-check-link mode-5 hidden-mode" id="backToEditBtn" style="display:none;">Back to editing</button>
           </div>
         </div>
       </div>
@@ -1300,12 +1369,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function isFieldEmpty(el){ return el.value.trim().length === 0; }
 
   // Iteration A: icon opens an inline popover under the field
-  function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn){
+  function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn, flagOverride){
     let idx = 0;
     const iconBtn = document.getElementById(iconBtnId);
     const popover = document.getElementById(popoverId);
     const textEl = document.getElementById(textId);
     iconBtn.addEventListener('click', ()=>{
+      if(flagOverride && flagOverride()) return;
       textEl.textContent = variants[idx];
       popover.classList.toggle('open');
     });
@@ -1323,7 +1393,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('titleDismissBtn').addEventListener('click', titleA.dismiss);
 
   const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
-    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
+    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
+    ()=>{
+      // Iteration 2: once there's content, the sparkle icon runs a rule-based
+      // check instead of generating a fresh draft.
+      if(drawer.dataset.phase === '2' && !isFieldEmpty(document.getElementById('aboutBook'))){
+        runGrammarlyCheck();
+        return true;
+      }
+      return false;
+    });
   document.getElementById('aboutInsertBtn').addEventListener('click', aboutA.insert);
   document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
   document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
@@ -1374,6 +1453,90 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
   }
 
+  // --- Shared: rule-based sentence splitting (no AI call) ---
+  function splitSentences(text){
+    return text.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);
+  }
+  function escapeHtml(str){
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function mockShorten(sentence){
+    const words = sentence.trim().split(/\s+/);
+    if(words.length <= 10) return sentence;
+    return words.slice(0,8).join(' ') + '.';
+  }
+
+  // --- Iteration 2: Grammarly style — flag one weak sentence, one AI call fixes just it ---
+  let grammarlyTargetSentence = null;
+  function runGrammarlyCheck(){
+    const text = document.getElementById('aboutBook').value;
+    const sentences = splitSentences(text);
+    if(sentences.length === 0) return;
+    let longest = sentences[0];
+    sentences.forEach(s=>{ if(s.split(/\s+/).length > longest.split(/\s+/).length) longest = s; });
+    grammarlyTargetSentence = longest;
+    document.getElementById('grammarlyOriginal').textContent = 'Flagged: "' + longest + '"';
+    document.getElementById('grammarlySuggestion').textContent = mockShorten(longest);
+    document.getElementById('grammarlyFlagPopover').classList.add('open');
+  }
+  document.getElementById('grammarlyAcceptBtn').addEventListener('click', ()=>{
+    if(!grammarlyTargetSentence) return;
+    const ta = document.getElementById('aboutBook');
+    ta.value = ta.value.replace(grammarlyTargetSentence, mockShorten(grammarlyTargetSentence));
+    document.getElementById('aboutCount').textContent = ta.value.length + '/1466';
+    document.getElementById('grammarlyFlagPopover').classList.remove('open');
+  });
+  document.getElementById('grammarlyDismissBtn').addEventListener('click', ()=>{
+    document.getElementById('grammarlyFlagPopover').classList.remove('open');
+  });
+
+  // --- Iteration 3: Hemingway style — color-code the passage, one AI call tightens all flagged sentences ---
+  function renderHemingwayHighlight(){
+    const text = document.getElementById('aboutBook').value;
+    const sentences = splitSentences(text);
+    document.getElementById('aboutRich').innerHTML = sentences.map(s=>{
+      const cls = s.split(/\s+/).length > 18 ? 'hl-amber' : 'hl-clear';
+      return '<span class="'+cls+'">'+escapeHtml(s)+'</span>';
+    }).join(' ');
+  }
+  function runHemingwayCheck(){
+    if(isFieldEmpty(document.getElementById('aboutBook'))) return;
+    renderHemingwayHighlight();
+    document.getElementById('aboutBook').style.display = 'none';
+    document.getElementById('aboutRich').style.display = 'block';
+    document.getElementById('clarityLegend').style.display = 'flex';
+    document.getElementById('tightenBtn').style.display = 'inline-flex';
+    document.getElementById('backToEditBtn').style.display = 'inline-flex';
+    document.getElementById('clarityCheckLink').style.display = 'none';
+  }
+  function exitHemingwayCheck(){
+    document.getElementById('aboutBook').style.display = '';
+    document.getElementById('aboutRich').style.display = 'none';
+    document.getElementById('clarityLegend').style.display = 'none';
+    document.getElementById('tightenBtn').style.display = 'none';
+    document.getElementById('backToEditBtn').style.display = 'none';
+    updateClarityLinkVisibility();
+  }
+  function tightenFlaggedSentences(){
+    const ta = document.getElementById('aboutBook');
+    const sentences = splitSentences(ta.value);
+    const tightened = sentences.map(s => s.split(/\s+/).length > 18 ? mockShorten(s) : s);
+    ta.value = tightened.join(' ');
+    document.getElementById('aboutCount').textContent = ta.value.length + '/1466';
+    renderHemingwayHighlight();
+  }
+  function updateClarityLinkVisibility(){
+    const isPhase3 = drawer.dataset.phase === '3';
+    const hasContent = !isFieldEmpty(document.getElementById('aboutBook'));
+    const link = document.getElementById('clarityCheckLink');
+    const inCheckView = document.getElementById('aboutRich').style.display === 'block';
+    link.style.display = (isPhase3 && hasContent && !inCheckView) ? 'inline-flex' : 'none';
+  }
+  document.getElementById('clarityCheckLink').addEventListener('click', runHemingwayCheck);
+  document.getElementById('backToEditBtn').addEventListener('click', exitHemingwayCheck);
+  document.getElementById('tightenBtn').addEventListener('click', tightenFlaggedSentences);
+  document.getElementById('aboutBook').addEventListener('input', updateClarityLinkVisibility);
+
   // "Let AI help you": opens a prompt box; generation happens on Generate, only filling empty fields.
   const bulkPromptBox = document.getElementById('bulkPromptBox');
   const bulkPromptInput = document.getElementById('bulkPromptInput');
@@ -1406,6 +1569,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
     renderMainKeywords();
     if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
+    updateClarityLinkVisibility();
     updateBulkGenerateState();
     bulkPromptBox.style.display = 'none';
   });
@@ -1420,18 +1584,26 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
 
-  // --- Mode switching across all five iterations ---
+  // --- Mode switching across all iterations ---
   function applyDemoMode(){
     const val = demoPhaseSelect.value;
     drawer.dataset.phase = val;
     const isPanelMode = (val === '1');
     const isA = val === '2';
     const isD = val === '3';
+    const isHemingway = (val === '3');
 
     document.querySelectorAll('.mode-1-2-3').forEach(el => el.classList.toggle('hidden-mode', !isPanelMode));
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
     document.querySelectorAll('.mode-a').forEach(el => el.classList.toggle('hidden-mode', !isA));
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
+    document.querySelectorAll('.mode-5').forEach(el => el.classList.toggle('hidden-mode', !isHemingway));
+
+    // Leaving iteration 2 or 3 resets any open flag/highlight state so it
+    // doesn't leak into a different iteration when switching in the dropdown.
+    if(val !== '2') document.getElementById('grammarlyFlagPopover').classList.remove('open');
+    if(val !== '3') exitHemingwayCheck();
+    updateClarityLinkVisibility();
 
     if(!isPanelMode && drawer.classList.contains('open')) closeDrawer();
     if(!(isA || isD)) bulkPromptBox.style.display = 'none';
