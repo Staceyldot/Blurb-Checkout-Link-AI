@@ -679,10 +679,18 @@
         </button>
         <button class="btn btn-outline-ai mode-a-d hidden-mode" id="bulkGenerate">
           <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-          Generate all with AI
+          Let AI help you
         </button>
       </div>
-      <p class="hint mode-a-d hidden-mode" style="margin:-8px 0 20px;">Fills every empty field below at once. Each one stays editable and can be redrafted on its own.</p>
+      <div class="mode-a-d hidden-mode" id="bulkPromptBox" style="display:none; margin:-8px 0 20px; padding:16px; border:1px solid var(--border-subtle); border-radius:4px;">
+        <p class="prompt-copy" style="margin:0 0 8px;">Help us get it right. What's your book about?</p>
+        <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+          <button class="btn btn-outline-bold" id="bulkPromptCancel">Cancel</button>
+          <button class="btn btn-disabled" id="bulkPromptSubmit" disabled>Generate</button>
+        </div>
+        <p class="hint" style="margin:12px 0 0; text-align:right;">Fills every empty field below at once. Each one stays editable and can be redrafted on its own.</p>
+      </div>
 
       <div class="field-row">
         <label class="label-with-info">Listing title
@@ -755,12 +763,12 @@
             <span class="material-symbols-rounded">info</span>
             <span class="tooltip-popup" role="tooltip">Keywords help buyers find your book on Google.</span>
           </span>
-          <button class="kw-suggest-btn mode-a-d hidden-mode" id="kwSuggestBtn" type="button">
-            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Suggest keywords
-          </button>
         </label>
         <div class="field-body">
           <input type="text" id="keywordsField" placeholder="Add a keyword...">
+          <button class="kw-suggest-btn mode-a-d hidden-mode" id="kwSuggestBtn" type="button" style="margin-left:0; margin-top:8px;">
+            <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Suggest keywords
+          </button>
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
           <div class="chip-group mode-a-d hidden-mode" id="kwSuggestChips" style="margin-top:8px;"></div>
@@ -1366,8 +1374,30 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
   }
 
-  // Bulk "Generate all with AI": only fills empty fields; tops up remaining keyword slots.
+  // "Let AI help you": opens a prompt box; generation happens on Generate, only filling empty fields.
+  const bulkPromptBox = document.getElementById('bulkPromptBox');
+  const bulkPromptInput = document.getElementById('bulkPromptInput');
+  const bulkPromptSubmit = document.getElementById('bulkPromptSubmit');
+
   document.getElementById('bulkGenerate').addEventListener('click', ()=>{
+    bulkPromptBox.style.display = 'block';
+    bulkPromptInput.focus();
+  });
+  document.getElementById('bulkPromptCancel').addEventListener('click', ()=>{
+    bulkPromptBox.style.display = 'none';
+  });
+  bulkPromptInput.addEventListener('input', ()=>{
+    const has = bulkPromptInput.value.trim().length > 0;
+    bulkPromptSubmit.disabled = !has;
+    bulkPromptSubmit.className = has ? 'btn btn-primary' : 'btn btn-disabled';
+  });
+  bulkPromptInput.addEventListener('click', ()=>{
+    if(bulkPromptInput.value.trim().length === 0){
+      bulkPromptInput.value = "It's a modern rom-com retelling of Pride and Prejudice. Witty, a little chaotic, second-chance romance vibes. Great gift for anyone who loves a slow burn with banter";
+      bulkPromptInput.dispatchEvent(new Event('input'));
+    }
+  });
+  bulkPromptSubmit.addEventListener('click', ()=>{
     const mode = drawer.dataset.phase;
     if(mode === '2'){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
     else { titleD.generateIfEmpty(); aboutD.generateIfEmpty(); }
@@ -1377,6 +1407,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     renderMainKeywords();
     if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
     updateBulkGenerateState();
+    bulkPromptBox.style.display = 'none';
   });
   function updateBulkGenerateState(){
     const allFull = !isFieldEmpty(document.getElementById('listingTitle'))
@@ -1403,6 +1434,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
 
     if(!isPanelMode && drawer.classList.contains('open')) closeDrawer();
+    if(!(isA || isD)) bulkPromptBox.style.display = 'none';
     updatePillIcon();
     if(document.getElementById('titleCards').children.length){
       renderTitleSuggestions();
