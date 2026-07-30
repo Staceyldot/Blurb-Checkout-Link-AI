@@ -19,6 +19,7 @@
     font-size:20px; line-height:1;
   }
   .ts-grad-icon{
+    font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
     background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
     -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; color:transparent;
@@ -719,7 +720,7 @@
           Let AI help you
         </button>
       </div>
-      <div class="mode-a-d hidden-mode" id="bulkPromptBox" style="display:none; margin:-8px 0 20px; padding:16px; border:1px solid var(--border-subtle); border-radius:4px;">
+      <div class="mode-a-d hidden-mode" id="bulkPromptBox" style="display:none; margin:-8px 0 20px; padding:16px; border:none; border-radius:4px; background:#F3F0FD;">
         <p class="prompt-copy" style="margin:0 0 8px;">Help us get it right. What's your book about?</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
         <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
@@ -1571,7 +1572,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
     updateClarityLinkVisibility();
     updateBulkGenerateState();
-    bulkPromptBox.style.display = 'none';
   });
   function updateBulkGenerateState(){
     const allFull = !isFieldEmpty(document.getElementById('listingTitle'))
