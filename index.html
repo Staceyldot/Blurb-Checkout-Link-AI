@@ -511,7 +511,7 @@
      refine composer used elsewhere, which stays as-is). --- */
   .prompt-textarea-field{
     width:100%; box-sizing:border-box; height:150px; resize:none;
-    border:1px solid var(--border-input); border-radius:4px; background:#fff;
+    border:1px solid var(--border-input); border-radius:4px; background:#f6f6f6;
     padding:8px 44px 8px 8px; font-family:var(--font-sans); font-size:16px;
     line-height:24px; color:var(--bold);
   }
@@ -519,7 +519,8 @@
   .prompt-textarea-field:disabled{opacity:.6;}
   .prompt-textarea-btn{
     position:absolute; right:8px; bottom:8px; width:auto; height:auto;
-    border-radius:4px; background:var(--brand); padding:8px; border:none; cursor:pointer;
+    border-radius:4px; padding:8px; border:none; cursor:pointer;
+    background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
   }
   .prompt-textarea-btn:hover{filter:brightness(0.95);}
   .prompt-textarea-btn:disabled{opacity:.5; cursor:default; background:var(--disabled);}
@@ -996,7 +997,7 @@
     <div class="drawer-inner">
 
       <!-- STEP 1: prompt -->
-      <div id="stepPrompt" class="drawer-body-wrap" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+      <div id="stepPrompt" class="drawer-body-wrap" style="display:flex; flex-direction:column; flex:1; min-height:0; background:#e7e7e7;">
         <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
           <button class="close" id="closePrompt">✕</button>
         </div>
@@ -1017,12 +1018,14 @@
           </div>
           <p style="font-family:var(--font-heading); font-size:20px; font-weight:500; line-height:1.2; color:var(--subtle); text-align:center; margin:0; width:312px; max-width:100%;">Tell us about your book and we'll draft a title, description, and keywords.</p>
         </div>
-        <div class="drawer-sticky-bottom">
-          <div class="prompt-pill-wrap" style="padding-bottom:24px; position:relative;">
-            <textarea class="prompt-textarea-field" id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone"></textarea>
-            <button class="prompt-textarea-btn" id="continueBtn" type="button" title="Generate" disabled>
-              <span class="material-symbols-rounded">arrow_upward</span>
-            </button>
+        <div class="drawer-sticky-bottom" style="background:#e7e7e7;">
+          <div class="prompt-pill-wrap" style="padding-bottom:24px;">
+            <div style="position:relative;">
+              <textarea class="prompt-textarea-field" id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone"></textarea>
+              <button class="prompt-textarea-btn" id="continueBtn" type="button" title="Generate" disabled>
+                <span class="material-symbols-rounded">arrow_upward</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
