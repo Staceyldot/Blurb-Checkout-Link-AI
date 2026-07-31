@@ -426,7 +426,7 @@
   .drawer{
     flex-shrink:0;
     width:0; overflow:hidden;
-    background:#F3F0FD; border-left:0 solid var(--border-subtle);
+    background:#F6F6F6; border-left:0 solid var(--border-subtle);
     transition:width .22s ease, border-left-width .22s ease;
   }
   .drawer.open{width:var(--panel-width); border-left-width:1px;}
@@ -450,7 +450,7 @@
   /* Pins the panel's own action row (Cancel/Apply, plus the pill bar in Results) to the
      bottom of the viewport as the page scrolls, mirroring .footer-bar's own stickiness. */
   .drawer-sticky-bottom{
-    position:sticky; bottom:0; background:#F3F0FD; flex-shrink:0;
+    position:sticky; bottom:0; background:#F6F6F6; flex-shrink:0;
   }
   .drawer-footer{
     border-top:1px solid var(--border-subtle); padding:16px 32px; flex-shrink:0;
@@ -505,6 +505,27 @@
     font-size:20px; color:#fff; font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
   }
   .prompt-pill-bar input:disabled{opacity:.6;}
+
+  /* --- Empty-state composer: bordered textarea with an overlaid square
+     button, matching the Figma spec exactly (distinct from the pill-shaped
+     refine composer used elsewhere, which stays as-is). --- */
+  .prompt-textarea-field{
+    width:100%; box-sizing:border-box; height:150px; resize:none;
+    border:1px solid var(--border-input); border-radius:4px; background:#fff;
+    padding:8px 44px 8px 8px; font-family:var(--font-sans); font-size:16px;
+    line-height:24px; color:var(--bold);
+  }
+  .prompt-textarea-field::placeholder{color:#7c7c7c;}
+  .prompt-textarea-field:disabled{opacity:.6;}
+  .prompt-textarea-btn{
+    position:absolute; right:8px; bottom:8px; width:auto; height:auto;
+    border-radius:4px; background:var(--brand); padding:8px; border:none; cursor:pointer;
+  }
+  .prompt-textarea-btn:hover{filter:brightness(0.95);}
+  .prompt-textarea-btn:disabled{opacity:.5; cursor:default; background:var(--disabled);}
+  .prompt-textarea-btn .material-symbols-rounded{
+    font-size:24px; color:#fff; display:block;
+  }
 
   .inline-thinking{display:flex; align-items:center; gap:8px; padding:0 4px 14px;}
   .inline-thinking .ts-thinking-label{font-size:14px;}
@@ -979,26 +1000,36 @@
         <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
           <button class="close" id="closePrompt">✕</button>
         </div>
-        <div class="drawer-body" style="flex:1;"></div>
+        <div class="drawer-body" style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+          <div class="ts-stars" style="width:40px; height:36px;">
+            <svg viewBox="0 0 100 100" width="0" height="0" style="position:absolute;">
+              <defs>
+                <linearGradient id="ts-star-empty" x1="8%" y1="0%" x2="92%" y2="100%">
+                  <stop offset="0%" stop-color="#7a3dc4"/>
+                  <stop offset="50%" stop-color="#0d5a84"/>
+                  <stop offset="100%" stop-color="#107eb1"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <svg style="position:absolute; width:24px; height:24px; left:1px; top:7px;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg style="position:absolute; width:14px; height:14px; right:2px; top:0;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg style="position:absolute; width:9px; height:9px; right:0; bottom:1px;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
+          </div>
+          <p style="font-family:var(--font-heading); font-size:20px; font-weight:500; line-height:1.2; color:var(--subtle); text-align:center; margin:0; width:312px; max-width:100%;">Tell us about your book and we'll draft a title, description, and keywords.</p>
+        </div>
         <div class="drawer-sticky-bottom">
-          <div class="prompt-pill-wrap" style="padding-bottom:24px;">
-            <p class="prompt-copy" style="margin:0 0 8px;">Help us get it right. What's your book about?</p>
-            <div class="prompt-pill-bar">
-              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-              <input type="text" id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone">
-              <button class="pill-action-btn" id="continueBtn" type="button" title="Generate" disabled>
-                <span class="material-symbols-rounded">arrow_upward</span>
-              </button>
-            </div>
+          <div class="prompt-pill-wrap" style="padding-bottom:24px; position:relative;">
+            <textarea class="prompt-textarea-field" id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone"></textarea>
+            <button class="prompt-textarea-btn" id="continueBtn" type="button" title="Generate" disabled>
+              <span class="material-symbols-rounded">arrow_upward</span>
+            </button>
           </div>
         </div>
       </div>
 
       <!-- STEP 2: thinking -->
       <div id="stepThinking" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-        <div class="drawer-header">
-          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-          <h3>Optimize listing</h3>
+        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
           <button class="close" id="closeThinking">✕</button>
         </div>
         <div class="think-wrap">
@@ -1031,6 +1062,18 @@
           <button class="close" id="closeResults">✕</button>
         </div>
         <div class="drawer-body">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <button class="link-with-icon" id="previousDraftBtn" type="button" style="display:none; border:none; background:none; padding:0; font-weight:600; font-size:13px; color:var(--bold); cursor:pointer; align-items:center; gap:5px;">
+              <span class="material-symbols-rounded" style="font-size:16px;">history</span> Previous draft
+            </button>
+          </div>
+          <div id="draftSwapConfirm" style="display:none; margin-bottom:14px; padding:12px 14px; border:1px solid var(--brand); border-radius:8px; background:#fff;">
+            <p style="font-size:14px; margin:0 0 10px; color:var(--bold);">Switch drafts? Your edits to the title and description here will be replaced.</p>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button class="btn btn-outline-bold" id="draftSwapCancel" style="padding:6px 16px; font-size:14px; min-width:auto;">Cancel</button>
+              <button class="btn btn-primary" id="draftSwapContinue" style="padding:6px 16px; font-size:14px; min-width:auto;">Switch</button>
+            </div>
+          </div>
           <p class="prompt-copy">Here's what we came up with. Check what you'd like to use.</p>
 
           <div class="suggestion-group">
@@ -1174,8 +1217,17 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     step.classList.remove('hidden');
   }
 
+  let hasGeneratedOnce = false;
+
   document.getElementById('openOptimize').addEventListener('click', ()=>{
-    showStep(stepPrompt);
+    if(hasGeneratedOnce){
+      // A draft (and possibly a previous draft) already exists from earlier
+      // in this session — resume where the seller left off instead of
+      // sending them back through the prompt step.
+      showStep(stepResults);
+    } else {
+      showStep(stepPrompt);
+    }
     openDrawer();
   });
   document.getElementById('closePrompt').addEventListener('click', closeDrawer);
@@ -1206,6 +1258,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       renderAboutSuggestions();
       KEYWORDS.forEach(kw => state.keywordsSelected.add(kw));
       renderChips();
+      markRendered();
+      updatePreviousDraftButton();
+      hasGeneratedOnce = true;
       showStep(stepResults);
     }, 1200);
   });
@@ -1322,7 +1377,63 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   const pillActionIcon = document.getElementById('pillActionIcon');
   const inlineThinking = document.getElementById('inlineThinking');
 
+  // --- Previous draft: two-slot swap (current <-> previous), not a growing
+  // history. Keywords is intentionally untouched by this — it already has
+  // its own independent selection lifecycle elsewhere in the file.
+  let previousDraft = null;
+  let lastRenderedTitle = '';
+  let lastRenderedAbout = '';
+  const previousDraftBtn = document.getElementById('previousDraftBtn');
+  const draftSwapConfirm = document.getElementById('draftSwapConfirm');
+
+  function currentDraftValues(){
+    const titleInput = document.getElementById('titleSuggestionInput');
+    const aboutInput = document.getElementById('aboutSuggestionInput');
+    return {
+      title: titleInput ? titleInput.value : '',
+      about: aboutInput ? aboutInput.value : ''
+    };
+  }
+  function markRendered(){
+    const v = currentDraftValues();
+    lastRenderedTitle = v.title;
+    lastRenderedAbout = v.about;
+  }
+  function hasUnsavedEdits(){
+    const v = currentDraftValues();
+    return v.title !== lastRenderedTitle || v.about !== lastRenderedAbout;
+  }
+  function updatePreviousDraftButton(){
+    previousDraftBtn.style.display = previousDraft ? 'inline-flex' : 'none';
+  }
+  function doDraftSwap(){
+    const current = currentDraftValues();
+    const titleInput = document.getElementById('titleSuggestionInput');
+    const aboutInput = document.getElementById('aboutSuggestionInput');
+    titleInput.value = previousDraft.title;
+    aboutInput.value = previousDraft.about;
+    const countEl = aboutInput.closest('.suggestion-card-body').querySelector('.suggestion-count');
+    if(countEl) countEl.textContent = aboutInput.value.length + '/1466';
+    previousDraft = current; // whichever was showing becomes the new "previous"
+    markRendered();
+  }
+  previousDraftBtn.addEventListener('click', ()=>{
+    if(!previousDraft) return;
+    if(hasUnsavedEdits()) draftSwapConfirm.style.display = 'block';
+    else doDraftSwap();
+  });
+  document.getElementById('draftSwapCancel').addEventListener('click', ()=>{
+    draftSwapConfirm.style.display = 'none';
+  });
+  document.getElementById('draftSwapContinue').addEventListener('click', ()=>{
+    draftSwapConfirm.style.display = 'none';
+    doDraftSwap();
+  });
+
   function resetAndRerenderSuggestions(){
+    // Snapshot the draft that's about to be replaced so the seller can swap
+    // back to it, before regenerating overwrites it.
+    previousDraft = currentDraftValues();
     state.titleChecked = true;
     state.aboutChecked = true;
     state.titleSelectedIndex = 0;
@@ -1330,6 +1441,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     renderTitleSuggestions();
     renderAboutSuggestions();
     refinePromptInput.value = '';
+    markRendered();
+    updatePreviousDraftButton();
+    draftSwapConfirm.style.display = 'none';
   }
 
   function regenerate(){
@@ -1700,6 +1814,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       document.getElementById('keywordsField').closest('.field-body').classList.add('flash');
     }
     closeDrawer();
+
+    // Apply is the natural endpoint of this session — the current/previous
+    // draft comparison no longer means anything once a decision's been made,
+    // so the next "Optimize listing" open should start fresh.
+    if(phase === '1'){
+      previousDraft = null;
+      hasGeneratedOnce = false;
+      previousDraftBtn.style.display = 'none';
+      draftSwapConfirm.style.display = 'none';
+    }
   });
 
   let mainKeywords = [];
