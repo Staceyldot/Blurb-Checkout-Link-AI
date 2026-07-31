@@ -729,6 +729,13 @@
           <button class="btn btn-outline-bold" id="bulkPromptCancel">Cancel</button>
           <button class="btn btn-disabled" id="bulkPromptSubmit" disabled>Generate</button>
         </div>
+        <div id="bulkRegenConfirm" style="display:none; margin-top:12px; padding:12px 14px; border:1px solid var(--border-subtle); border-radius:8px; background:#fff;">
+          <p style="margin:0 0 10px; font-size:14px; color:var(--bold);">This will replace your current draft. Continue?</p>
+          <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button class="btn btn-outline-bold" id="bulkRegenCancel" style="padding:6px 16px; font-size:14px; min-width:auto;">Cancel</button>
+            <button class="btn btn-primary" id="bulkRegenContinue" style="padding:6px 16px; font-size:14px; min-width:auto;">Continue</button>
+          </div>
+        </div>
         <p class="hint" style="margin:12px 0 0; text-align:right;">Fills every empty field below at once. Each one stays editable and can be redrafted on its own.</p>
       </div>
 
@@ -1380,7 +1387,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       insert(){ inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); },
       tryAgain(){ idx = (idx + 1) % variants.length; textEl.textContent = variants[idx]; },
       dismiss(){ popover.classList.remove('open'); },
-      generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } }
+      generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } },
+      regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); }
     };
   }
   const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
@@ -1422,7 +1430,10 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       inputEl.value = variants[idx];
       if(countUpdateFn) countUpdateFn();
     });
-    return { generateIfEmpty(){ if(isFieldEmpty(inputEl)) draft(); } };
+    return {
+      generateIfEmpty(){ if(isFieldEmpty(inputEl)) draft(); },
+      regenerate(){ idx = (idx + 1) % variants.length; draft(); }
+    };
   }
   const titleD = wireInlineD('titleDraftLinkD','titleAttrD','titleRedraftD', document.getElementById('listingTitle'), titleVariants,
     ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40');
@@ -1538,13 +1549,25 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   const bulkPromptBox = document.getElementById('bulkPromptBox');
   const bulkPromptInput = document.getElementById('bulkPromptInput');
   const bulkPromptSubmit = document.getElementById('bulkPromptSubmit');
+  const bulkRegenConfirm = document.getElementById('bulkRegenConfirm');
+
+  function isBulkDraftFull(){
+    return !isFieldEmpty(document.getElementById('listingTitle'))
+      && !isFieldEmpty(document.getElementById('aboutBook'))
+      && mainKeywords.length >= 7;
+  }
+  function updateBulkPromptSubmitLabel(){
+    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : 'Generate';
+  }
 
   document.getElementById('bulkGenerate').addEventListener('click', ()=>{
     bulkPromptBox.style.display = 'block';
+    updateBulkPromptSubmitLabel();
     bulkPromptInput.focus();
   });
   document.getElementById('bulkPromptCancel').addEventListener('click', ()=>{
     bulkPromptBox.style.display = 'none';
+    bulkRegenConfirm.style.display = 'none';
   });
   bulkPromptInput.addEventListener('input', ()=>{
     const has = bulkPromptInput.value.trim().length > 0;
@@ -1557,9 +1580,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       bulkPromptInput.dispatchEvent(new Event('input'));
     }
   });
-  bulkPromptSubmit.addEventListener('click', ()=>{
+  function runBulkFill(regenerate){
     const mode = drawer.dataset.phase;
-    if(mode === '2'){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
+    if(regenerate){
+      if(mode === '2'){ titleA.regenerate(); aboutA.regenerate(); }
+      else { titleD.regenerate(); aboutD.regenerate(); }
+    } else if(mode === '2'){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
     else { titleD.generateIfEmpty(); aboutD.generateIfEmpty(); }
     KEYWORDS.forEach(kw=>{
       if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
@@ -1568,14 +1594,27 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
     updateClarityLinkVisibility();
     updateBulkGenerateState();
+  }
+  bulkPromptSubmit.addEventListener('click', ()=>{
+    if(isBulkDraftFull()){
+      // Fields already carry an AI-drafted title/description — never overwrite
+      // silently on a prompt edit, so confirm inline before replacing them.
+      bulkRegenConfirm.style.display = 'block';
+      return;
+    }
+    runBulkFill(false);
+  });
+  document.getElementById('bulkRegenCancel').addEventListener('click', ()=>{
+    bulkRegenConfirm.style.display = 'none';
+  });
+  document.getElementById('bulkRegenContinue').addEventListener('click', ()=>{
+    bulkRegenConfirm.style.display = 'none';
+    runBulkFill(true);
   });
   function updateBulkGenerateState(){
-    const allFull = !isFieldEmpty(document.getElementById('listingTitle'))
-      && !isFieldEmpty(document.getElementById('aboutBook'))
-      && mainKeywords.length >= 7;
     const btn = document.getElementById('bulkGenerate');
-    btn.disabled = allFull;
-    btn.className = 'btn mode-a-d ' + (allFull ? 'btn-disabled' : 'btn-outline-ai') + (drawer.dataset.phase==='2'||drawer.dataset.phase==='3' ? '' : ' hidden-mode');
+    btn.className = 'btn mode-a-d btn-outline-ai' + (drawer.dataset.phase==='2'||drawer.dataset.phase==='3' ? '' : ' hidden-mode');
+    updateBulkPromptSubmitLabel();
   }
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
@@ -1602,7 +1641,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateClarityLinkVisibility();
 
     if(!isPanelMode && drawer.classList.contains('open')) closeDrawer();
-    if(!(isA || isD)) bulkPromptBox.style.display = 'none';
+    if(!(isA || isD)){ bulkPromptBox.style.display = 'none'; bulkRegenConfirm.style.display = 'none'; }
     updatePillIcon();
     if(document.getElementById('titleCards').children.length){
       renderTitleSuggestions();
