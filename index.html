@@ -631,6 +631,20 @@
   .mode-1-2-3, .mode-a-d{}
   .hidden-mode{display:none !important;}
 
+  /* --- Iteration 3: "Let AI help you" expands the bulk prompt box as an
+     accordion instead of iteration 2's instant show/hide. Base look lives
+     in .bulk-prompt-box so it still applies once the box is a plain block
+     (iteration 2); the accordion states below override margin/padding/
+     max-height only while the accordion class is present (iteration 3). */
+  .bulk-prompt-box{margin:-8px 0 20px; padding:16px;}
+  #bulkPromptBox.bulk-accordion{
+    overflow:hidden; max-height:0; opacity:0; margin:0; padding:0 16px;
+    transition:max-height .3s ease, opacity .25s ease, margin .3s ease, padding .3s ease;
+  }
+  #bulkPromptBox.bulk-accordion.open{
+    max-height:600px; opacity:1; margin:-8px 0 20px; padding:16px;
+  }
+
   .flash{
     animation:flashbg 1.4s ease;
   }
@@ -744,7 +758,7 @@
           Let AI help you
         </button>
       </div>
-      <div class="mode-a-d hidden-mode" id="bulkPromptBox" style="display:none; margin:-8px 0 20px; padding:16px; border:none; border-radius:4px; background:#F3F0FD;">
+      <div class="mode-a-d hidden-mode bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
         <p class="prompt-copy" style="margin:0 0 8px;">Help us get it right. What's your book about?</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
         <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
@@ -1677,14 +1691,34 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : 'Generate';
   }
 
-  document.getElementById('bulkGenerate').addEventListener('click', ()=>{
+  // Iteration 3: expand the box as an accordion (animated height) instead
+  // of the instant show/hide iteration 2 uses.
+  function openBulkAccordion(){
+    bulkPromptBox.classList.add('bulk-accordion');
     bulkPromptBox.style.display = 'block';
+    void bulkPromptBox.offsetHeight; // force reflow so .open transitions instead of jumping
+    bulkPromptBox.classList.add('open');
+  }
+  function closeBulkAccordion(){
+    bulkPromptBox.classList.remove('open');
+    bulkPromptBox.addEventListener('transitionend', function handler(e){
+      if(e.propertyName !== 'max-height') return;
+      bulkPromptBox.style.display = 'none';
+      bulkPromptBox.classList.remove('bulk-accordion');
+      bulkPromptBox.removeEventListener('transitionend', handler);
+    });
+  }
+
+  document.getElementById('bulkGenerate').addEventListener('click', ()=>{
     updateBulkPromptSubmitLabel();
+    if(drawer.dataset.phase === '3') openBulkAccordion();
+    else bulkPromptBox.style.display = 'block';
     bulkPromptInput.focus();
   });
   document.getElementById('bulkPromptCancel').addEventListener('click', ()=>{
-    bulkPromptBox.style.display = 'none';
     bulkRegenConfirm.style.display = 'none';
+    if(drawer.dataset.phase === '3') closeBulkAccordion();
+    else bulkPromptBox.style.display = 'none';
   });
   bulkPromptInput.addEventListener('input', ()=>{
     const has = bulkPromptInput.value.trim().length > 0;
@@ -1758,7 +1792,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateClarityLinkVisibility();
 
     if(!isPanelMode && drawer.classList.contains('open')) closeDrawer();
-    if(!(isA || isD)){ bulkPromptBox.style.display = 'none'; bulkRegenConfirm.style.display = 'none'; }
+    // Switching iterations always closes the bulk prompt box fresh, so no
+    // open/accordion state leaks from one iteration into another.
+    bulkPromptBox.style.display = 'none';
+    bulkPromptBox.classList.remove('bulk-accordion', 'open');
+    bulkRegenConfirm.style.display = 'none';
     updatePillIcon();
     if(document.getElementById('titleCards').children.length){
       renderTitleSuggestions();
