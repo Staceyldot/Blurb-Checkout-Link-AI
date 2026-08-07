@@ -1119,6 +1119,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const has = bulkPromptInput.value.trim().length > 0;
     bulkPromptSubmit.disabled = !has;
     bulkPromptSubmit.className = has ? 'btn btn-primary' : 'btn btn-disabled';
+    updateInlineSparkleVisibility();
   });
   bulkPromptInput.addEventListener('click', ()=>{
     if(bulkPromptInput.value.trim().length === 0){
@@ -1133,11 +1134,17 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       else { titleD.regenerate(); aboutD.regenerate(); }
     } else if(mode === '241'){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
     else { titleD.generateIfEmpty(); aboutD.generateIfEmpty(); }
-    KEYWORDS.forEach(kw=>{
-      if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
-    });
-    renderMainKeywords();
-    if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
+    if(mode === '241'){
+      // 241: surface keywords as suggestions (dashed outline, +) instead of
+      // auto-adding them, so the seller picks which ones to keep.
+      renderKwSuggestChips();
+    } else {
+      KEYWORDS.forEach(kw=>{
+        if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
+      });
+      renderMainKeywords();
+      if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
+    }
     updateClarityLinkVisibility();
     updateBulkGenerateState();
   }
@@ -1164,6 +1171,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
 
+  // 241: the per-field sparkle only makes sense once the seller has told the
+  // "Let AI help you" prompt box something about the book, so it stays hidden
+  // until that box has content.
+  function updateInlineSparkleVisibility(){
+    const hide = currentMode !== '241' || bulkPromptInput.value.trim().length === 0;
+    document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', hide);
+    document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
+  }
+
   // --- Mode switching across 241/242 ---
   function applyDemoMode(){
     const val = demoPhaseSelect.value;
@@ -1189,6 +1205,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
     updateBulkGenerateState();
+    updateInlineSparkleVisibility();
   }
   demoPhaseSelect.addEventListener('change', applyDemoMode);
   applyDemoMode();
