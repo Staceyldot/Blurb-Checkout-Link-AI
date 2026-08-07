@@ -49,8 +49,6 @@
     --gray-subtler:#f7f7f7;
     --ai-purple:#7a3dc4;
     --ai-mid:#0d5a84;
-    --panel-width:360px;
-    --footer-bar-right:0px;
     --font-sans: "Proxima Nova", "Jost", Arial, sans-serif;
     --font-heading: "Futura PT", "Mulish", Georgia, sans-serif;
     --font-mono: "Roboto Mono", "Courier New", monospace;
@@ -405,9 +403,8 @@
   .link-with-icon .material-symbols-rounded{font-size:20px; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
 
   .footer-bar{
-    position:fixed; bottom:0; left:0; right:var(--footer-bar-right, 0px); z-index:10;
+    position:fixed; bottom:0; left:0; right:0; z-index:10;
     background:#fff; border-top:1px solid var(--border-subtle);
-    transition:right .22s ease;
   }
   .footer-bar-inner{
     display:flex; align-items:center; justify-content:space-between;
@@ -417,123 +414,6 @@
   .footer-bar .actions{display:flex; gap:8px; align-items:center;}
   .footer-bar a.preview-link{color:var(--disabled); font-weight:600; font-size:16px; margin-right:8px;}
 
-  /* --- Optimize listing side panel ---
-     Sits as a flex sibling of the sidenav/page (not a fixed overlay), so opening it
-     pushes/shrinks the main content instead of floating on top of it. It stretches to
-     match the row's full height (like the sidenav) rather than capping at 100vh, since
-     capping at 100vh made its bottom render off-screen until the page was scrolled past
-     the panel's own natural offset below the demo banner/topnav. */
-  .drawer{
-    flex-shrink:0;
-    width:0; overflow:hidden;
-    background:#F6F6F6; border-left:0 solid var(--border-subtle);
-    transition:width .22s ease, border-left-width .22s ease;
-  }
-  .drawer.open{width:var(--panel-width); border-left-width:1px;}
-  .drawer-inner{
-    width:var(--panel-width); height:100%; display:flex; flex-direction:column;
-  }
-  .drawer-header{
-    display:flex; align-items:center; gap:10px; padding:24px 32px;
-    border-bottom:1px solid var(--border-subtle); flex-shrink:0;
-  }
-  .drawer-header h3{
-    font-family:var(--font-heading); font-size:20px; margin:0; flex:1;
-  }
-  .close{
-    cursor:pointer; border:none; background:none; font-size:20px; color:var(--subtle); line-height:1;
-    padding:4px;
-  }
-  .drawer-body{
-    padding:24px 32px; flex:1; min-height:0; display:flex; flex-direction:column; gap:20px;
-  }
-  /* Pins the panel's own action row (Cancel/Apply, plus the pill bar in Results) to the
-     bottom of the viewport as the page scrolls, mirroring .footer-bar's own stickiness. */
-  .drawer-sticky-bottom{
-    position:sticky; bottom:0; background:#F6F6F6; flex-shrink:0;
-  }
-  .drawer-footer{
-    border-top:1px solid var(--border-subtle); padding:16px 32px; flex-shrink:0;
-  }
-  .drawer-footer .row{display:flex; gap:8px; justify-content:flex-end;}
-  .drawer-footer .disclaimer{
-    font-size:12px; color:var(--subtle); text-align:right; margin-top:8px;
-  }
-
-  .prompt-copy{font-size:16px; line-height:1.4; margin:0;}
-
-  .suggestion-group{display:flex; flex-direction:column; gap:8px;}
-  .suggestion-group label{font-size:16px; font-weight:600; display:block;}
-  .suggestion-cards{display:flex; flex-direction:column; gap:10px;}
-  .suggestion-card{
-    display:flex; gap:10px; align-items:flex-start; cursor:pointer;
-    border:1px solid var(--border-subtle); border-radius:8px; padding:16px;
-  }
-  .suggestion-card:hover{background:var(--gray-subtler);}
-  .suggestion-card-body{flex:1; min-width:0;}
-  .suggestion-field{
-    border:1px solid var(--border-input); border-radius:4px; padding:10px 12px; font-size:16px;
-    line-height:1.4; background:#fff; width:100%;
-  }
-  .suggestion-card.selectable .radio-icon{
-    font-size:22px; color:var(--border-input); flex-shrink:0; margin-top:1px;
-  }
-  .suggestion-card.selectable.selected{
-    border-color:var(--brand); border-width:2px; padding:15px;
-  }
-  .suggestion-card.selectable.selected .radio-icon{color:var(--brand);}
-
-  .prompt-pill-wrap{padding:16px 32px 0; flex-shrink:0;}
-  .prompt-pill-bar{
-    display:flex; align-items:center; gap:10px;
-    border:1px solid var(--border-input); border-radius:100px;
-    padding:8px 8px 8px 18px;
-    background:#fff;
-  }
-  .prompt-pill-bar input{
-    flex:1; min-width:0; border:none; outline:none; background:transparent;
-    font-family:var(--font-sans); font-size:15px; color:var(--bold); padding:6px 0;
-  }
-  .pill-action-btn{
-    flex-shrink:0; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
-    background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .pill-action-btn:hover{filter:brightness(0.95);}
-  .pill-action-btn:disabled{opacity:.5; cursor:default;}
-  .pill-action-btn .material-symbols-rounded{
-    font-size:20px; color:#fff; font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
-  }
-  .prompt-pill-bar input:disabled{opacity:.6;}
-
-  /* --- Empty-state composer: bordered textarea with an overlaid square
-     button, matching the Figma spec exactly (distinct from the pill-shaped
-     refine composer used elsewhere, which stays as-is). --- */
-  .prompt-textarea-field{
-    width:100%; box-sizing:border-box; height:150px; resize:none;
-    border:1px solid var(--border-input); border-radius:4px; background:#f6f6f6;
-    padding:8px 44px 8px 8px; font-family:var(--font-sans); font-size:16px;
-    line-height:24px; color:var(--bold);
-  }
-  .prompt-textarea-field::placeholder{color:#7c7c7c;}
-  .prompt-textarea-field:disabled{opacity:.6;}
-  .prompt-textarea-btn{
-    position:absolute; right:8px; bottom:8px; width:auto; height:auto;
-    border-radius:4px; padding:8px; border:none; cursor:pointer;
-    background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
-  }
-  .prompt-textarea-btn:hover{filter:brightness(0.95);}
-  .prompt-textarea-btn:disabled{opacity:.5; cursor:default; background:var(--disabled);}
-  .prompt-textarea-btn .material-symbols-rounded{
-    font-size:24px; color:#fff; display:block;
-  }
-
-  .inline-thinking{display:flex; align-items:center; gap:8px; padding:0 4px 14px;}
-  .inline-thinking .ts-thinking-label{font-size:14px;}
-
-  .kw-label-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
-  .kw-label-row label{font-size:16px; font-weight:600;}
-  .kw-count{font-size:13px; color:var(--subtle);}
   .chip-group{display:flex; flex-wrap:wrap; gap:8px;}
   .chip{
     display:inline-flex; align-items:center; gap:6px; border-radius:100px; padding:5px 6px 5px 12px;
@@ -556,33 +436,6 @@
     border-radius:50%; cursor:pointer; font-size:14px; line-height:1;
   }
   .chip-main .icon:hover{background:var(--gray-subtler);}
-
-  /* Thinking state — Codex "Thinking States" doc, variant 1a */
-  .think-wrap{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:28px; padding:64px 0; flex:1;
-  }
-  .ts-stars{position:relative; width:96px; height:88px;}
-  .ts-stars svg{position:absolute; overflow:visible; transform-origin:center;}
-  .ts-star-1{width:58px; height:58px; left:2px; top:16px; animation:ts-appear1 3.6s ease-in-out infinite 0s;}
-  .ts-star-2{width:34px; height:34px; right:6px; top:0; animation:ts-appear1 3.6s ease-in-out infinite 1.2s;}
-  .ts-star-3{width:22px; height:22px; right:0; bottom:4px; animation:ts-appear1 3.6s ease-in-out infinite 2.4s;}
-  @keyframes ts-appear1{
-    0%{opacity:0; transform:scale(0.3);}
-    8%{opacity:1; transform:scale(1.1);}
-    14%,33%{opacity:1; transform:scale(1);}
-    41%,100%{opacity:0; transform:scale(0.3);}
-  }
-  .ts-thinking-label{
-    display:flex; align-items:baseline; gap:2px; font-size:16px; font-weight:500; color:var(--bold);
-  }
-  .ts-thinking-label span.dot{animation:ts-dots 1.4s infinite 0s;}
-  .ts-thinking-label span.dot:nth-child(3){animation-delay:.2s;}
-  .ts-thinking-label span.dot:nth-child(4){animation-delay:.4s;}
-  @keyframes ts-dots{
-    0%,20%{opacity:0;}
-    50%,100%{opacity:1;}
-  }
 
   /* --- Iteration A / D: inline, ambient AI per field ---
      No side panel. The sparkle/draft-link lives directly on the field itself. */
@@ -628,14 +481,14 @@
   .kw-suggest-btn .material-symbols-rounded{font-size:16px;}
   .kw-suggest-row{display:flex; align-items:center; flex-wrap:wrap;}
 
-  .mode-1-2-3, .mode-a-d{}
+  .mode-a-d{}
   .hidden-mode{display:none !important;}
 
-  /* --- Iteration 3: "Let AI help you" expands the bulk prompt box as an
-     accordion instead of iteration 2's instant show/hide. Base look lives
+  /* --- 242: "Let AI help you" expands the bulk prompt box as an
+     accordion instead of 241's instant show/hide. Base look lives
      in .bulk-prompt-box so it still applies once the box is a plain block
-     (iteration 2); the accordion states below override margin/padding/
-     max-height only while the accordion class is present (iteration 3). */
+     (241); the accordion states below override margin/padding/
+     max-height only while the accordion class is present (242). */
   .bulk-prompt-box{margin:-8px 0 20px; padding:16px;}
   #bulkPromptBox.bulk-accordion{
     overflow:hidden; max-height:0; opacity:0; margin:0; padding:0 16px;
@@ -649,7 +502,7 @@
     animation:flashbg 1.4s ease;
   }
 
-  /* --- Iteration 2 (Grammarly-style flag layer): rule-based flagging (no AI
+  /* --- 241 (Grammarly-style flag layer): rule-based flagging (no AI
      call) finds one weak sentence; clicking triggers a single AI rewrite
      call scoped to just that sentence. */
   .about-rich{
@@ -669,7 +522,7 @@
   .flag-popover p.suggestion{font-size:14px; margin:0 0 8px; color:var(--bold);}
   .flag-popover .row{display:flex; gap:6px;}
 
-  /* --- Iteration 3 (Hemingway-style highlight layer): whole passage
+  /* --- 242 (Hemingway-style highlight layer): whole passage
      color-coded by sentence length; one button rewrites only the flagged
      sentences. */
   .hl-clear{background:rgba(46,125,50,0.10); border-radius:3px;}
@@ -689,8 +542,6 @@
     0%{background:#eaf6fc;}
     100%{background:transparent;}
   }
-
-  .hidden{display:none !important;}
 </style>
 </head>
 <body>
@@ -701,9 +552,8 @@
     <label for="demoPhase">Iteration</label>
     <div class="select-wrap">
       <select id="demoPhase">
-        <option value="1" selected>Iteration 1</option>
-        <option value="2">Iteration 2</option>
-        <option value="3">Iteration 3</option>
+        <option value="241" selected>241</option>
+        <option value="242">242</option>
       </select>
       <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
     </div>
@@ -749,10 +599,6 @@
     <div class="section no-divider">
       <div class="section-header">
         <h2>Listing content</h2>
-        <button class="btn btn-outline-ai mode-1-2-3" id="openOptimize">
-          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-          Optimize listing
-        </button>
         <button class="btn btn-outline-ai mode-a-d hidden-mode" id="bulkGenerate">
           <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
           Let AI help you
@@ -821,7 +667,7 @@
           </div>
           <div class="count" id="aboutCount">0/1466</div>
 
-          <!-- Iteration 2 (Grammarly-style flag layer): rule-based check flags one
+          <!-- 241 (Grammarly-style flag layer): rule-based check flags one
                weak sentence; clicking the sparkle icon on non-empty text opens this
                instead of the full-draft popover. One AI call rewrites just it. -->
           <div class="flag-popover" id="grammarlyFlagPopover">
@@ -852,7 +698,7 @@
             <button id="aboutRedraftD">Draft again</button>
           </div>
 
-          <!-- Iteration 3 (Hemingway-style highlight layer): rule-based check
+          <!-- 242 (Hemingway-style highlight layer): rule-based check
                color-codes the whole passage; one button rewrites only the
                flagged sentences. -->
           <button class="clarity-check-link mode-5 hidden-mode" id="clarityCheckLink" type="button">
@@ -1006,139 +852,6 @@
   </div>
   </div>
 
-  <!-- Optimize listing side panel: flex sibling of sidenav/page, not an overlay -->
-  <div class="drawer" id="drawer" data-phase="1">
-    <div class="drawer-inner">
-
-      <!-- STEP 1: prompt -->
-      <div id="stepPrompt" class="drawer-body-wrap" style="display:flex; flex-direction:column; flex:1; min-height:0; background:#e7e7e7;">
-        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
-          <button class="close" id="closePrompt">✕</button>
-        </div>
-        <div class="drawer-body" style="flex:1; display:flex; flex-direction:column; align-items:center; padding-top:64px; gap:16px;">
-          <div class="ts-stars" style="width:40px; height:36px;">
-            <svg viewBox="0 0 100 100" width="0" height="0" style="position:absolute;">
-              <defs>
-                <linearGradient id="ts-star-empty" x1="8%" y1="0%" x2="92%" y2="100%">
-                  <stop offset="0%" stop-color="#7a3dc4"/>
-                  <stop offset="50%" stop-color="#0d5a84"/>
-                  <stop offset="100%" stop-color="#107eb1"/>
-                </linearGradient>
-              </defs>
-            </svg>
-            <svg style="position:absolute; width:24px; height:24px; left:1px; top:7px;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
-            <svg style="position:absolute; width:14px; height:14px; right:2px; top:0;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
-            <svg style="position:absolute; width:9px; height:9px; right:0; bottom:1px;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
-          </div>
-          <p style="font-family:var(--font-heading); font-size:20px; font-weight:500; line-height:1.2; color:var(--subtle); text-align:center; margin:0; width:312px; max-width:100%;">Tell us about your book and we'll draft a title, description, and keywords.</p>
-        </div>
-        <div class="drawer-sticky-bottom" style="background:#e7e7e7;">
-          <div class="prompt-pill-wrap" style="padding-bottom:24px;">
-            <div style="position:relative;">
-              <textarea class="prompt-textarea-field" id="promptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone"></textarea>
-              <button class="prompt-textarea-btn" id="continueBtn" type="button" title="Generate" disabled>
-                <span class="material-symbols-rounded">arrow_upward</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 2: thinking -->
-      <div id="stepThinking" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
-          <button class="close" id="closeThinking">✕</button>
-        </div>
-        <div class="think-wrap">
-          <div class="ts-stars">
-            <svg viewBox="0 0 100 100" width="0" height="0" style="position:absolute;">
-              <defs>
-                <linearGradient id="ts-star-a" x1="8%" y1="0%" x2="92%" y2="100%">
-                  <stop offset="0%" stop-color="#7a3dc4"/>
-                  <stop offset="50%" stop-color="#0d5a84"/>
-                  <stop offset="100%" stop-color="#107eb1"/>
-                </linearGradient>
-              </defs>
-            </svg>
-            <svg class="ts-star-1" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
-            <svg class="ts-star-2" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
-            <svg class="ts-star-3" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="ts-thinking-label">
-            <span>Thinking</span>
-            <span class="dot">.</span>
-            <span class="dot">.</span>
-            <span class="dot">.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- STEP 3: results -->
-      <div id="stepResults" class="hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
-        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
-          <button class="close" id="closeResults">✕</button>
-        </div>
-        <div class="drawer-body">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-            <button class="link-with-icon" id="previousDraftBtn" type="button" style="display:none; border:none; background:none; padding:0; font-weight:600; font-size:13px; color:var(--bold); cursor:pointer; align-items:center; gap:5px;">
-              <span class="material-symbols-rounded" style="font-size:16px;">history</span> Previous draft
-            </button>
-          </div>
-          <div id="draftSwapConfirm" style="display:none; margin-bottom:14px; padding:12px 14px; border:1px solid var(--brand); border-radius:8px; background:#fff;">
-            <p style="font-size:14px; margin:0 0 10px; color:var(--bold);">Switch drafts? Your edits to the title and description here will be replaced.</p>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button class="btn btn-outline-bold" id="draftSwapCancel" style="padding:6px 16px; font-size:14px; min-width:auto;">Cancel</button>
-              <button class="btn btn-primary" id="draftSwapContinue" style="padding:6px 16px; font-size:14px; min-width:auto;">Switch</button>
-            </div>
-          </div>
-          <p class="prompt-copy">Here's what we came up with. Check what you'd like to use.</p>
-
-          <div class="suggestion-group">
-            <label>Listing title</label>
-            <div class="suggestion-cards" id="titleCards"></div>
-          </div>
-
-          <div class="suggestion-group">
-            <label>About the book</label>
-            <div class="suggestion-cards" id="aboutCards"></div>
-          </div>
-
-          <div>
-            <div class="kw-label-row">
-              <label>Keywords</label>
-              <span class="kw-count" id="kwCount"></span>
-            </div>
-            <div class="chip-group" id="chipGroup"></div>
-          </div>
-        </div>
-        <div class="drawer-sticky-bottom">
-          <div class="prompt-pill-wrap">
-            <div class="inline-thinking hidden" id="inlineThinking">
-              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-              <span class="ts-thinking-label"><span>Thinking</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span>
-            </div>
-            <div class="prompt-pill-bar">
-              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-              <input type="text" id="refinePromptInput" placeholder="Try something different...">
-              <button class="pill-action-btn" id="pillActionBtn" type="button" title="Regenerate">
-                <span class="material-symbols-rounded" id="pillActionIcon">refresh</span>
-              </button>
-            </div>
-          </div>
-          <div class="drawer-footer">
-            <div class="row">
-              <button class="btn btn-outline-bold" id="cancelResults">Cancel</button>
-              <button class="btn btn-primary" id="applyBtn">Apply selected</button>
-            </div>
-            <div class="disclaimer">Suggestions generated with AI. Review before applying.</div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
 <div class="footer-bar">
   <div class="footer-bar-inner">
     <div class="status">You have no unsaved changes</div>
@@ -1175,326 +888,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       "Perfect for gifting: a warm, funny story about second chances and happy endings."
     ]
   };
-  const state = {
-    titleChecked:false,
-    aboutChecked:false,
-    titleSelectedIndex:0,
-    aboutSelectedIndex:0,
-    keywordsSelected:new Set()
-  };
-
-  const drawer = document.getElementById('drawer');
-  const stepPrompt = document.getElementById('stepPrompt');
-  const stepThinking = document.getElementById('stepThinking');
-  const stepResults = document.getElementById('stepResults');
-  const promptInput = document.getElementById('promptInput');
-  const continueBtn = document.getElementById('continueBtn');
+  let currentMode = null;
   const demoPhaseSelect = document.getElementById('demoPhase');
-
-  const rootEl = document.documentElement;
-  function updateFooterBarOffset(){
-    if(!document.body.classList.contains('panel-open')){
-      rootEl.style.setProperty('--footer-bar-right', '0px');
-      return;
-    }
-    const panelWidth = parseFloat(getComputedStyle(rootEl).getPropertyValue('--panel-width')) || 0;
-    const shellRight = document.querySelector('.app-shell').getBoundingClientRect().right;
-    const viewportGap = window.innerWidth - shellRight;
-    rootEl.style.setProperty('--footer-bar-right', (viewportGap + panelWidth) + 'px');
-  }
-  window.addEventListener('resize', updateFooterBarOffset);
-
-  // overflow:hidden clips the width transition (so the panel looks like it slides
-  // into view), but left on permanently it would also trap position:sticky
-  // descendants (like .drawer-sticky-bottom) into sticking relative to the drawer
-  // itself instead of the viewport. So it's only held during the transition, then
-  // released once fully open.
-  drawer.addEventListener('transitionend', (e)=>{
-    if(e.propertyName === 'width' && drawer.classList.contains('open')){
-      drawer.style.overflow = 'visible';
-    }
-  });
-
-  function openDrawer(){
-    drawer.style.overflow = 'hidden';
-    drawer.classList.add('open');
-    document.body.classList.add('panel-open');
-    updateFooterBarOffset();
-  }
-  function closeDrawer(){
-    drawer.style.overflow = 'hidden';
-    drawer.classList.remove('open');
-    document.body.classList.remove('panel-open');
-    updateFooterBarOffset();
-  }
-  function showStep(step){
-    stepPrompt.classList.add('hidden');
-    stepThinking.classList.add('hidden');
-    stepResults.classList.add('hidden');
-    step.classList.remove('hidden');
-  }
-
-  let hasGeneratedOnce = false;
-
-  document.getElementById('openOptimize').addEventListener('click', ()=>{
-    if(hasGeneratedOnce){
-      // A draft (and possibly a previous draft) already exists from earlier
-      // in this session — resume where the seller left off instead of
-      // sending them back through the prompt step.
-      showStep(stepResults);
-    } else {
-      showStep(stepPrompt);
-    }
-    openDrawer();
-  });
-  document.getElementById('closePrompt').addEventListener('click', closeDrawer);
-  document.getElementById('closeThinking').addEventListener('click', closeDrawer);
-  document.getElementById('closeResults').addEventListener('click', closeDrawer);
-  document.getElementById('cancelResults').addEventListener('click', closeDrawer);
-
-  promptInput.addEventListener('input', ()=>{
-    continueBtn.disabled = promptInput.value.trim().length === 0;
-  });
-
-  promptInput.addEventListener('click', ()=>{
-    if(promptInput.value.trim().length === 0){
-      promptInput.value = "It's a modern rom-com retelling of Pride and Prejudice. Witty, a little chaotic, second-chance romance vibes. Great gift for anyone who loves a slow burn with banter";
-      promptInput.dispatchEvent(new Event('input'));
-    }
-  });
-
-  continueBtn.addEventListener('click', ()=>{
-    if(continueBtn.disabled) return;
-    showStep(stepThinking);
-    setTimeout(()=>{
-      state.titleChecked = true;
-      state.aboutChecked = true;
-      state.titleSelectedIndex = 0;
-      state.aboutSelectedIndex = 0;
-      renderTitleSuggestions();
-      renderAboutSuggestions();
-      KEYWORDS.forEach(kw => state.keywordsSelected.add(kw));
-      renderChips();
-      markRendered();
-      updatePreviousDraftButton();
-      hasGeneratedOnce = true;
-      showStep(stepResults);
-    }, 1200);
-  });
-
-  function buildCheckboxCard(field, text, checkboxId, inputId, isTextarea){
-    const card = document.createElement('div');
-    card.className = 'suggestion-card selectable';
-    card.innerHTML = isTextarea
-      ? `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
-         <div class="suggestion-card-body">
-           <textarea class="suggestion-field" id="${inputId}" style="height:220px;"></textarea>
-           <div class="hint suggestion-count" style="text-align:right; margin-top:8px;"></div>
-         </div>`
-      : `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
-         <div class="suggestion-card-body">
-           <input type="text" class="suggestion-field" id="${inputId}">
-         </div>`;
-    const fieldEl = card.querySelector('.suggestion-field');
-    fieldEl.value = text;
-    const icon = card.querySelector(`#${checkboxId}`);
-    const checkedKey = field === 'title' ? 'titleChecked' : 'aboutChecked';
-    const applyCheckedState = ()=>{
-      const checked = state[checkedKey];
-      card.classList.toggle('selected', checked);
-      icon.textContent = checked ? 'check_circle' : 'radio_button_unchecked';
-    };
-    applyCheckedState();
-    if(isTextarea){
-      const countEl = card.querySelector('.suggestion-count');
-      const updateCount = ()=> countEl.textContent = fieldEl.value.length + '/1466';
-      updateCount();
-      fieldEl.addEventListener('input', updateCount);
-    }
-    card.addEventListener('click', (e)=>{
-      if(e.target.closest('.suggestion-field')) return;
-      state[checkedKey] = !state[checkedKey];
-      applyCheckedState();
-    });
-    return card;
-  }
-
-  function buildSelectableCard(field, index, text, isTextarea){
-    const card = document.createElement('div');
-    card.className = 'suggestion-card selectable';
-    card.dataset.index = index;
-    const fieldId = (field === 'title' ? 'titleSuggestionInput-' : 'aboutSuggestionInput-') + index;
-    card.innerHTML = isTextarea
-      ? `<span class="material-symbols-rounded radio-icon">radio_button_unchecked</span>
-         <div class="suggestion-card-body">
-           <textarea class="suggestion-field" id="${fieldId}" style="height:160px;"></textarea>
-           <div class="hint suggestion-count" style="text-align:right; margin-top:8px;"></div>
-         </div>`
-      : `<span class="material-symbols-rounded radio-icon">radio_button_unchecked</span>
-         <div class="suggestion-card-body">
-           <input type="text" class="suggestion-field" id="${fieldId}">
-         </div>`;
-    const fieldEl = card.querySelector('.suggestion-field');
-    fieldEl.value = text;
-    if(isTextarea){
-      const countEl = card.querySelector('.suggestion-count');
-      const updateCount = ()=> countEl.textContent = fieldEl.value.length + '/1466';
-      updateCount();
-      fieldEl.addEventListener('input', updateCount);
-    }
-    card.addEventListener('click', (e)=>{
-      if(e.target.closest('.suggestion-field')) return;
-      if(field === 'title') state.titleSelectedIndex = index;
-      else state.aboutSelectedIndex = index;
-      updateSelectionUI(field);
-    });
-    return card;
-  }
-
-  function updateSelectionUI(field){
-    const container = document.getElementById(field === 'title' ? 'titleCards' : 'aboutCards');
-    const selectedIndex = field === 'title' ? state.titleSelectedIndex : state.aboutSelectedIndex;
-    container.querySelectorAll('.suggestion-card.selectable').forEach(card=>{
-      const isSelected = Number(card.dataset.index) === selectedIndex;
-      card.classList.toggle('selected', isSelected);
-      card.querySelector('.radio-icon').textContent = isSelected ? 'check_circle' : 'radio_button_unchecked';
-    });
-  }
-
-  function renderTitleSuggestions(){
-    const container = document.getElementById('titleCards');
-    container.innerHTML = '';
-    if(drawer.dataset.phase === '1'){
-      container.appendChild(buildCheckboxCard('title', mockSuggestions.title[0], 'checkTitle', 'titleSuggestionInput', false));
-    } else {
-      if(state.titleSelectedIndex == null) state.titleSelectedIndex = 0;
-      mockSuggestions.title.forEach((text, i)=>{
-        container.appendChild(buildSelectableCard('title', i, text, false));
-      });
-      updateSelectionUI('title');
-    }
-  }
-
-  function renderAboutSuggestions(){
-    const container = document.getElementById('aboutCards');
-    container.innerHTML = '';
-    if(drawer.dataset.phase === '1'){
-      container.appendChild(buildCheckboxCard('about', mockSuggestions.description[0], 'checkAbout', 'aboutSuggestionInput', true));
-    } else {
-      if(state.aboutSelectedIndex == null) state.aboutSelectedIndex = 0;
-      mockSuggestions.description.forEach((text, i)=>{
-        container.appendChild(buildSelectableCard('about', i, text, true));
-      });
-      updateSelectionUI('about');
-    }
-  }
-
-  const refinePromptInput = document.getElementById('refinePromptInput');
-  const pillActionBtn = document.getElementById('pillActionBtn');
-  const pillActionIcon = document.getElementById('pillActionIcon');
-  const inlineThinking = document.getElementById('inlineThinking');
-
-  // --- Previous draft: two-slot swap (current <-> previous), not a growing
-  // history. Keywords is intentionally untouched by this — it already has
-  // its own independent selection lifecycle elsewhere in the file.
-  let previousDraft = null;
-  let lastRenderedTitle = '';
-  let lastRenderedAbout = '';
-  const previousDraftBtn = document.getElementById('previousDraftBtn');
-  const draftSwapConfirm = document.getElementById('draftSwapConfirm');
-
-  function currentDraftValues(){
-    const titleInput = document.getElementById('titleSuggestionInput');
-    const aboutInput = document.getElementById('aboutSuggestionInput');
-    return {
-      title: titleInput ? titleInput.value : '',
-      about: aboutInput ? aboutInput.value : ''
-    };
-  }
-  function markRendered(){
-    const v = currentDraftValues();
-    lastRenderedTitle = v.title;
-    lastRenderedAbout = v.about;
-  }
-  function hasUnsavedEdits(){
-    const v = currentDraftValues();
-    return v.title !== lastRenderedTitle || v.about !== lastRenderedAbout;
-  }
-  function updatePreviousDraftButton(){
-    previousDraftBtn.style.display = previousDraft ? 'inline-flex' : 'none';
-  }
-  function doDraftSwap(){
-    const current = currentDraftValues();
-    const titleInput = document.getElementById('titleSuggestionInput');
-    const aboutInput = document.getElementById('aboutSuggestionInput');
-    titleInput.value = previousDraft.title;
-    aboutInput.value = previousDraft.about;
-    const countEl = aboutInput.closest('.suggestion-card-body').querySelector('.suggestion-count');
-    if(countEl) countEl.textContent = aboutInput.value.length + '/1466';
-    previousDraft = current; // whichever was showing becomes the new "previous"
-    markRendered();
-  }
-  previousDraftBtn.addEventListener('click', ()=>{
-    if(!previousDraft) return;
-    if(hasUnsavedEdits()) draftSwapConfirm.style.display = 'block';
-    else doDraftSwap();
-  });
-  document.getElementById('draftSwapCancel').addEventListener('click', ()=>{
-    draftSwapConfirm.style.display = 'none';
-  });
-  document.getElementById('draftSwapContinue').addEventListener('click', ()=>{
-    draftSwapConfirm.style.display = 'none';
-    doDraftSwap();
-  });
-
-  function resetAndRerenderSuggestions(){
-    // Snapshot the draft that's about to be replaced so the seller can swap
-    // back to it, before regenerating overwrites it.
-    previousDraft = currentDraftValues();
-    state.titleChecked = true;
-    state.aboutChecked = true;
-    state.titleSelectedIndex = 0;
-    state.aboutSelectedIndex = 0;
-    renderTitleSuggestions();
-    renderAboutSuggestions();
-    refinePromptInput.value = '';
-    markRendered();
-    updatePreviousDraftButton();
-    draftSwapConfirm.style.display = 'none';
-  }
-
-  function regenerate(){
-    if(drawer.dataset.phase === '3'){
-      // Ideal-state framing: regenerate inline instead of leaving the results view.
-      inlineThinking.classList.remove('hidden');
-      pillActionBtn.disabled = true;
-      refinePromptInput.disabled = true;
-      setTimeout(()=>{
-        resetAndRerenderSuggestions();
-        inlineThinking.classList.add('hidden');
-        pillActionBtn.disabled = false;
-        refinePromptInput.disabled = false;
-      }, 900);
-    } else {
-      showStep(stepThinking);
-      setTimeout(()=>{
-        resetAndRerenderSuggestions();
-        showStep(stepResults);
-      }, 900);
-    }
-  }
-  pillActionBtn.addEventListener('click', regenerate);
-  refinePromptInput.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      regenerate();
-    }
-  });
-
-  function updatePillIcon(){
-    pillActionIcon.textContent = drawer.dataset.phase === '3' ? 'arrow_upward' : 'refresh';
-  }
-  updatePillIcon();
 
   // --- Iteration A / D: inline field-level AI (no side panel) ---
   const titleVariants = [mockSuggestions.title[0], mockSuggestions.title[1], mockSuggestions.title[2]];
@@ -1531,9 +926,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
     ()=>{
-      // Iteration 2: once there's content, the sparkle icon runs a rule-based
+      // 241: once there's content, the sparkle icon runs a rule-based
       // check instead of generating a fresh draft.
-      if(drawer.dataset.phase === '2' && !isFieldEmpty(document.getElementById('aboutBook'))){
+      if(currentMode === '241' && !isFieldEmpty(document.getElementById('aboutBook'))){
         runGrammarlyCheck();
         return true;
       }
@@ -1605,7 +1000,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     return words.slice(0,8).join(' ') + '.';
   }
 
-  // --- Iteration 2: Grammarly style — flag one weak sentence, one AI call fixes just it ---
+  // --- 241: Grammarly style — flag one weak sentence, one AI call fixes just it ---
   let grammarlyTargetSentence = null;
   function runGrammarlyCheck(){
     const text = document.getElementById('aboutBook').value;
@@ -1629,7 +1024,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('grammarlyFlagPopover').classList.remove('open');
   });
 
-  // --- Iteration 3: Hemingway style — color-code the passage, one AI call tightens all flagged sentences ---
+  // --- 242: Hemingway style — color-code the passage, one AI call tightens all flagged sentences ---
   function renderHemingwayHighlight(){
     const text = document.getElementById('aboutBook').value;
     const sentences = splitSentences(text);
@@ -1665,11 +1060,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     renderHemingwayHighlight();
   }
   function updateClarityLinkVisibility(){
-    const isPhase3 = drawer.dataset.phase === '3';
+    const is242 = currentMode === '242';
     const hasContent = !isFieldEmpty(document.getElementById('aboutBook'));
     const link = document.getElementById('clarityCheckLink');
     const inCheckView = document.getElementById('aboutRich').style.display === 'block';
-    link.style.display = (isPhase3 && hasContent && !inCheckView) ? 'inline-flex' : 'none';
+    link.style.display = (is242 && hasContent && !inCheckView) ? 'inline-flex' : 'none';
   }
   document.getElementById('clarityCheckLink').addEventListener('click', runHemingwayCheck);
   document.getElementById('backToEditBtn').addEventListener('click', exitHemingwayCheck);
@@ -1691,8 +1086,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : 'Generate';
   }
 
-  // Iteration 3: expand the box as an accordion (animated height) instead
-  // of the instant show/hide iteration 2 uses.
+  // 242: expand the box as an accordion (animated height) instead
+  // of the instant show/hide 241 uses.
   function openBulkAccordion(){
     bulkPromptBox.classList.add('bulk-accordion');
     bulkPromptBox.style.display = 'block';
@@ -1711,13 +1106,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
   document.getElementById('bulkGenerate').addEventListener('click', ()=>{
     updateBulkPromptSubmitLabel();
-    if(drawer.dataset.phase === '3') openBulkAccordion();
+    if(currentMode === '242') openBulkAccordion();
     else bulkPromptBox.style.display = 'block';
     bulkPromptInput.focus();
   });
   document.getElementById('bulkPromptCancel').addEventListener('click', ()=>{
     bulkRegenConfirm.style.display = 'none';
-    if(drawer.dataset.phase === '3') closeBulkAccordion();
+    if(currentMode === '242') closeBulkAccordion();
     else bulkPromptBox.style.display = 'none';
   });
   bulkPromptInput.addEventListener('input', ()=>{
@@ -1732,11 +1127,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
   });
   function runBulkFill(regenerate){
-    const mode = drawer.dataset.phase;
+    const mode = currentMode;
     if(regenerate){
-      if(mode === '2'){ titleA.regenerate(); aboutA.regenerate(); }
+      if(mode === '241'){ titleA.regenerate(); aboutA.regenerate(); }
       else { titleD.regenerate(); aboutD.regenerate(); }
-    } else if(mode === '2'){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
+    } else if(mode === '241'){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
     else { titleD.generateIfEmpty(); aboutD.generateIfEmpty(); }
     KEYWORDS.forEach(kw=>{
       if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
@@ -1763,109 +1158,40 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     runBulkFill(true);
   });
   function updateBulkGenerateState(){
-    const btn = document.getElementById('bulkGenerate');
-    btn.className = 'btn mode-a-d btn-outline-ai' + (drawer.dataset.phase==='2'||drawer.dataset.phase==='3' ? '' : ' hidden-mode');
+    document.getElementById('bulkGenerate').className = 'btn mode-a-d btn-outline-ai';
     updateBulkPromptSubmitLabel();
   }
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
 
-  // --- Mode switching across all iterations ---
+  // --- Mode switching across 241/242 ---
   function applyDemoMode(){
     const val = demoPhaseSelect.value;
-    drawer.dataset.phase = val;
-    const isPanelMode = (val === '1');
-    const isA = val === '2';
-    const isD = val === '3';
-    const isHemingway = (val === '3');
+    currentMode = val;
+    const isA = val === '241';
+    const isD = val === '242';
+    const isHemingway = (val === '242');
 
-    document.querySelectorAll('.mode-1-2-3').forEach(el => el.classList.toggle('hidden-mode', !isPanelMode));
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
     document.querySelectorAll('.mode-a').forEach(el => el.classList.toggle('hidden-mode', !isA));
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
     document.querySelectorAll('.mode-5').forEach(el => el.classList.toggle('hidden-mode', !isHemingway));
 
-    // Leaving iteration 2 or 3 resets any open flag/highlight state so it
-    // doesn't leak into a different iteration when switching in the dropdown.
-    if(val !== '2') document.getElementById('grammarlyFlagPopover').classList.remove('open');
-    if(val !== '3') exitHemingwayCheck();
+    // Leaving 241 or 242 resets any open flag/highlight state so it
+    // doesn't leak into a different mode when switching in the dropdown.
+    if(val !== '241') document.getElementById('grammarlyFlagPopover').classList.remove('open');
+    if(val !== '242') exitHemingwayCheck();
     updateClarityLinkVisibility();
 
-    if(!isPanelMode && drawer.classList.contains('open')) closeDrawer();
-    // Switching iterations always closes the bulk prompt box fresh, so no
-    // open/accordion state leaks from one iteration into another.
+    // Switching modes always closes the bulk prompt box fresh, so no
+    // open/accordion state leaks from one mode into another.
     bulkPromptBox.style.display = 'none';
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
-    updatePillIcon();
-    if(document.getElementById('titleCards').children.length){
-      renderTitleSuggestions();
-      renderAboutSuggestions();
-    }
     updateBulkGenerateState();
   }
   demoPhaseSelect.addEventListener('change', applyDemoMode);
   applyDemoMode();
-
-  function renderChips(){
-    const group = document.getElementById('chipGroup');
-    group.innerHTML = '';
-    KEYWORDS.forEach(kw=>{
-      const selected = state.keywordsSelected.has(kw);
-      const chip = document.createElement('div');
-      chip.className = 'chip ' + (selected ? 'selected' : 'unselected');
-      chip.innerHTML = `<span>${kw}</span><span class="icon">${selected ? '✕' : '+'}</span>`;
-      chip.addEventListener('click', ()=>{
-        if(selected) state.keywordsSelected.delete(kw);
-        else state.keywordsSelected.add(kw);
-        renderChips();
-      });
-      group.appendChild(chip);
-    });
-    updateKwCount();
-  }
-  function updateKwCount(){
-    const n = state.keywordsSelected.size;
-    document.getElementById('kwCount').textContent = n > 0 ? `${n} of ${KEYWORDS.length} selected` : '';
-  }
-
-  document.getElementById('applyBtn').addEventListener('click', ()=>{
-    const phase = drawer.dataset.phase;
-    const applyTitle = phase === '1' ? state.titleChecked : true;
-    const applyAbout = phase === '1' ? state.aboutChecked : true;
-    const titleFieldId = phase === '1' ? 'titleSuggestionInput' : `titleSuggestionInput-${state.titleSelectedIndex}`;
-    const aboutFieldId = phase === '1' ? 'aboutSuggestionInput' : `aboutSuggestionInput-${state.aboutSelectedIndex}`;
-    if(applyTitle){
-      const t = document.getElementById('listingTitle');
-      t.value = document.getElementById(titleFieldId).value;
-      t.closest('.field-body').classList.add('flash');
-      document.getElementById('titleCount').textContent = t.value.length + '/40';
-    }
-    if(applyAbout){
-      const a = document.getElementById('aboutBook');
-      a.value = document.getElementById(aboutFieldId).value;
-      a.closest('.field-body').classList.add('flash');
-      document.getElementById('aboutCount').textContent = a.value.length + '/1466';
-    }
-    if(state.keywordsSelected.size > 0){
-      state.keywordsSelected.forEach(kw=>{
-        if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
-      });
-      renderMainKeywords();
-      document.getElementById('keywordsField').closest('.field-body').classList.add('flash');
-    }
-    closeDrawer();
-
-    // Apply is the natural endpoint of this session — the current/previous
-    // draft comparison no longer means anything once a decision's been made,
-    // so the next "Optimize listing" open should start fresh.
-    if(phase === '1'){
-      previousDraft = null;
-      hasGeneratedOnce = false;
-      previousDraftBtn.style.display = 'none';
-      draftSwapConfirm.style.display = 'none';
-    }
-  });
 
   let mainKeywords = [];
   function renderMainKeywords(){
