@@ -461,8 +461,17 @@
   }
   .inline-draft-popover.open{display:block;}
   .inline-draft-popover p{font-size:15px; line-height:1.5; margin:0 0 10px; color:var(--subtle); white-space:pre-line;}
-  .inline-draft-popover .row{display:flex; gap:8px;}
+  .inline-draft-popover .row{display:flex; align-items:center; gap:16px;}
   .inline-draft-popover .row .spacer{flex:1;}
+
+  .popover-link-btn{
+    border:none; background:none; padding:0; cursor:pointer;
+    font-family:var(--font-sans); font-size:14px; color:var(--link);
+    text-decoration:underline;
+  }
+  .popover-link-btn.primary{font-weight:600;}
+  .popover-link-btn.muted{color:var(--subtle);}
+  .popover-link-btn:hover{filter:brightness(0.85);}
 
   .inline-draft-link{
     display:inline-flex; align-items:center; gap:6px; border:none; background:none; cursor:pointer;
@@ -526,7 +535,7 @@
   .flag-popover .label{display:flex; align-items:center; gap:5px; font-size:12px; color:var(--subtle); margin:0 0 6px;}
   .flag-popover .label .material-symbols-rounded{font-size:15px;}
   .flag-popover p.suggestion{font-size:14px; margin:0 0 8px; color:var(--bold);}
-  .flag-popover .row{display:flex; gap:6px;}
+  .flag-popover .row{display:flex; align-items:center; gap:16px;}
 
   /* --- 242 (Hemingway-style highlight layer): whole passage
      color-coded by sentence length; one button rewrites only the flagged
@@ -625,7 +634,7 @@
             <button class="btn btn-primary" id="bulkRegenContinue" style="padding:6px 16px; font-size:14px; min-width:auto;">Continue</button>
           </div>
         </div>
-        <p class="hint" style="margin:12px 0 0; text-align:right;">Fills every empty field below at once. Each one stays editable and can be redrafted on its own.</p>
+        <p class="hint mode-d hidden-mode" style="margin:12px 0 0; text-align:right;">Fills every empty field below at once. Each one stays editable and can be redrafted on its own.</p>
       </div>
 
       <div class="field-row">
@@ -646,10 +655,10 @@
           <div class="inline-draft-popover" id="titleDraftPopover">
             <p id="titleDraftText"></p>
             <div class="row">
-              <button class="btn btn-primary" id="titleInsertBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Insert</button>
-              <button class="btn btn-outline-bold" id="titleTryAgainBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Try again</button>
+              <button class="popover-link-btn primary" id="titleInsertBtn">Use this title</button>
+              <button class="popover-link-btn" id="titleTryAgainBtn">Suggest another</button>
               <span class="spacer"></span>
-              <button class="btn btn-outline-bold" id="titleDismissBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Dismiss</button>
+              <button class="popover-link-btn muted" id="titleDismissBtn">Keep as is</button>
             </div>
           </div>
           <button class="inline-draft-link mode-d hidden-mode" id="titleDraftLinkD" type="button">
@@ -682,18 +691,18 @@
             <p class="suggestion" id="grammarlyOriginal" style="color:var(--subtle); font-size:13px;"></p>
             <p class="suggestion" id="grammarlySuggestion"></p>
             <div class="row">
-              <button class="btn btn-primary" id="grammarlyAcceptBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Accept</button>
-              <button class="btn btn-outline-bold" id="grammarlyDismissBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Dismiss</button>
+              <button class="popover-link-btn primary" id="grammarlyAcceptBtn">Accept</button>
+              <button class="popover-link-btn muted" id="grammarlyDismissBtn">Keep as is</button>
             </div>
           </div>
 
           <div class="inline-draft-popover" id="aboutDraftPopover">
             <p id="aboutDraftText"></p>
             <div class="row">
-              <button class="btn btn-primary" id="aboutInsertBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Insert</button>
-              <button class="btn btn-outline-bold" id="aboutTryAgainBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Try again</button>
+              <button class="popover-link-btn primary" id="aboutInsertBtn">Use this description</button>
+              <button class="popover-link-btn" id="aboutTryAgainBtn">Suggest another</button>
               <span class="spacer"></span>
-              <button class="btn btn-outline-bold" id="aboutDismissBtn" style="padding:6px 16px; font-size:14px; min-width:auto;">Dismiss</button>
+              <button class="popover-link-btn muted" id="aboutDismissBtn">Keep as is</button>
             </div>
           </div>
           <button class="inline-draft-link mode-d hidden-mode" id="aboutDraftLinkD" type="button">
@@ -1206,6 +1215,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('bulkPromptCopy').textContent = isA
       ? "Tell us about your book, and we'll suggest a title, description, and keywords."
       : "Help us get it right. What's your book about?";
+    document.getElementById('titleCount').style.textAlign = isA ? 'left' : 'right';
+    document.getElementById('aboutCount').style.textAlign = isA ? 'left' : 'right';
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
     document.querySelectorAll('.mode-a').forEach(el => el.classList.toggle('hidden-mode', !isA));
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
