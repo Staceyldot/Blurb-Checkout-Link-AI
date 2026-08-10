@@ -607,12 +607,13 @@
         <h2>Listing content</h2>
         <button class="btn btn-outline-ai mode-a-d hidden-mode" id="bulkGenerate">
           <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-          Let AI help you
+          <span id="bulkGenerateLabel">Let AI help you</span>
         </button>
       </div>
       <div class="mode-a-d hidden-mode bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-        <p class="prompt-copy" style="margin:0 0 8px;">Help us get it right. What's your book about?</p>
+        <p class="prompt-copy" style="margin:0 0 8px;" id="bulkPromptCopy">Help us get it right. What's your book about?</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
+        <p class="hint mode-a hidden-mode" style="margin:8px 0 0;">The more detail you give, the better the results.</p>
         <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
           <button class="btn btn-outline-bold" id="bulkPromptCancel">Cancel</button>
           <button class="btn btn-disabled" id="bulkPromptSubmit" disabled>Generate</button>
@@ -1098,7 +1099,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       && mainKeywords.length >= 7;
   }
   function updateBulkPromptSubmitLabel(){
-    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : 'Generate';
+    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : (currentMode === '241' ? 'Suggest content' : 'Generate');
   }
 
   // 242: expand the box as an accordion (animated height) instead
@@ -1201,6 +1202,10 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const isD = val === '242';
     const isHemingway = (val === '242');
 
+    document.getElementById('bulkGenerateLabel').textContent = isA ? 'Suggest content with AI' : 'Let AI help you';
+    document.getElementById('bulkPromptCopy').textContent = isA
+      ? "Tell us about your book, and we'll suggest a title, description, and keywords."
+      : "Help us get it right. What's your book about?";
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
     document.querySelectorAll('.mode-a').forEach(el => el.classList.toggle('hidden-mode', !isA));
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
