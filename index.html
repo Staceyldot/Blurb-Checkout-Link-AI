@@ -439,16 +439,21 @@
   .chip-main .icon:hover{background:var(--gray-subtler);}
 
   /* --- Iteration A / D: inline, ambient AI per field ---
-     No side panel. The sparkle/draft-link lives directly on the field itself. */
-  .inline-ai-wrap{position:relative;}
+     No side panel. The AI trigger sits beside the field as its own icon
+     button rather than floating on top of the text. */
+  .inline-ai-wrap{display:flex; align-items:flex-start; gap:8px;}
+  .inline-ai-wrap input, .inline-ai-wrap textarea{flex:1; min-width:0;}
   .inline-ai-icon-btn{
-    position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:4px;
-    border:none; background:none; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; width:44px; height:44px; border-radius:6px;
+    border:2px solid transparent;
+    background:
+      linear-gradient(#fff, #fff) padding-box,
+      linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%) border-box;
+    display:flex; align-items:center; justify-content:center;
     cursor:pointer;
   }
-  .inline-ai-icon-btn:hover{background:var(--gray-subtler);}
-  .inline-ai-icon-btn .material-symbols-rounded{font-size:20px;}
-  textarea.has-inline-ai, input.has-inline-ai{padding-right:40px;}
+  .inline-ai-icon-btn:hover{filter:brightness(0.97);}
+  .inline-ai-icon-btn .material-symbols-rounded{font-size:22px;}
 
   .inline-draft-popover{
     display:none; margin-top:8px; border:1px solid var(--brand); border-radius:8px;
@@ -727,7 +732,12 @@
           </span>
         </label>
         <div class="field-body">
-          <input type="text" id="keywordsField" placeholder="Add a keyword...">
+          <div class="inline-ai-wrap">
+            <input type="text" id="keywordsField" placeholder="Add a keyword...">
+            <button class="inline-ai-icon-btn mode-a hidden-mode" id="keywordsInlineIconBtn" type="button" title="Suggest keywords">
+              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+            </button>
+          </div>
           <button class="kw-suggest-btn mode-d hidden-mode" id="kwSuggestBtn" type="button" style="margin-left:0; margin-top:8px;">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Suggest keywords
           </button>
@@ -970,6 +980,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // Keywords: inline "Suggest keywords" reveals chips; clicking a chip adds it directly
   // (tops up remaining empty slots only, same rule as the bulk button).
   document.getElementById('kwSuggestBtn').addEventListener('click', renderKwSuggestChips);
+  document.getElementById('keywordsInlineIconBtn').addEventListener('click', renderKwSuggestChips);
   function renderKwSuggestChips(){
     const wrap = document.getElementById('kwSuggestChips');
     wrap.style.display = 'flex';
@@ -1077,6 +1088,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   const bulkPromptInput = document.getElementById('bulkPromptInput');
   const bulkPromptSubmit = document.getElementById('bulkPromptSubmit');
   const bulkRegenConfirm = document.getElementById('bulkRegenConfirm');
+  // 241: the per-field sparkle stays hidden until the seller has actually
+  // clicked Generate/Regenerate — typing in the prompt box alone isn't enough.
+  let inlineSparkleUnlocked = false;
 
   function isBulkDraftFull(){
     return !isFieldEmpty(document.getElementById('listingTitle'))
@@ -1120,7 +1134,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const has = bulkPromptInput.value.trim().length > 0;
     bulkPromptSubmit.disabled = !has;
     bulkPromptSubmit.className = has ? 'btn btn-primary' : 'btn btn-disabled';
-    updateInlineSparkleVisibility();
   });
   bulkPromptInput.addEventListener('click', ()=>{
     if(bulkPromptInput.value.trim().length === 0){
@@ -1130,6 +1143,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   });
   function runBulkFill(regenerate){
     const mode = currentMode;
+    if(mode === '241'){ inlineSparkleUnlocked = true; updateInlineSparkleVisibility(); }
     if(regenerate){
       if(mode === '241'){ titleA.regenerate(); aboutA.regenerate(); }
       else { titleD.regenerate(); aboutD.regenerate(); }
@@ -1172,13 +1186,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
 
-  // 241: the per-field sparkle only makes sense once the seller has told the
-  // "Let AI help you" prompt box something about the book, so it stays hidden
-  // until that box has content.
   function updateInlineSparkleVisibility(){
-    const hide = currentMode !== '241' || bulkPromptInput.value.trim().length === 0;
+    const hide = currentMode !== '241' || !inlineSparkleUnlocked;
     document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
+    document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', hide);
   }
 
   // --- Mode switching across 241/242 ---
@@ -1205,6 +1217,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptBox.style.display = 'none';
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
+    if(val !== '241') inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
   }
