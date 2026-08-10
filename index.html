@@ -578,12 +578,12 @@
     <div class="section no-divider">
       <div class="section-header">
         <h2>Listing content</h2>
-        <button class="btn btn-outline-ai mode-a-d hidden-mode" id="bulkGenerate">
+        <button class="btn btn-outline-ai mode-a hidden-mode" id="bulkGenerate">
           <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
           <span id="bulkGenerateLabel">Let AI help you</span>
         </button>
       </div>
-      <div class="mode-a-d hidden-mode bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+      <div class="mode-a hidden-mode bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
         <p class="prompt-copy" style="margin:0 0 8px;" id="bulkPromptCopy">Help us get it right. What's your book about?</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
         <p class="hint mode-a hidden-mode" style="margin:8px 0 0;">The more detail you give, the better the results.</p>
@@ -611,11 +611,19 @@
         <div class="field-body">
           <div class="inline-ai-wrap">
             <input type="text" id="listingTitle" value="Pride and Preconceptions" maxlength="40">
-            <button class="inline-ai-icon-btn mode-a hidden-mode" id="titleInlineIconBtn" type="button" title="Improve with AI">
+            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="titleInlineIconBtn" type="button" title="Improve with AI">
               <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
             </button>
           </div>
           <div class="count" id="titleCount">24/40</div>
+          <div class="mode-d hidden-mode bulk-prompt-box" id="titlePromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+            <p class="prompt-copy" style="margin:0 0 8px;">What should we know to write your title?</p>
+            <textarea id="titlePromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+              <button class="btn btn-outline-bold" id="titlePromptCancelD" type="button">Cancel</button>
+              <button class="btn btn-primary" id="titlePromptGenerateD" type="button">Generate</button>
+            </div>
+          </div>
           <div class="inline-draft-popover" id="titleDraftPopover">
             <p id="titleDraftText"></p>
             <div class="row">
@@ -625,7 +633,7 @@
               <button class="popover-link-btn muted" id="titleDismissBtn">Keep as is</button>
             </div>
           </div>
-          <button class="inline-draft-link mode-d hidden-mode" id="titleDraftLinkD" type="button">
+          <button class="inline-draft-link hidden-mode" id="titleDraftLinkD" type="button">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Draft this with AI
           </button>
           <div class="inline-ai-attribution mode-d hidden-mode" id="titleAttrD" style="display:none;">
@@ -641,7 +649,7 @@
         <div class="field-body">
           <div class="inline-ai-wrap">
             <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
-            <button class="inline-ai-icon-btn mode-a hidden-mode" id="aboutInlineIconBtn" type="button" title="Improve with AI">
+            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="aboutInlineIconBtn" type="button" title="Improve with AI">
               <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
             </button>
           </div>
@@ -656,7 +664,7 @@
               <button class="popover-link-btn muted" id="aboutDismissBtn">Keep as is</button>
             </div>
           </div>
-          <button class="inline-draft-link mode-d hidden-mode" id="aboutDraftLinkD" type="button">
+          <button class="inline-draft-link hidden-mode" id="aboutDraftLinkD" type="button">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Draft this with AI
           </button>
           <div class="inline-ai-attribution mode-d hidden-mode" id="aboutAttrD" style="display:none;">
@@ -677,11 +685,11 @@
         <div class="field-body">
           <div class="inline-ai-wrap">
             <input type="text" id="keywordsField" placeholder="Add a keyword...">
-            <button class="inline-ai-icon-btn mode-a hidden-mode" id="keywordsInlineIconBtn" type="button" title="Suggest keywords">
+            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="keywordsInlineIconBtn" type="button" title="Suggest keywords">
               <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
             </button>
           </div>
-          <button class="kw-suggest-btn mode-d hidden-mode" id="kwSuggestBtn" type="button" style="margin-left:0; margin-top:8px;">
+          <button class="kw-suggest-btn hidden-mode" id="kwSuggestBtn" type="button" style="margin-left:0; margin-top:8px;">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Suggest keywords
           </button>
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
@@ -859,6 +867,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const popover = document.getElementById(popoverId);
     const textEl = document.getElementById(textId);
     iconBtn.addEventListener('click', ()=>{
+      if(currentMode !== '241') return;
       if(flagOverride && flagOverride()) return;
       textEl.textContent = variants[idx];
       popover.classList.toggle('open');
@@ -910,6 +919,26 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40');
   const aboutD = wireInlineD('aboutDraftLinkD','aboutAttrD','aboutRedraftD', document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
+
+  // 242: the field icon is the only entry point (no separate "Draft this
+  // with AI" link). Title opens a small prompt box below the field first;
+  // About drafts immediately (first click) / redrafts (later clicks).
+  const titlePromptBoxD = document.getElementById('titlePromptBoxD');
+  document.getElementById('titleInlineIconBtn').addEventListener('click', ()=>{
+    if(currentMode !== '242') return;
+    titlePromptBoxD.style.display = titlePromptBoxD.style.display === 'block' ? 'none' : 'block';
+  });
+  document.getElementById('titlePromptCancelD').addEventListener('click', ()=>{
+    titlePromptBoxD.style.display = 'none';
+  });
+  document.getElementById('titlePromptGenerateD').addEventListener('click', ()=>{
+    isFieldEmpty(document.getElementById('listingTitle')) ? titleD.generateIfEmpty() : titleD.regenerate();
+    titlePromptBoxD.style.display = 'none';
+  });
+  document.getElementById('aboutInlineIconBtn').addEventListener('click', ()=>{
+    if(currentMode !== '242') return;
+    isFieldEmpty(document.getElementById('aboutBook')) ? aboutD.generateIfEmpty() : aboutD.regenerate();
+  });
 
   // Keywords: inline "Suggest keywords" reveals chips; clicking a chip adds it directly
   // (tops up remaining empty slots only, same rule as the bulk button).
@@ -1030,14 +1059,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     runBulkFill(true);
   });
   function updateBulkGenerateState(){
-    document.getElementById('bulkGenerate').className = 'btn mode-a-d btn-outline-ai';
+    document.getElementById('bulkGenerate').className = 'btn mode-a btn-outline-ai' + (currentMode === '241' ? '' : ' hidden-mode');
     updateBulkPromptSubmitLabel();
   }
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
 
   function updateInlineSparkleVisibility(){
-    const hide = currentMode !== '241' || !inlineSparkleUnlocked;
+    // 241 gates the icon behind the AI prompt box being generated first;
+    // 242 has no such gate, so its icon is always available.
+    const hide = currentMode === '241' && !inlineSparkleUnlocked;
     document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', hide);
@@ -1054,6 +1085,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('bulkPromptCopy').textContent = isA
       ? "Tell us about your book, and we'll suggest a title, description, and keywords."
       : "Help us get it right. What's your book about?";
+    document.getElementById('bulkPromptInput').placeholder = isA
+      ? "A travel photo book of two weeks backpacking through Patagonia"
+      : "e.g. a cozy mystery set in a small-town bakery, playful tone";
     document.getElementById('titleCount').style.textAlign = isA ? 'left' : 'right';
     document.getElementById('aboutCount').style.textAlign = isA ? 'left' : 'right';
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
@@ -1065,6 +1099,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptBox.style.display = 'none';
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
+    document.getElementById('titlePromptBoxD').style.display = 'none';
     if(val !== '241') inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
