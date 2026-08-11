@@ -617,11 +617,13 @@
           </div>
           <div class="count" id="titleCount">24/40</div>
           <div class="mode-d hidden-mode bulk-prompt-box" id="titlePromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-            <p class="prompt-copy" style="margin:0 0 8px;">What should we know to write your title?</p>
+            <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest a title.</p>
             <textarea id="titlePromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
+            <p class="hint" style="margin:8px 0 0;">A sentence or two is enough.</p>
+            <p class="hint" id="titlePromptErrorD" style="margin:6px 0 0; color:var(--danger); display:none;">Tell us a bit about your book first.</p>
             <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
               <button class="btn btn-outline-bold" id="titlePromptCancelD" type="button">Cancel</button>
-              <button class="btn btn-primary" id="titlePromptGenerateD" type="button">Generate</button>
+              <button class="btn btn-primary" id="titlePromptGenerateD" type="button">Suggest a title</button>
             </div>
           </div>
           <div class="inline-draft-popover" id="titleDraftPopover">
@@ -924,14 +926,25 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // with AI" link). Title opens a small prompt box below the field first;
   // About drafts immediately (first click) / redrafts (later clicks).
   const titlePromptBoxD = document.getElementById('titlePromptBoxD');
+  const titlePromptInputD = document.getElementById('titlePromptInputD');
+  const titlePromptErrorD = document.getElementById('titlePromptErrorD');
   document.getElementById('titleInlineIconBtn').addEventListener('click', ()=>{
     if(currentMode !== '242') return;
+    titlePromptErrorD.style.display = 'none';
     titlePromptBoxD.style.display = titlePromptBoxD.style.display === 'block' ? 'none' : 'block';
   });
   document.getElementById('titlePromptCancelD').addEventListener('click', ()=>{
+    titlePromptErrorD.style.display = 'none';
     titlePromptBoxD.style.display = 'none';
   });
+  titlePromptInputD.addEventListener('input', ()=>{
+    titlePromptErrorD.style.display = 'none';
+  });
   document.getElementById('titlePromptGenerateD').addEventListener('click', ()=>{
+    if(isFieldEmpty(titlePromptInputD)){
+      titlePromptErrorD.style.display = 'block';
+      return;
+    }
     isFieldEmpty(document.getElementById('listingTitle')) ? titleD.generateIfEmpty() : titleD.regenerate();
     titlePromptBoxD.style.display = 'none';
   });
@@ -1100,6 +1113,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
     document.getElementById('titlePromptBoxD').style.display = 'none';
+    document.getElementById('titlePromptErrorD').style.display = 'none';
     if(val !== '241') inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
