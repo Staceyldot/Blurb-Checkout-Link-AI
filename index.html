@@ -221,7 +221,6 @@
     line-height:1.4;
     color:var(--subtle);
   }
-  #titleCount, #aboutCount{text-align:right;}
   .field-row{
     display:flex;
     gap:24px;
@@ -657,12 +656,12 @@
           <div class="count" id="aboutCount">0/1466</div>
 
           <div class="mode-d hidden-mode bulk-prompt-box" id="aboutPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-            <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest a description.</p>
+            <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll draft a description.</p>
             <textarea id="aboutPromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
-            <p class="hint" style="margin:8px 0 0;">A sentence or two is enough.</p>
+            <p class="hint" style="margin:8px 0 0;">The more detail you give, the better the draft.</p>
             <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
               <button class="btn btn-outline-bold" id="aboutPromptCancelD" type="button">Cancel</button>
-              <button class="btn btn-disabled" id="aboutPromptGenerateD" type="button" disabled>Suggest a description</button>
+              <button class="btn btn-disabled" id="aboutPromptGenerateD" type="button" disabled>Write a description</button>
             </div>
           </div>
           <div class="inline-draft-popover" id="aboutDraftPopover">
@@ -700,9 +699,9 @@
             </button>
           </div>
           <div class="mode-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-            <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest keywords.</p>
+            <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll suggest keywords.</p>
             <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
-            <p class="hint" style="margin:8px 0 0;">A sentence or two is enough.</p>
+            <p class="hint" style="margin:8px 0 0;">The more detail you give, the better the suggestions.</p>
             <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
               <button class="btn btn-outline-bold" id="keywordsPromptCancelD" type="button">Cancel</button>
               <button class="btn btn-disabled" id="keywordsPromptGenerateD" type="button" disabled>Suggest keywords</button>
@@ -1120,8 +1119,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('bulkPromptInput').placeholder = isA
       ? "A travel photo book of two weeks backpacking through Patagonia"
       : "e.g. a cozy mystery set in a small-town bakery, playful tone";
-    document.getElementById('titleCount').style.textAlign = isA ? 'left' : 'right';
-    document.getElementById('aboutCount').style.textAlign = isA ? 'left' : 'right';
+    document.getElementById('titleCount').style.display = isA ? 'block' : 'none';
+    document.getElementById('aboutCount').style.display = isA ? 'block' : 'none';
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
     document.querySelectorAll('.mode-a').forEach(el => el.classList.toggle('hidden-mode', !isA));
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
