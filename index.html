@@ -620,10 +620,9 @@
             <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest a title.</p>
             <textarea id="titlePromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
             <p class="hint" style="margin:8px 0 0;">A sentence or two is enough.</p>
-            <p class="hint" id="titlePromptErrorD" style="margin:6px 0 0; color:var(--danger); display:none;">Tell us a bit about your book first.</p>
             <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
               <button class="btn btn-outline-bold" id="titlePromptCancelD" type="button">Cancel</button>
-              <button class="btn btn-primary" id="titlePromptGenerateD" type="button">Suggest a title</button>
+              <button class="btn btn-disabled" id="titlePromptGenerateD" type="button" disabled>Suggest a title</button>
             </div>
           </div>
           <div class="inline-draft-popover" id="titleDraftPopover">
@@ -657,6 +656,15 @@
           </div>
           <div class="count" id="aboutCount">0/1466</div>
 
+          <div class="mode-d hidden-mode bulk-prompt-box" id="aboutPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+            <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest a description.</p>
+            <textarea id="aboutPromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
+            <p class="hint" style="margin:8px 0 0;">A sentence or two is enough.</p>
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+              <button class="btn btn-outline-bold" id="aboutPromptCancelD" type="button">Cancel</button>
+              <button class="btn btn-disabled" id="aboutPromptGenerateD" type="button" disabled>Suggest a description</button>
+            </div>
+          </div>
           <div class="inline-draft-popover" id="aboutDraftPopover">
             <p id="aboutDraftText"></p>
             <div class="row">
@@ -690,6 +698,15 @@
             <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="keywordsInlineIconBtn" type="button" title="Suggest keywords">
               <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
             </button>
+          </div>
+          <div class="mode-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+            <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest keywords.</p>
+            <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
+            <p class="hint" style="margin:8px 0 0;">A sentence or two is enough.</p>
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+              <button class="btn btn-outline-bold" id="keywordsPromptCancelD" type="button">Cancel</button>
+              <button class="btn btn-disabled" id="keywordsPromptGenerateD" type="button" disabled>Suggest keywords</button>
+            </div>
           </div>
           <button class="kw-suggest-btn hidden-mode" id="kwSuggestBtn" type="button" style="margin-left:0; margin-top:8px;">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Suggest keywords
@@ -922,39 +939,41 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   const aboutD = wireInlineD('aboutDraftLinkD','aboutAttrD','aboutRedraftD', document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
 
-  // 242: the field icon is the only entry point (no separate "Draft this
-  // with AI" link). Title opens a small prompt box below the field first;
-  // About drafts immediately (first click) / redrafts (later clicks).
-  const titlePromptBoxD = document.getElementById('titlePromptBoxD');
-  const titlePromptInputD = document.getElementById('titlePromptInputD');
-  const titlePromptErrorD = document.getElementById('titlePromptErrorD');
-  document.getElementById('titleInlineIconBtn').addEventListener('click', ()=>{
-    if(currentMode !== '242') return;
-    titlePromptErrorD.style.display = 'none';
-    titlePromptBoxD.style.display = titlePromptBoxD.style.display === 'block' ? 'none' : 'block';
-  });
-  document.getElementById('titlePromptCancelD').addEventListener('click', ()=>{
-    titlePromptErrorD.style.display = 'none';
-    titlePromptBoxD.style.display = 'none';
-  });
-  titlePromptInputD.addEventListener('input', ()=>{
-    titlePromptErrorD.style.display = 'none';
-  });
-  document.getElementById('titlePromptGenerateD').addEventListener('click', ()=>{
-    if(isFieldEmpty(titlePromptInputD)){
-      titlePromptErrorD.style.display = 'block';
-      return;
-    }
-    isFieldEmpty(document.getElementById('listingTitle')) ? titleD.generateIfEmpty() : titleD.regenerate();
-    titlePromptBoxD.style.display = 'none';
-  });
-  document.getElementById('aboutInlineIconBtn').addEventListener('click', ()=>{
-    if(currentMode !== '242') return;
-    isFieldEmpty(document.getElementById('aboutBook')) ? aboutD.generateIfEmpty() : aboutD.regenerate();
-  });
+  // 242: each field icon is its own entry point — no separate "Draft this
+  // with AI" link. Clicking it opens a small prompt box below the field;
+  // Generate/Suggest stays disabled until the seller types something.
+  function wirePromptBoxD(iconBtnId, boxId, inputId, generateBtnId, cancelBtnId, onGenerate){
+    const box = document.getElementById(boxId);
+    const input = document.getElementById(inputId);
+    const generateBtn = document.getElementById(generateBtnId);
+    document.getElementById(iconBtnId).addEventListener('click', ()=>{
+      if(currentMode !== '242') return;
+      box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    });
+    document.getElementById(cancelBtnId).addEventListener('click', ()=>{
+      box.style.display = 'none';
+    });
+    input.addEventListener('input', ()=>{
+      const has = !isFieldEmpty(input);
+      generateBtn.disabled = !has;
+      generateBtn.className = has ? 'btn btn-primary' : 'btn btn-disabled';
+    });
+    generateBtn.addEventListener('click', ()=>{
+      onGenerate();
+      box.style.display = 'none';
+    });
+    return box;
+  }
+  const titlePromptBoxD = wirePromptBoxD('titleInlineIconBtn', 'titlePromptBoxD', 'titlePromptInputD', 'titlePromptGenerateD', 'titlePromptCancelD',
+    ()=> isFieldEmpty(document.getElementById('listingTitle')) ? titleD.generateIfEmpty() : titleD.regenerate());
+  const aboutPromptBoxD = wirePromptBoxD('aboutInlineIconBtn', 'aboutPromptBoxD', 'aboutPromptInputD', 'aboutPromptGenerateD', 'aboutPromptCancelD',
+    ()=> isFieldEmpty(document.getElementById('aboutBook')) ? aboutD.generateIfEmpty() : aboutD.regenerate());
+  const keywordsPromptBoxD = wirePromptBoxD('keywordsInlineIconBtn', 'keywordsPromptBoxD', 'keywordsPromptInputD', 'keywordsPromptGenerateD', 'keywordsPromptCancelD',
+    renderKwSuggestChips);
 
-  // Keywords: inline "Suggest keywords" reveals chips; clicking a chip adds it directly
-  // (tops up remaining empty slots only, same rule as the bulk button).
+  // Keywords (241): the manual "Suggest keywords" text link reveals chips;
+  // clicking a chip adds it directly (tops up remaining empty slots only,
+  // same rule as the bulk button).
   document.getElementById('kwSuggestBtn').addEventListener('click', renderKwSuggestChips);
   document.getElementById('keywordsInlineIconBtn').addEventListener('click', renderKwSuggestChips);
   function renderKwSuggestChips(){
@@ -1113,7 +1132,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
     document.getElementById('titlePromptBoxD').style.display = 'none';
-    document.getElementById('titlePromptErrorD').style.display = 'none';
+    document.getElementById('aboutPromptBoxD').style.display = 'none';
+    document.getElementById('keywordsPromptBoxD').style.display = 'none';
     if(val !== '241') inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
