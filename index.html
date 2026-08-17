@@ -455,8 +455,8 @@
   .inline-ai-icon-btn .material-symbols-rounded{font-size:22px;}
 
   .inline-draft-popover{
-    display:none; margin-top:8px; border:1px solid var(--brand); border-radius:8px;
-    background:#fff; padding:14px 16px;
+    display:none; margin-top:8px; border:none; border-radius:8px;
+    background:#F3F0FD; padding:14px 16px;
   }
   .inline-draft-popover.open{display:block;}
   .inline-draft-popover p{font-size:15px; line-height:1.5; margin:0 0 10px; color:var(--subtle); white-space:pre-line;}
@@ -466,8 +466,9 @@
   .popover-link-btn{
     border:none; background:none; padding:0; cursor:pointer;
     font-family:var(--font-sans); font-size:14px; color:var(--link);
-    text-decoration:underline;
+    text-decoration:underline; display:inline-flex; align-items:center; gap:4px;
   }
+  .popover-link-btn .material-symbols-rounded{font-size:16px; text-decoration:none;}
   .popover-link-btn.primary{font-weight:600;}
   .popover-link-btn.muted{color:var(--subtle);}
   .popover-link-btn:hover{filter:brightness(0.85);}
@@ -521,6 +522,14 @@
   .flash{
     animation:flashbg 1.4s ease;
   }
+
+  /* Compliance/trust disclosure — shown wherever AI-generated content is
+     presented for review, not just where it's requested. */
+  .ai-disclosure{
+    font-size:12px; color:var(--subtle); margin:10px 0 0;
+    display:flex; align-items:center; gap:5px;
+  }
+  .ai-disclosure .material-symbols-rounded{font-size:14px;}
 
   @keyframes flashbg{
     0%{background:#eaf6fc;}
@@ -596,8 +605,9 @@
           <button class="btn btn-outline-bold" id="bulkPromptCancel">Cancel</button>
           <button class="btn btn-disabled" id="bulkPromptSubmit" disabled>Generate</button>
         </div>
+        <p class="ai-disclosure" style="justify-content:flex-end;"><span class="material-symbols-rounded">auto_awesome</span>Generated with AI. Review before using.</p>
         <div id="bulkRegenConfirm" style="display:none; margin-top:12px; padding:12px 14px; border:1px solid var(--border-subtle); border-radius:8px; background:#fff;">
-          <p style="margin:0 0 10px; font-size:14px; color:var(--bold);">This will replace your current draft. Continue?</p>
+          <p style="margin:0 0 10px; font-size:14px; color:var(--bold);">This will replace your current title and description. Continue?</p>
           <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button class="btn btn-outline-bold" id="bulkRegenCancel" style="padding:6px 16px; font-size:14px; min-width:auto;">Cancel</button>
             <button class="btn btn-primary" id="bulkRegenContinue" style="padding:6px 16px; font-size:14px; min-width:auto;">Continue</button>
@@ -616,8 +626,8 @@
         <div class="field-body">
           <div class="inline-ai-wrap">
             <input type="text" id="listingTitle" value="Pride and Preconceptions" maxlength="40">
-            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="titleInlineIconBtn" type="button" title="Improve with AI">
-              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="titleInlineIconBtn" type="button" title="Improve with AI" aria-label="Improve title with AI">
+              <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
             </button>
           </div>
           <div class="count" id="titleCount">24/40</div>
@@ -633,8 +643,8 @@
           <div class="inline-draft-popover" id="titleDraftPopover">
             <p id="titleDraftText"></p>
             <div class="row">
-              <button class="popover-link-btn primary" id="titleInsertBtn">Use this title</button>
-              <button class="popover-link-btn" id="titleTryAgainBtn">Suggest another</button>
+              <button class="popover-link-btn primary" id="titleInsertBtn"><span class="material-symbols-rounded">check</span>Use this title</button>
+              <button class="popover-link-btn" id="titleTryAgainBtn"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
               <span class="spacer"></span>
               <button class="popover-link-btn muted" id="titleDismissBtn">Dismiss</button>
             </div>
@@ -659,8 +669,8 @@
         <div class="field-body">
           <div class="inline-ai-wrap">
             <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
-            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="aboutInlineIconBtn" type="button" title="Improve with AI">
-              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="aboutInlineIconBtn" type="button" title="Improve with AI" aria-label="Improve description with AI">
+              <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
             </button>
           </div>
           <div class="count" id="aboutCount">0/1466</div>
@@ -677,8 +687,8 @@
           <div class="inline-draft-popover" id="aboutDraftPopover">
             <p id="aboutDraftText"></p>
             <div class="row">
-              <button class="popover-link-btn primary" id="aboutInsertBtn">Use this description</button>
-              <button class="popover-link-btn" id="aboutTryAgainBtn">Suggest another</button>
+              <button class="popover-link-btn primary" id="aboutInsertBtn"><span class="material-symbols-rounded">check</span>Use this description</button>
+              <button class="popover-link-btn" id="aboutTryAgainBtn"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
               <span class="spacer"></span>
               <button class="popover-link-btn muted" id="aboutDismissBtn">Dismiss</button>
             </div>
@@ -708,7 +718,7 @@
         <div class="field-body">
           <div class="inline-ai-wrap">
             <input type="text" id="keywordsField" placeholder="Add a keyword...">
-            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="keywordsInlineIconBtn" type="button" title="Suggest keywords">
+            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="keywordsInlineIconBtn" type="button" title="Suggest keywords" aria-label="Suggest keywords with AI">
               <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
             </button>
           </div>
@@ -726,7 +736,8 @@
           </button>
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
-          <div class="chip-group mode-a-d hidden-mode" id="kwSuggestChips" style="margin-top:8px;"></div>
+          <p class="hint" id="kwSuggestLabel" style="display:none; margin-top:8px;"></p>
+          <div class="chip-group mode-a-d hidden-mode" id="kwSuggestChips" style="margin-top:4px;"></div>
         </div>
       </div>
     </div>
@@ -862,6 +873,18 @@
 
 <script>
   const KEYWORDS = ["contemporary romance","enemies to lovers","slow burn","second chances","first impressions","small town romance","women's fiction"];
+  // Mock relational data: in a real system this would come from the model
+  // reasoning about the book + what's already selected, not a lookup table.
+  // Stands in for "give me new suggestions informed by what I've already picked."
+  const RELATED_KEYWORDS = {
+    "enemies to lovers": ["forced proximity","banter-heavy","grumpy sunshine"],
+    "slow burn": ["yearning","found family","emotional payoff"],
+    "second chances": ["hometown reunion","childhood friends","reunited"],
+    "small town romance": ["found family","hometown reunion","cozy setting"],
+    "women's fiction": ["book club pick","coming of age","found family"],
+    "first impressions": ["misunderstandings","banter-heavy","opposites attract"],
+    "contemporary romance": ["opposites attract","banter-heavy","happily ever after"]
+  };
   const mockSuggestions = {
     title: [
       "Pride and Preconceptions, Gift Edition",
@@ -1002,9 +1025,41 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('keywordsInlineIconBtn').addEventListener('click', renderKwSuggestChips);
   function renderKwSuggestChips(){
     const wrap = document.getElementById('kwSuggestChips');
+    const label = document.getElementById('kwSuggestLabel');
     wrap.style.display = 'flex';
     wrap.innerHTML = '';
-    KEYWORDS.filter(kw => !mainKeywords.includes(kw)).forEach(kw=>{
+    if(mainKeywords.length >= 7){
+      label.style.display = 'none';
+      wrap.innerHTML = '<p class="hint" style="margin:0;">Maximum keywords reached. Remove one to see more suggestions.</p>';
+      updateKeywordsHint();
+      return;
+    }
+
+    let pool;
+    if(mainKeywords.length === 0){
+      // Nothing picked yet — show the base suggestion set.
+      pool = KEYWORDS.slice();
+    } else {
+      // Something's picked — suggest what's related to those picks instead
+      // of just replaying the same static list with fewer items.
+      const related = [];
+      mainKeywords.forEach(kw=>{
+        (RELATED_KEYWORDS[kw] || []).forEach(r=>{
+          if(!related.includes(r)) related.push(r);
+        });
+      });
+      // Fall back to remaining base keywords too, so the pool doesn't run dry
+      // once the related list is exhausted or a picked keyword has none mapped.
+      const remainingBase = KEYWORDS.filter(kw => !mainKeywords.includes(kw));
+      pool = [...related, ...remainingBase];
+    }
+    const remaining = [...new Set(pool)].filter(kw => !mainKeywords.includes(kw)).slice(0, 6);
+
+    label.textContent = mainKeywords.length > 0
+      ? "More ideas, based on what you're building"
+      : 'Suggested keywords';
+    label.style.display = remaining.length ? 'block' : 'none';
+    remaining.forEach(kw=>{
       if(mainKeywords.length >= 7) return;
       const chip = document.createElement('div');
       chip.className = 'chip unselected';
@@ -1016,6 +1071,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       });
       wrap.appendChild(chip);
     });
+    updateKeywordsHint();
   }
 
 
@@ -1144,8 +1200,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('bulkPromptInput').placeholder = isA
       ? "A travel photo book of two weeks backpacking through Patagonia"
       : "e.g. a cozy mystery set in a small-town bakery, playful tone";
-    document.getElementById('titleCount').style.display = isA ? 'block' : 'none';
-    document.getElementById('aboutCount').style.display = isA ? 'block' : 'none';
+    document.getElementById('titleCount').style.display = 'none';
+    document.getElementById('aboutCount').style.display = 'none';
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', !(isA || isD)));
     document.querySelectorAll('.mode-a').forEach(el => el.classList.toggle('hidden-mode', !isA));
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
@@ -1184,14 +1240,19 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       group.appendChild(chip);
     });
     group.style.display = mainKeywords.length ? 'flex' : 'none';
-    const field = document.getElementById('keywordsField');
+    document.getElementById('keywordsField').disabled = mainKeywords.length >= 7;
+    updateKeywordsHint();
+  }
+  function updateKeywordsHint(){
     const hint = document.getElementById('keywordsHint');
+    const suggestChips = document.getElementById('kwSuggestChips');
+    const hasSuggestions = suggestChips.style.display === 'flex' && suggestChips.querySelector('.chip');
     if(mainKeywords.length >= 7){
       hint.textContent = 'Maximum keywords reached. Remove one to add another.';
-      field.disabled = true;
+    } else if(hasSuggestions){
+      hint.textContent = 'Press Enter to add a keyword, or click a suggestion below. Up to 7 keywords.';
     } else {
       hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
-      field.disabled = false;
     }
   }
   document.getElementById('keywordsField').addEventListener('keydown', (e)=>{
