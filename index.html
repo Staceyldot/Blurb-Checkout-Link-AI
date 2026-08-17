@@ -472,6 +472,12 @@
   .popover-link-btn.muted{color:var(--subtle);}
   .popover-link-btn:hover{filter:brightness(0.85);}
 
+  .dismiss-undo{
+    display:none; align-items:center; gap:10px; margin-top:8px;
+    font-size:14px; color:var(--subtle);
+  }
+  .dismiss-undo.show{display:flex;}
+
   .inline-draft-link{
     display:inline-flex; align-items:center; gap:6px; border:none; background:none; cursor:pointer;
     color:var(--bold); font-family:var(--font-sans); font-size:14px; font-weight:600; padding:0; margin-top:8px;
@@ -630,8 +636,12 @@
               <button class="popover-link-btn primary" id="titleInsertBtn">Use this title</button>
               <button class="popover-link-btn" id="titleTryAgainBtn">Suggest another</button>
               <span class="spacer"></span>
-              <button class="popover-link-btn muted" id="titleDismissBtn">Keep as is</button>
+              <button class="popover-link-btn muted" id="titleDismissBtn">Dismiss</button>
             </div>
+          </div>
+          <div class="dismiss-undo" id="titleDismissUndo">
+            <span>Suggestion dismissed</span>
+            <button class="popover-link-btn" id="titleUndoBtn">Undo</button>
           </div>
           <button class="inline-draft-link hidden-mode" id="titleDraftLinkD" type="button">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Draft this with AI
@@ -670,8 +680,12 @@
               <button class="popover-link-btn primary" id="aboutInsertBtn">Use this description</button>
               <button class="popover-link-btn" id="aboutTryAgainBtn">Suggest another</button>
               <span class="spacer"></span>
-              <button class="popover-link-btn muted" id="aboutDismissBtn">Keep as is</button>
+              <button class="popover-link-btn muted" id="aboutDismissBtn">Dismiss</button>
             </div>
+          </div>
+          <div class="dismiss-undo" id="aboutDismissUndo">
+            <span>Suggestion dismissed</span>
+            <button class="popover-link-btn" id="aboutUndoBtn">Undo</button>
           </div>
           <button class="inline-draft-link hidden-mode" id="aboutDraftLinkD" type="button">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Draft this with AI
@@ -879,33 +893,44 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function isFieldEmpty(el){ return el.value.trim().length === 0; }
 
   // Iteration A: icon opens an inline popover under the field
-  function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn, flagOverride){
+  function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn, undoWrapId, undoBtnId, flagOverride){
     let idx = 0;
     const iconBtn = document.getElementById(iconBtnId);
     const popover = document.getElementById(popoverId);
     const textEl = document.getElementById(textId);
+    const undoWrap = document.getElementById(undoWrapId);
+    const undoBtn = document.getElementById(undoBtnId);
     iconBtn.addEventListener('click', ()=>{
       if(currentMode !== '241') return;
       if(flagOverride && flagOverride()) return;
+      undoWrap.classList.remove('show');
       textEl.textContent = variants[idx];
       popover.classList.toggle('open');
     });
+    undoBtn.addEventListener('click', ()=>{
+      undoWrap.classList.remove('show');
+      textEl.textContent = variants[idx];
+      popover.classList.add('open');
+    });
     return {
-      insert(){ inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); },
+      insert(){ inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); },
       tryAgain(){ idx = (idx + 1) % variants.length; textEl.textContent = variants[idx]; },
-      dismiss(){ popover.classList.remove('open'); },
+      // Dismissing hides the suggestion without discarding it — Undo brings the same draft right back.
+      dismiss(){ popover.classList.remove('open'); undoWrap.classList.add('show'); },
       generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } },
-      regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); }
+      regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); }
     };
   }
   const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
-    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40');
+    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
+    'titleDismissUndo', 'titleUndoBtn');
   document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
   document.getElementById('titleTryAgainBtn').addEventListener('click', titleA.tryAgain);
   document.getElementById('titleDismissBtn').addEventListener('click', titleA.dismiss);
 
   const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
-    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
+    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
+    'aboutDismissUndo', 'aboutUndoBtn');
   document.getElementById('aboutInsertBtn').addEventListener('click', aboutA.insert);
   document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
   document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
@@ -1133,6 +1158,10 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('titlePromptBoxD').style.display = 'none';
     document.getElementById('aboutPromptBoxD').style.display = 'none';
     document.getElementById('keywordsPromptBoxD').style.display = 'none';
+    document.getElementById('titleDraftPopover').classList.remove('open');
+    document.getElementById('aboutDraftPopover').classList.remove('open');
+    document.getElementById('titleDismissUndo').classList.remove('show');
+    document.getElementById('aboutDismissUndo').classList.remove('show');
     if(val !== '241') inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
