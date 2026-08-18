@@ -551,6 +551,26 @@
   }
   .ai-disclosure .material-symbols-rounded{font-size:14px;}
 
+  /* --- Staggered generation reveal (Meta Marketplace-style): each field
+     shows a shimmer while its own value is being "generated," resolving
+     independently rather than one global blocking spinner. */
+  @keyframes skeleton-shimmer{
+    0%{background-position:-200% 0;}
+    100%{background-position:200% 0;}
+  }
+  .field-skeleton{
+    background:linear-gradient(90deg, var(--gray-subtler) 25%, #ececec 50%, var(--gray-subtler) 75%) !important;
+    background-size:200% 100% !important;
+    animation:skeleton-shimmer 1.3s ease-in-out infinite;
+    color:transparent !important;
+  }
+  .field-skeleton::placeholder{color:transparent;}
+  .chip-skeleton{
+    display:inline-block; width:100px; height:30px; border-radius:100px;
+    background:linear-gradient(90deg, var(--gray-subtler) 25%, #ececec 50%, var(--gray-subtler) 75%);
+    background-size:200% 100%; animation:skeleton-shimmer 1.3s ease-in-out infinite;
+  }
+
   @keyframes flashbg{
     0%{background:#eaf6fc;}
     100%{background:transparent;}
@@ -1303,6 +1323,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
   document.getElementById('bulkGenerate').addEventListener('click', ()=>{
     updateBulkPromptSubmitLabel();
+    const hasText = bulkPromptInput.value.trim().length > 0;
+    bulkPromptSubmit.disabled = !hasText;
+    bulkPromptSubmit.className = hasText ? 'btn btn-primary' : 'btn btn-disabled';
     if(currentMode === '242' || currentMode === '243') openBulkAccordion();
     else bulkPromptBox.style.display = 'block';
     bulkPromptInput.focus();
@@ -1326,24 +1349,67 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function runBulkFill(regenerate){
     const mode = currentMode;
     const instantMode = (mode === '241' || mode === '243');
-    if(instantMode){ inlineSparkleUnlocked = true; updateInlineSparkleVisibility(); }
-    if(regenerate){
-      if(instantMode){ titleA.regenerate(); aboutA.regenerate(); }
-      else { titleD.regenerate(); aboutD.regenerate(); }
-    } else if(instantMode){ titleA.generateIfEmpty(); aboutA.generateIfEmpty(); }
-    else { titleD.generateIfEmpty(); aboutD.generateIfEmpty(); }
     if(instantMode){
-      // 241/243: surface keywords as suggestions (dashed outline, +) instead
-      // of auto-adding them, so the seller picks which ones to keep.
-      renderKwSuggestChips();
-    } else {
-      KEYWORDS.forEach(kw=>{
-        if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
-      });
-      renderMainKeywords();
-      if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
+      runBulkFillStaggered(regenerate);
+      return;
     }
+    titleD.generateIfEmpty(); aboutD.generateIfEmpty();
+    if(regenerate){ titleD.regenerate(); aboutD.regenerate(); }
+    KEYWORDS.forEach(kw=>{
+      if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
+    });
+    renderMainKeywords();
+    if(document.getElementById('kwSuggestChips').style.display === 'flex') renderKwSuggestChips();
     updateBulkGenerateState();
+  }
+
+  // 241/243: each field resolves independently with its own shimmer, instead
+  // of one instant swap or a single blocking spinner over everything.
+  function showKeywordSkeleton(){
+    const wrap = document.getElementById('kwSuggestChips');
+    const label = document.getElementById('kwSuggestLabel');
+    label.style.display = 'none';
+    wrap.style.display = 'flex';
+    wrap.innerHTML = '<span class="chip-skeleton"></span><span class="chip-skeleton"></span><span class="chip-skeleton"></span>';
+  }
+  function runBulkFillStaggered(regenerate){
+    if(currentMode === '242' || currentMode === '243') closeBulkAccordion();
+    else bulkPromptBox.style.display = 'none';
+    inlineSparkleUnlocked = true;
+    updateInlineSparkleVisibility();
+    const titleInput = document.getElementById('listingTitle');
+    const aboutInput = document.getElementById('aboutBook');
+    const willFillTitle = regenerate || isFieldEmpty(titleInput);
+    const willFillAbout = regenerate || isFieldEmpty(aboutInput);
+
+    if(willFillTitle){ titleInput.classList.add('field-skeleton'); titleInput.disabled = true; }
+    if(willFillAbout){ aboutInput.classList.add('field-skeleton'); aboutInput.disabled = true; }
+    showKeywordSkeleton();
+    bulkPromptSubmit.disabled = true;
+
+    setTimeout(()=>{
+      if(willFillTitle){
+        if(regenerate) titleA.regenerate(); else titleA.generateIfEmpty();
+        titleInput.classList.remove('field-skeleton');
+        titleInput.disabled = false;
+      }
+    }, 500);
+
+    setTimeout(()=>{
+      if(willFillAbout){
+        if(regenerate) aboutA.regenerate(); else aboutA.generateIfEmpty();
+        aboutInput.classList.remove('field-skeleton');
+        aboutInput.disabled = false;
+      }
+    }, 1000);
+
+    setTimeout(()=>{
+      renderKwSuggestChips();
+      const hasText = bulkPromptInput.value.trim().length > 0;
+      bulkPromptSubmit.disabled = !hasText;
+      bulkPromptSubmit.className = hasText ? 'btn btn-primary' : 'btn btn-disabled';
+      updateBulkGenerateState();
+    }, 1450);
   }
   bulkPromptSubmit.addEventListener('click', ()=>{
     if(isBulkDraftFull()){
