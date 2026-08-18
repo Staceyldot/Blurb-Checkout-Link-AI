@@ -982,6 +982,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     ]
   };
   let currentMode = null;
+  let mainKeywords = [];
   const demoPhaseSelect = document.getElementById('demoPhase');
 
   // --- Iteration A / D: inline field-level AI (no side panel) ---
@@ -1208,7 +1209,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       icon.disabled = true;
       icon.title = 'Maximum keywords reached';
       icon.setAttribute('aria-label', 'Maximum keywords reached');
-      glyph.textContent = 'auto_awesome';
+      glyph.textContent = currentMode === '242' ? 'auto_fix_high' : 'auto_awesome';
+    } else if(currentMode === '242'){
+      // 242: Title/Description use a static wand icon (prompt-box pattern) —
+      // Keywords matches that here instead of the dynamic sparkle/refresh
+      // swap used in 241/243's instant-suggestion pattern.
+      icon.disabled = false;
+      icon.title = 'Suggest keywords';
+      icon.setAttribute('aria-label', 'Suggest keywords with AI');
+      glyph.textContent = 'auto_fix_high';
     } else if(hasSuggestions){
       icon.disabled = false;
       icon.title = 'Suggest more keywords';
@@ -1393,17 +1402,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
         titleInput.classList.remove('field-skeleton');
         titleInput.disabled = false;
       }
-    }, 500);
-
-    setTimeout(()=>{
       if(willFillAbout){
         if(regenerate) aboutA.regenerate(); else aboutA.generateIfEmpty();
         aboutInput.classList.remove('field-skeleton');
         aboutInput.disabled = false;
       }
-    }, 1000);
-
-    setTimeout(()=>{
       renderKwSuggestChips();
       const hasText = bulkPromptInput.value.trim().length > 0;
       bulkPromptSubmit.disabled = !hasText;
@@ -1493,14 +1496,18 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutDismissUndo').classList.remove('show');
     document.getElementById('titleGuideBox').style.display = 'none';
     document.getElementById('aboutGuideBox').style.display = 'none';
+    document.getElementById('kwSuggestChips').style.display = 'none';
+    document.getElementById('kwSuggestChips').innerHTML = '';
+    document.getElementById('kwSuggestLabel').style.display = 'none';
     if(!instantMode) inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
+    updateKeywordsIconState();
   }
   demoPhaseSelect.addEventListener('change', applyDemoMode);
   applyDemoMode();
 
-  let mainKeywords = [];
+
   function renderMainKeywords(){
     const group = document.getElementById('mainKeywordChips');
     group.innerHTML = '';
