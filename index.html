@@ -551,24 +551,37 @@
   }
   .ai-disclosure .material-symbols-rounded{font-size:14px;}
 
-  /* --- Staggered generation reveal (Meta Marketplace-style): each field
-     shows a shimmer while its own value is being "generated," resolving
-     independently rather than one global blocking spinner. */
+  /* --- Staggered generation reveal (Meta Marketplace-style): a shimmering
+     line sits inside the field, standing in for the text being generated,
+     rather than tinting the whole input's background. */
   @keyframes skeleton-shimmer{
     0%{background-position:-200% 0;}
     100%{background-position:200% 0;}
   }
-  .field-skeleton{
-    background:linear-gradient(90deg, var(--gray-subtler) 25%, #ececec 50%, var(--gray-subtler) 75%) !important;
-    background-size:200% 100% !important;
-    animation:skeleton-shimmer 1.3s ease-in-out infinite;
-    color:transparent !important;
+  .field-relative{position:relative; flex:1; min-width:0;}
+  .field-relative input, .field-relative textarea{width:100%;}
+  .skeleton-overlay{
+    display:none; position:absolute; inset:0; background:#fff; border-radius:4px;
+    border:1px solid var(--border-input);
+    padding:10px 12px; box-sizing:border-box; pointer-events:none;
   }
-  .field-skeleton::placeholder{color:transparent;}
+  .skeleton-overlay.show{display:flex; flex-direction:column; gap:8px;}
+  .skeleton-line{
+    height:16px; border-radius:4px;
+    background:linear-gradient(90deg, var(--gray-subtler) 25%, #ececec 50%, var(--gray-subtler) 75%);
+    background-size:200% 100%; animation:skeleton-shimmer 1.3s ease-in-out infinite;
+  }
   .chip-skeleton{
     display:inline-block; width:100px; height:30px; border-radius:100px;
     background:linear-gradient(90deg, var(--gray-subtler) 25%, #ececec 50%, var(--gray-subtler) 75%);
     background-size:200% 100%; animation:skeleton-shimmer 1.3s ease-in-out infinite;
+  }
+
+  /* Shows what prompt/guidance is driving the current suggestion, so
+     "Suggest another" is visibly working from the same context rather than
+     silently discarding whatever the seller typed. */
+  .suggestion-context{
+    font-size:12px; color:var(--subtle); margin:0 0 8px; font-style:italic;
   }
 
   @keyframes flashbg{
@@ -665,7 +678,12 @@
         </label>
         <div class="field-body">
           <div class="inline-ai-wrap">
-            <input type="text" id="listingTitle" value="Pride and Preconceptions" maxlength="40">
+            <div class="field-relative">
+              <input type="text" id="listingTitle" value="" maxlength="40" placeholder="e.g. Hand-Woven Geometric Kilim Runner Rug">
+              <div class="skeleton-overlay" id="titleSkeletonOverlay">
+                <div class="skeleton-line" style="width:65%;"></div>
+              </div>
+            </div>
             <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="titleInlineIconBtn" type="button" title="Improve with AI" aria-label="Improve title with AI">
               <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
             </button>
@@ -682,6 +700,7 @@
               </div>
             </div>
             <div id="titlePromptResultD" style="display:none; background:#fff; border-radius:8px; padding:14px 16px;">
+              <p class="suggestion-context" id="titlePromptContextLine" style="display:none;"></p>
               <p id="titlePromptResultText" style="margin:0 0 12px; font-size:15px; color:var(--subtle); white-space:pre-line;"></p>
               <div class="row" style="display:flex; align-items:center; gap:16px;">
                 <button class="popover-link-btn primary" id="titlePromptUseD"><span class="material-symbols-rounded">check</span>Use this title</button>
@@ -692,6 +711,7 @@
             </div>
           </div>
           <div class="inline-draft-popover" id="titleDraftPopover">
+            <p class="suggestion-context" id="titleContextLine" style="display:none;"></p>
             <p id="titleDraftText"></p>
             <div class="row">
               <button class="popover-link-btn primary" id="titleInsertBtn"><span class="material-symbols-rounded">check</span>Use this title</button>
@@ -726,7 +746,14 @@
         <label>About the book</label>
         <div class="field-body">
           <div class="inline-ai-wrap">
-            <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
+            <div class="field-relative">
+              <textarea id="aboutBook" placeholder="e.g. keep it playful, mention it's a gift edition" maxlength="1466"></textarea>
+              <div class="skeleton-overlay" id="aboutSkeletonOverlay">
+                <div class="skeleton-line" style="width:100%;"></div>
+                <div class="skeleton-line" style="width:100%;"></div>
+                <div class="skeleton-line" style="width:80%;"></div>
+              </div>
+            </div>
             <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="aboutInlineIconBtn" type="button" title="Improve with AI" aria-label="Improve description with AI">
               <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
             </button>
@@ -744,6 +771,7 @@
               </div>
             </div>
             <div id="aboutPromptResultD" style="display:none; background:#fff; border-radius:8px; padding:14px 16px;">
+              <p class="suggestion-context" id="aboutPromptContextLine" style="display:none;"></p>
               <p id="aboutPromptResultText" style="margin:0 0 12px; font-size:15px; color:var(--subtle); white-space:pre-line;"></p>
               <div class="row" style="display:flex; align-items:center; gap:16px;">
                 <button class="popover-link-btn primary" id="aboutPromptUseD"><span class="material-symbols-rounded">check</span>Use this description</button>
@@ -754,6 +782,7 @@
             </div>
           </div>
           <div class="inline-draft-popover" id="aboutDraftPopover">
+            <p class="suggestion-context" id="aboutContextLine" style="display:none;"></p>
             <p id="aboutDraftText"></p>
             <div class="row">
               <button class="popover-link-btn primary" id="aboutInsertBtn"><span class="material-symbols-rounded">check</span>Use this description</button>
@@ -983,6 +1012,21 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   };
   let currentMode = null;
   let mainKeywords = [];
+  // Tracks whatever prompt/guidance actually informed each field's current
+  // suggestion, so "Suggest another" works from the same context instead of
+  // silently discarding it. Updated whenever a new prompt or guidance is used.
+  let titleLastPrompt = '';
+  let aboutLastPrompt = '';
+  function setContextLine(lineId, text){
+    const el = document.getElementById(lineId);
+    if(text){
+      el.textContent = 'Based on: "' + text + '"';
+      el.style.display = 'block';
+    } else {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+  }
   const demoPhaseSelect = document.getElementById('demoPhase');
 
   // --- Iteration A / D: inline field-level AI (no side panel) ---
@@ -1027,9 +1071,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
   document.getElementById('titleTryAgainBtn').addEventListener('click', titleA.tryAgain);
   document.getElementById('titleDismissBtn').addEventListener('click', titleA.dismiss);
-  wireGuideBox('titleGuideToggle', 'titleGuideBox', 'titleGuideInput', 'titleGuideSubmit', titleA.tryAgain);
+  wireGuideBox('titleGuideToggle', 'titleGuideBox', 'titleGuideInput', 'titleGuideSubmit',
+    ()=>{ titleLastPrompt = document.getElementById('titleGuideInput').value.trim(); titleA.tryAgain(); },
+    'titleContextLine');
   document.getElementById('titleInlineIconBtn').addEventListener('click', ()=>{
     document.getElementById('titleGuideBox').style.display = 'none';
+    setContextLine('titleContextLine', titleLastPrompt);
   });
 
   const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
@@ -1038,16 +1085,19 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('aboutInsertBtn').addEventListener('click', aboutA.insert);
   document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
   document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
-  wireGuideBox('aboutGuideToggle', 'aboutGuideBox', 'aboutGuideInput', 'aboutGuideSubmit', aboutA.tryAgain);
+  wireGuideBox('aboutGuideToggle', 'aboutGuideBox', 'aboutGuideInput', 'aboutGuideSubmit',
+    ()=>{ aboutLastPrompt = document.getElementById('aboutGuideInput').value.trim(); aboutA.tryAgain(); },
+    'aboutContextLine');
   document.getElementById('aboutInlineIconBtn').addEventListener('click', ()=>{
     document.getElementById('aboutGuideBox').style.display = 'none';
+    setContextLine('aboutContextLine', aboutLastPrompt);
   });
 
   // 243: optional guidance nested inside the instant-suggestion popover.
   // Mock data can't truly steer the result, so this reuses the same
   // "suggest another" cycling — the point being to demo the affordance,
   // not simulate real prompt-conditioned generation.
-  function wireGuideBox(toggleId, boxId, inputId, submitId, onSubmit){
+  function wireGuideBox(toggleId, boxId, inputId, submitId, onSubmit, contextLineId){
     const toggle = document.getElementById(toggleId);
     const box = document.getElementById(boxId);
     const input = document.getElementById(inputId);
@@ -1063,7 +1113,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       submitBtn.className = has ? 'btn btn-primary' : 'btn btn-disabled';
     });
     submitBtn.addEventListener('click', ()=>{
+      const guidance = input.value.trim();
       onSubmit();
+      // Guidance replaces the prior context — it's the seller's latest,
+      // more specific ask, not an addition to what came before.
+      if(contextLineId) setContextLine(contextLineId, guidance);
       box.style.display = 'none';
       input.value = '';
       submitBtn.disabled = true;
@@ -1104,7 +1158,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // review (Use / Suggest another / Dismiss) before it ever touches the
   // real field — mirrors 241's popover instead of writing on Generate.
   function wirePromptBoxWithReviewD(iconBtnId, boxId, inputStepId, inputId, generateBtnId, cancelBtnId,
-      resultStepId, resultTextId, useBtnId, anotherBtnId, dismissBtnId, inputEl, variants, countUpdateFn){
+      resultStepId, resultTextId, useBtnId, anotherBtnId, dismissBtnId, inputEl, variants, countUpdateFn, contextLineId){
     const box = document.getElementById(boxId);
     const inputStep = document.getElementById(inputStepId);
     const promptInput = document.getElementById(inputId);
@@ -1119,6 +1173,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
     function showResultStep(){
       resultText.textContent = variants[idx];
+      if(contextLineId) setContextLine(contextLineId, promptInput.value.trim());
       inputStep.style.display = 'none';
       resultStep.style.display = 'block';
     }
@@ -1156,12 +1211,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     'titleInlineIconBtn', 'titlePromptBoxD', 'titlePromptInputStepD', 'titlePromptInputD', 'titlePromptGenerateD', 'titlePromptCancelD',
     'titlePromptResultD', 'titlePromptResultText', 'titlePromptUseD', 'titlePromptAnotherD', 'titlePromptDismissD',
     document.getElementById('listingTitle'), titleVariants,
-    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40');
+    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
+    'titlePromptContextLine');
   const aboutPromptBoxD = wirePromptBoxWithReviewD(
     'aboutInlineIconBtn', 'aboutPromptBoxD', 'aboutPromptInputStepD', 'aboutPromptInputD', 'aboutPromptGenerateD', 'aboutPromptCancelD',
     'aboutPromptResultD', 'aboutPromptResultText', 'aboutPromptUseD', 'aboutPromptAnotherD', 'aboutPromptDismissD',
     document.getElementById('aboutBook'), aboutVariants,
-    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
+    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
+    'aboutPromptContextLine');
 
   // Keywords keeps the original pattern — Generate reveals suggestion chips,
   // which already requires an explicit click to add each one (its own
@@ -1335,14 +1392,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const hasText = bulkPromptInput.value.trim().length > 0;
     bulkPromptSubmit.disabled = !hasText;
     bulkPromptSubmit.className = hasText ? 'btn btn-primary' : 'btn btn-disabled';
-    if(currentMode === '242' || currentMode === '243') openBulkAccordion();
-    else bulkPromptBox.style.display = 'block';
+    openBulkAccordion();
     bulkPromptInput.focus();
   });
   document.getElementById('bulkPromptCancel').addEventListener('click', ()=>{
     bulkRegenConfirm.style.display = 'none';
-    if(currentMode === '242' || currentMode === '243') closeBulkAccordion();
-    else bulkPromptBox.style.display = 'none';
+    closeBulkAccordion();
   });
   bulkPromptInput.addEventListener('input', ()=>{
     const has = bulkPromptInput.value.trim().length > 0;
@@ -1382,30 +1437,33 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     wrap.innerHTML = '<span class="chip-skeleton"></span><span class="chip-skeleton"></span><span class="chip-skeleton"></span>';
   }
   function runBulkFillStaggered(regenerate){
-    if(currentMode === '242' || currentMode === '243') closeBulkAccordion();
-    else bulkPromptBox.style.display = 'none';
     inlineSparkleUnlocked = true;
     updateInlineSparkleVisibility();
     const titleInput = document.getElementById('listingTitle');
     const aboutInput = document.getElementById('aboutBook');
+    const titleOverlay = document.getElementById('titleSkeletonOverlay');
+    const aboutOverlay = document.getElementById('aboutSkeletonOverlay');
     const willFillTitle = regenerate || isFieldEmpty(titleInput);
     const willFillAbout = regenerate || isFieldEmpty(aboutInput);
 
-    if(willFillTitle){ titleInput.classList.add('field-skeleton'); titleInput.disabled = true; }
-    if(willFillAbout){ aboutInput.classList.add('field-skeleton'); aboutInput.disabled = true; }
+    if(willFillTitle){ titleOverlay.classList.add('show'); titleInput.disabled = true; }
+    if(willFillAbout){ aboutOverlay.classList.add('show'); aboutInput.disabled = true; }
     showKeywordSkeleton();
     bulkPromptSubmit.disabled = true;
+    const promptUsed = bulkPromptInput.value.trim();
 
     setTimeout(()=>{
       if(willFillTitle){
         if(regenerate) titleA.regenerate(); else titleA.generateIfEmpty();
-        titleInput.classList.remove('field-skeleton');
+        titleOverlay.classList.remove('show');
         titleInput.disabled = false;
+        titleLastPrompt = promptUsed;
       }
       if(willFillAbout){
         if(regenerate) aboutA.regenerate(); else aboutA.generateIfEmpty();
-        aboutInput.classList.remove('field-skeleton');
+        aboutOverlay.classList.remove('show');
         aboutInput.disabled = false;
+        aboutLastPrompt = promptUsed;
       }
       renderKwSuggestChips();
       const hasText = bulkPromptInput.value.trim().length > 0;
@@ -1499,6 +1557,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('kwSuggestChips').style.display = 'none';
     document.getElementById('kwSuggestChips').innerHTML = '';
     document.getElementById('kwSuggestLabel').style.display = 'none';
+    titleLastPrompt = '';
+    aboutLastPrompt = '';
+    setContextLine('titleContextLine', '');
+    setContextLine('aboutContextLine', '');
+    setContextLine('titlePromptContextLine', '');
+    setContextLine('aboutPromptContextLine', '');
     if(!instantMode) inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
