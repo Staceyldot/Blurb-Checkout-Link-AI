@@ -1111,8 +1111,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // Keywords (241): the manual "Suggest keywords" text link reveals chips;
   // clicking a chip adds it directly (tops up remaining empty slots only,
   // same rule as the bulk button).
-  document.getElementById('kwSuggestBtn').addEventListener('click', renderKwSuggestChips);
-  document.getElementById('keywordsInlineIconBtn').addEventListener('click', renderKwSuggestChips);
+  document.getElementById('kwSuggestBtn').addEventListener('click', ()=> renderKwSuggestChips(false));
+  document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
+    const wrap = document.getElementById('kwSuggestChips');
+    const isRefresh = wrap.style.display === 'flex' && wrap.querySelector('.chip');
+    renderKwSuggestChips(isRefresh);
+  });
   function updateKeywordsIconState(){
     const icon = document.getElementById('keywordsInlineIconBtn');
     const glyph = icon.querySelector('.material-symbols-rounded');
@@ -1135,7 +1139,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       glyph.textContent = 'auto_awesome';
     }
   }
-  function renderKwSuggestChips(){
+  let kwSuggestOffset = 0;
+  function renderKwSuggestChips(advance){
     const wrap = document.getElementById('kwSuggestChips');
     const label = document.getElementById('kwSuggestLabel');
     wrap.style.display = 'flex';
@@ -1166,7 +1171,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       const remainingBase = KEYWORDS.filter(kw => !mainKeywords.includes(kw));
       pool = [...related, ...remainingBase];
     }
-    const remaining = [...new Set(pool)].filter(kw => !mainKeywords.includes(kw)).slice(0, 6);
+    const fullList = [...new Set(pool)].filter(kw => !mainKeywords.includes(kw));
+
+    // "Suggest more" (advance=true) rotates to the next batch from the same
+    // pool instead of recomputing the identical list when nothing's changed.
+    // Any real change (a pick, a fresh generate) resets back to the start.
+    kwSuggestOffset = advance && fullList.length ? (kwSuggestOffset + 6) % fullList.length : 0;
+    const rotated = fullList.length
+      ? [...fullList.slice(kwSuggestOffset), ...fullList.slice(0, kwSuggestOffset)]
+      : [];
+    const remaining = rotated.slice(0, 6);
 
     label.textContent = mainKeywords.length > 0
       ? "More ideas, based on what you're building"
