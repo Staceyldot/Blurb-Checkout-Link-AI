@@ -1412,7 +1412,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       bulkPromptSubmit.disabled = !hasText;
       bulkPromptSubmit.className = hasText ? 'btn btn-primary' : 'btn btn-disabled';
       updateBulkGenerateState();
-    }, 1450);
+    }, 2000);
   }
   bulkPromptSubmit.addEventListener('click', ()=>{
     if(isBulkDraftFull()){
@@ -1476,7 +1476,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
     // mode-243: the optional "want something different" guidance link inside
     // the instant popover — new to 243, not present in 241 or 242.
-    document.querySelectorAll('.mode-243').forEach(el => el.classList.toggle('hidden-mode', !isThree));
+    document.querySelectorAll('.mode-243').forEach(el => { el.style.display = isThree ? 'inline-flex' : 'none'; });
 
     // Switching modes always closes the bulk prompt box fresh, so no
     // open/accordion state leaks from one mode into another.
