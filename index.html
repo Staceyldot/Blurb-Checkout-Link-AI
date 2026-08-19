@@ -307,6 +307,25 @@
   .btn:hover.btn-outline-bold, .btn:hover.btn-outline-brand{filter:brightness(0.98);}
   .btn-outline-ai:hover{filter:brightness(0.97);}
 
+  /* --- 244: a full-width banner replaces the small header button as the
+     AI entry point — more confident/prominent, matching the flagship
+     positioning of this iteration. */
+  .ai-banner{
+    display:none; align-items:center; gap:14px; width:100%;
+    margin:-8px 0 20px; padding:16px 18px; box-sizing:border-box;
+    border:2px solid transparent; border-radius:8px; cursor:pointer;
+    background:
+      linear-gradient(#F3F0FD, #F3F0FD) padding-box,
+      linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%) border-box;
+    font-family:var(--font-sans); text-align:left;
+  }
+  .ai-banner:hover{filter:brightness(0.98);}
+  .ai-banner-icon{font-size:28px; flex-shrink:0;}
+  .ai-banner-text{display:flex; flex-direction:column; gap:2px; flex:1;}
+  .ai-banner-text strong{font-size:16px; color:var(--bold);}
+  .ai-banner-text span{font-size:13px; color:var(--subtle);}
+  .ai-banner-chevron{font-size:22px; color:var(--subtle); flex-shrink:0;}
+
   .sparkle{
     width:20px;height:20px;flex-shrink:0;
     display:inline-block;
@@ -482,17 +501,6 @@
   .popover-link-btn.muted{color:var(--subtle);}
   .popover-link-btn:hover{filter:brightness(0.85);}
 
-  /* --- 243: optional guidance inside the instant-suggestion popover.
-     Hidden by default; only mode 243 reveals the toggle link. */
-  .guide-toggle{
-    display:none; margin-top:10px; border:none; background:none; padding:0;
-    cursor:pointer; font-family:var(--font-sans); font-size:13px; color:var(--subtle);
-    text-decoration:underline;
-  }
-  .guide-box{display:none; margin-top:10px;}
-  .guide-box textarea{min-height:60px; font-size:14px;}
-  .guide-box .row{display:flex; justify-content:flex-end; gap:8px; margin-top:8px;}
-
   .dismiss-undo{
     display:none; align-items:center; gap:10px; margin-top:8px;
     font-size:14px; color:var(--subtle);
@@ -598,9 +606,9 @@
     <label for="demoPhase">Iteration</label>
     <div class="select-wrap">
       <select id="demoPhase">
-        <option value="241" selected>241</option>
+        <option value="244" selected>244</option>
+        <option value="241">241</option>
         <option value="242">242</option>
-        <option value="243">243</option>
       </select>
       <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
     </div>
@@ -651,6 +659,14 @@
           <span id="bulkGenerateLabel">Let AI help you</span>
         </button>
       </div>
+      <button class="ai-banner" id="bulkGenerateBanner" type="button">
+        <span class="material-symbols-rounded ts-grad-icon ai-banner-icon">auto_awesome</span>
+        <span class="ai-banner-text">
+          <strong>Suggest content with AI</strong>
+          <span>We'll draft a title, description, and keywords from your book's details.</span>
+        </span>
+        <span class="material-symbols-rounded ai-banner-chevron">chevron_right</span>
+      </button>
       <div class="bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
         <p class="prompt-copy" style="margin:0 0 8px;" id="bulkPromptCopy">Help us get it right. What's your book about?</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
@@ -719,13 +735,6 @@
               <span class="spacer"></span>
               <button class="popover-link-btn muted" id="titleDismissBtn">Dismiss</button>
             </div>
-            <button class="guide-toggle mode-243" id="titleGuideToggle" type="button">Want something different? Tell us more.</button>
-            <div class="guide-box" id="titleGuideBox">
-              <textarea id="titleGuideInput" placeholder="e.g. mention it's a gift edition"></textarea>
-              <div class="row">
-                <button class="btn btn-disabled" id="titleGuideSubmit" disabled>Suggest another</button>
-              </div>
-            </div>
           </div>
           <div class="dismiss-undo" id="titleDismissUndo">
             <span>Suggestion dismissed</span>
@@ -760,7 +769,7 @@
           </div>
           <div class="count" id="aboutCount">0/1466</div>
 
-          <div class="mode-d hidden-mode bulk-prompt-box" id="aboutPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+          <div class="mode-about-d hidden-mode bulk-prompt-box" id="aboutPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
             <div id="aboutPromptInputStepD">
               <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll draft a description.</p>
               <textarea id="aboutPromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
@@ -790,13 +799,6 @@
               <span class="spacer"></span>
               <button class="popover-link-btn muted" id="aboutDismissBtn">Dismiss</button>
             </div>
-            <button class="guide-toggle mode-243" id="aboutGuideToggle" type="button">Want something different? Tell us more.</button>
-            <div class="guide-box" id="aboutGuideBox">
-              <textarea id="aboutGuideInput" placeholder="e.g. mention it's a gift edition"></textarea>
-              <div class="row">
-                <button class="btn btn-disabled" id="aboutGuideSubmit" disabled>Suggest another</button>
-              </div>
-            </div>
           </div>
           <div class="dismiss-undo" id="aboutDismissUndo">
             <span>Suggestion dismissed</span>
@@ -805,7 +807,7 @@
           <button class="inline-draft-link hidden-mode" id="aboutDraftLinkD" type="button">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Draft this with AI
           </button>
-          <div class="inline-ai-attribution mode-d hidden-mode" id="aboutAttrD" style="display:none;">
+          <div class="inline-ai-attribution mode-about-d hidden-mode" id="aboutAttrD" style="display:none;">
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
             <span>Drafted with AI &middot;</span>
             <button id="aboutRedraftD">Draft again</button>
@@ -1037,7 +1039,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function isFieldEmpty(el){ return el.value.trim().length === 0; }
 
   // Iteration A: icon opens an inline popover under the field
-  function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn, undoWrapId, undoBtnId, flagOverride){
+  function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn, undoWrapId, undoBtnId, activeModes, flagOverride){
     let idx = 0;
     const iconBtn = document.getElementById(iconBtnId);
     const popover = document.getElementById(popoverId);
@@ -1045,7 +1047,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const undoWrap = document.getElementById(undoWrapId);
     const undoBtn = document.getElementById(undoBtnId);
     iconBtn.addEventListener('click', ()=>{
-      if(currentMode !== '241' && currentMode !== '243') return;
+      if(!activeModes.includes(currentMode)) return;
       if(flagOverride && flagOverride()) return;
       undoWrap.classList.remove('show');
       textEl.textContent = variants[idx];
@@ -1065,66 +1067,29 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); }
     };
   }
+  // Title: instant popover in both 241 and 244 — 244 just hides "Suggest
+  // another" for it (handled in applyDemoMode), same underlying mechanism.
   const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
     ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
-    'titleDismissUndo', 'titleUndoBtn');
+    'titleDismissUndo', 'titleUndoBtn', ['241','244']);
   document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
   document.getElementById('titleTryAgainBtn').addEventListener('click', titleA.tryAgain);
   document.getElementById('titleDismissBtn').addEventListener('click', titleA.dismiss);
-  wireGuideBox('titleGuideToggle', 'titleGuideBox', 'titleGuideInput', 'titleGuideSubmit',
-    ()=>{ titleLastPrompt = document.getElementById('titleGuideInput').value.trim(); titleA.tryAgain(); },
-    'titleContextLine');
   document.getElementById('titleInlineIconBtn').addEventListener('click', ()=>{
-    document.getElementById('titleGuideBox').style.display = 'none';
     setContextLine('titleContextLine', titleLastPrompt);
   });
 
+  // Description: instant popover only in 241 — 244 routes Description
+  // through the more capable prompt-box-first pattern instead (below).
   const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
-    'aboutDismissUndo', 'aboutUndoBtn');
+    'aboutDismissUndo', 'aboutUndoBtn', ['241']);
   document.getElementById('aboutInsertBtn').addEventListener('click', aboutA.insert);
   document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
   document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
-  wireGuideBox('aboutGuideToggle', 'aboutGuideBox', 'aboutGuideInput', 'aboutGuideSubmit',
-    ()=>{ aboutLastPrompt = document.getElementById('aboutGuideInput').value.trim(); aboutA.tryAgain(); },
-    'aboutContextLine');
   document.getElementById('aboutInlineIconBtn').addEventListener('click', ()=>{
-    document.getElementById('aboutGuideBox').style.display = 'none';
     setContextLine('aboutContextLine', aboutLastPrompt);
   });
-
-  // 243: optional guidance nested inside the instant-suggestion popover.
-  // Mock data can't truly steer the result, so this reuses the same
-  // "suggest another" cycling — the point being to demo the affordance,
-  // not simulate real prompt-conditioned generation.
-  function wireGuideBox(toggleId, boxId, inputId, submitId, onSubmit, contextLineId){
-    const toggle = document.getElementById(toggleId);
-    const box = document.getElementById(boxId);
-    const input = document.getElementById(inputId);
-    const submitBtn = document.getElementById(submitId);
-    toggle.addEventListener('click', ()=>{
-      const opening = box.style.display !== 'block';
-      box.style.display = opening ? 'block' : 'none';
-      if(opening) input.focus();
-    });
-    input.addEventListener('input', ()=>{
-      const has = input.value.trim().length > 0;
-      submitBtn.disabled = !has;
-      submitBtn.className = has ? 'btn btn-primary' : 'btn btn-disabled';
-    });
-    submitBtn.addEventListener('click', ()=>{
-      const guidance = input.value.trim();
-      onSubmit();
-      // Guidance replaces the prior context — it's the seller's latest,
-      // more specific ask, not an addition to what came before.
-      if(contextLineId) setContextLine(contextLineId, guidance);
-      box.style.display = 'none';
-      input.value = '';
-      submitBtn.disabled = true;
-      submitBtn.className = 'btn btn-disabled';
-    });
-  }
-
 
   // Iteration D: quiet link fills the field in place, replaced by an attribution line
   function wireInlineD(linkId, attrId, redraftId, inputEl, variants, countUpdateFn){
@@ -1158,7 +1123,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // review (Use / Suggest another / Dismiss) before it ever touches the
   // real field — mirrors 241's popover instead of writing on Generate.
   function wirePromptBoxWithReviewD(iconBtnId, boxId, inputStepId, inputId, generateBtnId, cancelBtnId,
-      resultStepId, resultTextId, useBtnId, anotherBtnId, dismissBtnId, inputEl, variants, countUpdateFn, contextLineId){
+      resultStepId, resultTextId, useBtnId, anotherBtnId, dismissBtnId, inputEl, variants, countUpdateFn, contextLineId, activeModes){
     const box = document.getElementById(boxId);
     const inputStep = document.getElementById(inputStepId);
     const promptInput = document.getElementById(inputId);
@@ -1179,7 +1144,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
 
     document.getElementById(iconBtnId).addEventListener('click', ()=>{
-      if(currentMode !== '242') return;
+      if(!activeModes.includes(currentMode)) return;
       const opening = box.style.display !== 'block';
       box.style.display = opening ? 'block' : 'none';
       if(opening) showInputStep();
@@ -1207,18 +1172,22 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } }
     };
   }
+  // Title's prompt-box pattern stays exclusive to 242 — 244 uses the
+  // simpler instant popover for Title instead (wired above via titleA).
   const titlePromptBoxD = wirePromptBoxWithReviewD(
     'titleInlineIconBtn', 'titlePromptBoxD', 'titlePromptInputStepD', 'titlePromptInputD', 'titlePromptGenerateD', 'titlePromptCancelD',
     'titlePromptResultD', 'titlePromptResultText', 'titlePromptUseD', 'titlePromptAnotherD', 'titlePromptDismissD',
     document.getElementById('listingTitle'), titleVariants,
     ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
-    'titlePromptContextLine');
+    'titlePromptContextLine', ['242']);
+  // Description's prompt-box pattern is shared by 242 and 244 — this is the
+  // one field where 244 keeps the more capable refine-first flow.
   const aboutPromptBoxD = wirePromptBoxWithReviewD(
     'aboutInlineIconBtn', 'aboutPromptBoxD', 'aboutPromptInputStepD', 'aboutPromptInputD', 'aboutPromptGenerateD', 'aboutPromptCancelD',
     'aboutPromptResultD', 'aboutPromptResultText', 'aboutPromptUseD', 'aboutPromptAnotherD', 'aboutPromptDismissD',
     document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
-    'aboutPromptContextLine');
+    'aboutPromptContextLine', ['242','244']);
 
   // Keywords keeps the original pattern — Generate reveals suggestion chips,
   // which already requires an explicit click to add each one (its own
@@ -1270,7 +1239,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     } else if(currentMode === '242'){
       // 242: Title/Description use a static wand icon (prompt-box pattern) —
       // Keywords matches that here instead of the dynamic sparkle/refresh
-      // swap used in 241/243's instant-suggestion pattern.
+      // swap used in 241's instant-suggestion pattern.
       icon.disabled = false;
       icon.title = 'Suggest keywords';
       icon.setAttribute('aria-label', 'Suggest keywords with AI');
@@ -1366,7 +1335,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       && mainKeywords.length >= 7;
   }
   function updateBulkPromptSubmitLabel(){
-    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : (currentMode === '241' ? 'Suggest content' : 'Generate');
+    const stagedMode = (currentMode === '241' || currentMode === '244');
+    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : (stagedMode ? 'Suggest content' : 'Generate');
   }
 
   // 242: expand the box as an accordion (animated height) instead
@@ -1387,14 +1357,20 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
   }
 
-  document.getElementById('bulkGenerate').addEventListener('click', ()=>{
+  function openBulkPrompt(){
+    if(bulkPromptBox.classList.contains('open')){
+      closeBulkAccordion();
+      return;
+    }
     updateBulkPromptSubmitLabel();
     const hasText = bulkPromptInput.value.trim().length > 0;
     bulkPromptSubmit.disabled = !hasText;
     bulkPromptSubmit.className = hasText ? 'btn btn-primary' : 'btn btn-disabled';
     openBulkAccordion();
     bulkPromptInput.focus();
-  });
+  }
+  document.getElementById('bulkGenerate').addEventListener('click', openBulkPrompt);
+  document.getElementById('bulkGenerateBanner').addEventListener('click', openBulkPrompt);
   document.getElementById('bulkPromptCancel').addEventListener('click', ()=>{
     bulkRegenConfirm.style.display = 'none';
     closeBulkAccordion();
@@ -1412,8 +1388,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   });
   function runBulkFill(regenerate){
     const mode = currentMode;
-    const instantMode = (mode === '241' || mode === '243');
-    if(instantMode){
+    if(mode === '241' || mode === '244'){
       runBulkFillStaggered(regenerate);
       return;
     }
@@ -1427,7 +1402,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateBulkGenerateState();
   }
 
-  // 241/243: each field resolves independently with its own shimmer, instead
+  // 241/244: each field resolves independently with its own shimmer, instead
   // of one instant swap or a single blocking spinner over everything.
   function showKeywordSkeleton(){
     const wrap = document.getElementById('kwSuggestChips');
@@ -1490,8 +1465,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   });
   function updateBulkGenerateState(){
     // 242 relies entirely on the per-field prompt boxes — no section-level
-    // "generate everything" entry point in that mode.
-    document.getElementById('bulkGenerate').className = 'btn btn-outline-ai' + (currentMode === '242' ? ' hidden-mode' : '');
+    // "generate everything" entry point in that mode. 244 has one too, but
+    // as the banner below the header instead of this small button.
+    const hideHeaderBtn = currentMode === '242' || currentMode === '244';
+    document.getElementById('bulkGenerate').className = 'btn btn-outline-ai' + (hideHeaderBtn ? ' hidden-mode' : '');
+    document.getElementById('bulkGenerateBanner').style.display = currentMode === '244' ? 'flex' : 'none';
     updateBulkPromptSubmitLabel();
   }
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
@@ -1512,29 +1490,33 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     currentMode = val;
     const isA = val === '241';
     const isD = val === '242';
-    const isThree = val === '243';
-    const instantMode = isA || isThree; // 241/243 share the icon-first, instant-suggestion pattern
+    const isFourFour = val === '244';
+    const bulkStagedMode = isA || isFourFour; // both use the instant staggered bulk-fill
 
     document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : 'Suggest content with AI';
-    document.getElementById('bulkPromptCopy').textContent = instantMode
+    document.getElementById('bulkPromptCopy').textContent = bulkStagedMode
       ? "Tell us about your book, and we'll suggest a title, description, and keywords."
       : "Help us get it right. What's your book about?";
-    document.getElementById('bulkPromptInput').placeholder = instantMode
+    document.getElementById('bulkPromptInput').placeholder = bulkStagedMode
       ? "A travel photo book of two weeks backpacking through Patagonia"
       : "e.g. a cozy mystery set in a small-town bakery, playful tone";
-    document.getElementById('bulkFillHint').textContent = isA
+    document.getElementById('bulkFillHint').textContent = bulkStagedMode
       ? 'The more detail you give, the better the results.'
       : "Fills every empty field below at once. Each one stays editable and can be redrafted on its own.";
     document.getElementById('titleCount').style.display = 'none';
     document.getElementById('aboutCount').style.display = 'none';
-    // mode-a-d: per-field AI icons + keyword suggestions — available in all three modes.
+    // mode-a-d: per-field AI icons + keyword suggestions — available in every mode.
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', false));
-    // mode-d: the 242-only per-field prompt-box pattern (Title/Description/Keywords
-    // each requiring typed input before generating) stays exclusive to 242.
+    // mode-d: Title's and Keywords' 242-only per-field prompt-box pattern stays exclusive to 242.
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
-    // mode-243: the optional "want something different" guidance link inside
-    // the instant popover — new to 243, not present in 241 or 242.
-    document.querySelectorAll('.mode-243').forEach(el => { el.style.display = isThree ? 'inline-flex' : 'none'; });
+    // mode-about-d: Description's prompt-box-first pattern is shared by 242 and 244 —
+    // 244's whole premise is that Description benefits from the more capable flow
+    // Title and Keywords don't need.
+    document.querySelectorAll('.mode-about-d').forEach(el => el.classList.toggle('hidden-mode', !(isD || isFourFour)));
+    // 244: Title's popover drops "Suggest another" — one suggestion, Use or
+    // Dismiss, no cycling. Editing a 40-character field by hand is trivial,
+    // so the refinement machinery 241 builds for Title isn't needed here.
+    document.getElementById('titleTryAgainBtn').style.display = isFourFour ? 'none' : 'inline-flex';
 
     // Switching modes always closes the bulk prompt box fresh, so no
     // open/accordion state leaks from one mode into another.
@@ -1552,8 +1534,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutDraftPopover').classList.remove('open');
     document.getElementById('titleDismissUndo').classList.remove('show');
     document.getElementById('aboutDismissUndo').classList.remove('show');
-    document.getElementById('titleGuideBox').style.display = 'none';
-    document.getElementById('aboutGuideBox').style.display = 'none';
     document.getElementById('kwSuggestChips').style.display = 'none';
     document.getElementById('kwSuggestChips').innerHTML = '';
     document.getElementById('kwSuggestLabel').style.display = 'none';
@@ -1563,7 +1543,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     setContextLine('aboutContextLine', '');
     setContextLine('titlePromptContextLine', '');
     setContextLine('aboutPromptContextLine', '');
-    if(!instantMode) inlineSparkleUnlocked = false;
+    if(!isA) inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
     updateKeywordsIconState();
