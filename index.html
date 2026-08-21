@@ -606,8 +606,8 @@
     <label for="demoPhase">Iteration</label>
     <div class="select-wrap">
       <select id="demoPhase">
-        <option value="245">245</option>
-        <option value="244" selected>244</option>
+        <option value="245" selected>245</option>
+        <option value="244">244</option>
         <option value="242">242</option>
       </select>
       <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
@@ -674,8 +674,7 @@
       </button>
       <div class="bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
         <div id="bulkPromptHeading" style="display:none; margin:0 0 16px;">
-          <p style="margin:0 0 4px; font-weight:600; font-size:15px; color:var(--bold);">Draft a description and keywords</p>
-          <p style="margin:0; font-size:13px; color:var(--subtle);">Drafted from your book's details — edit anything afterwards</p>
+          <p style="margin:0; font-weight:600; font-size:15px; color:var(--bold);">Draft a description and keywords</p>
         </div>
         <p class="prompt-copy" style="margin:0 0 8px;" id="bulkPromptCopy">Help us get it right. What's your book about?</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
@@ -1566,6 +1565,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245');
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245');
+    // 245: by the time this icon is visible, Description is already
+    // drafted — a regenerate icon reads better than the wand used
+    // elsewhere for "draft this for the first time" (242/244).
+    const aboutIcon = document.getElementById('aboutInlineIconBtn');
+    aboutIcon.querySelector('.material-symbols-rounded').textContent = currentMode === '245' ? 'refresh' : 'auto_fix_high';
+    aboutIcon.title = currentMode === '245' ? 'Regenerate description' : 'Improve with AI';
+    aboutIcon.setAttribute('aria-label', currentMode === '245' ? 'Regenerate description with AI' : 'Improve description with AI');
   }
 
   // --- Mode switching across 245/242 ---
@@ -1588,7 +1594,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : (isA ? 'Draft this for me' : 'Suggest content with AI');
     document.getElementById('bulkPromptHeading').style.display = isA ? 'block' : 'none';
     document.getElementById('bulkPromptCopy').textContent = isA
-      ? "We'll work from this. Anything to add or change?"
+      ? "Tell us about your book, and we'll draft the rest –– edit it afterwards"
       : bulkStagedMode
         ? "Tell us about your book, and we'll suggest a title, description, and keywords."
         : "Help us get it right. What's your book about?";
