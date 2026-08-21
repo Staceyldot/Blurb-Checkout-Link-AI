@@ -1502,6 +1502,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       const hasText = bulkPromptInput.value.trim().length > 0;
       bulkPromptSubmit.disabled = !hasText;
       bulkPromptSubmit.className = hasText ? 'btn btn-primary' : 'btn btn-disabled';
+      // 245: the prompt box gives way to the "Drafted with AI" banner once
+      // the draft lands — no need to keep it open alongside it.
+      if(currentMode === '245' && bulkPromptBox.classList.contains('open')) closeBulkAccordion();
       updateBulkGenerateState();
     }, 2000);
   }
