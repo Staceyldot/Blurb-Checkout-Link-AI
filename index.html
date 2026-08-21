@@ -666,8 +666,19 @@
         <span class="material-symbols-rounded ai-banner-chevron">chevron_right</span>
       </button>
       <div class="bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+        <div id="bulkPromptHeading" style="display:none; margin:0 0 16px;">
+          <p style="margin:0 0 4px; font-weight:600; font-size:15px; color:var(--bold);">Draft a title, description and keywords</p>
+          <p style="margin:0; font-size:13px; color:var(--subtle);">Drafted from your book's details — edit anything afterwards</p>
+        </div>
         <p class="prompt-copy" style="margin:0 0 8px;" id="bulkPromptCopy">Help us get it right. What's your book about?</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
+        <div class="chip-group" id="bulkToneChips" style="display:none; margin-top:12px;">
+          <div class="chip unselected" data-tone="Warm">Warm</div>
+          <div class="chip unselected" data-tone="Playful">Playful</div>
+          <div class="chip unselected" data-tone="Formal">Formal</div>
+          <div class="chip unselected" data-tone="Gift edition">Gift edition</div>
+          <div class="chip unselected" data-tone="Short">Short</div>
+        </div>
         <p class="hint" id="bulkFillHint" style="margin:8px 0 0;">The more detail you give, the better the results.</p>
         <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
           <button class="btn btn-outline-bold" id="bulkPromptCancel">Cancel</button>
@@ -1396,6 +1407,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       bulkPromptInput.dispatchEvent(new Event('input'));
     }
   });
+  // 245: tone chips are a lightweight visual toggle, matching the design —
+  // no wiring into the mock draft content beyond that.
+  document.querySelectorAll('#bulkToneChips .chip').forEach(chip => {
+    chip.addEventListener('click', ()=>{
+      const selected = chip.classList.toggle('selected');
+      chip.classList.toggle('unselected', !selected);
+    });
+  });
   function runBulkFill(regenerate){
     const mode = currentMode;
     if(mode === '244' || mode === '245'){
@@ -1503,13 +1522,22 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const isFourFour = val === '244';
     const bulkStagedMode = isA || isFourFour; // both use the instant staggered bulk-fill
 
-    document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : 'Suggest content with AI';
-    document.getElementById('bulkPromptCopy').textContent = bulkStagedMode
-      ? "Tell us about your book, and we'll suggest a title, description, and keywords."
-      : "Help us get it right. What's your book about?";
+    document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : (isA ? 'Draft this for me' : 'Suggest content with AI');
+    document.getElementById('bulkPromptHeading').style.display = isA ? 'block' : 'none';
+    document.getElementById('bulkPromptCopy').textContent = isA
+      ? "We'll work from this. Anything to add or change?"
+      : bulkStagedMode
+        ? "Tell us about your book, and we'll suggest a title, description, and keywords."
+        : "Help us get it right. What's your book about?";
     document.getElementById('bulkPromptInput').placeholder = bulkStagedMode
       ? "A travel photo book of two weeks backpacking through Patagonia"
       : "e.g. a cozy mystery set in a small-town bakery, playful tone";
+    document.getElementById('bulkToneChips').style.display = isA ? 'flex' : 'none';
+    document.querySelectorAll('#bulkToneChips .chip').forEach(chip => {
+      chip.classList.remove('selected');
+      chip.classList.add('unselected');
+    });
+    document.getElementById('bulkFillHint').style.display = isA ? 'none' : '';
     document.getElementById('bulkFillHint').textContent = bulkStagedMode
       ? 'The more detail you give, the better the results.'
       : "Fills every empty field below at once. Each one stays editable and can be redrafted on its own.";
