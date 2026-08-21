@@ -852,7 +852,10 @@
           </button>
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
-          <p class="hint" id="kwSuggestLabel" style="display:none; margin-top:8px;"></p>
+          <div class="kw-suggest-row" id="kwSuggestLabelRow" style="display:none; justify-content:space-between; margin-top:8px;">
+            <p class="hint" id="kwSuggestLabel" style="margin:0;"></p>
+            <button type="button" class="popover-link-btn" id="kwSuggestRefreshBtn"><span class="material-symbols-rounded">refresh</span>Suggest more</button>
+          </div>
           <div class="chip-group mode-a-d hidden-mode" id="kwSuggestChips" style="margin-top:4px;"></div>
         </div>
       </div>
@@ -1238,14 +1241,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
   // Keywords (245): the manual "Suggest keywords" text link reveals chips;
   // clicking a chip adds it directly (tops up remaining empty slots only,
-  // same rule as the bulk button).
+  // same rule as the bulk button). The field icon only ever triggers the
+  // first suggestion — once chips are showing, it hides in favor of the
+  // "Suggest more" link next to the label (kwSuggestRefreshBtn) below.
   document.getElementById('kwSuggestBtn').addEventListener('click', ()=> renderKwSuggestChips(false));
   document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
     if(keywordsPromptBoxActive()) return;
-    const wrap = document.getElementById('kwSuggestChips');
-    const isRefresh = wrap.style.display === 'flex' && wrap.querySelector('.chip');
-    renderKwSuggestChips(isRefresh);
+    renderKwSuggestChips(false);
   });
+  document.getElementById('kwSuggestRefreshBtn').addEventListener('click', ()=> renderKwSuggestChips(true));
   function updateKeywordsIconState(){
     const icon = document.getElementById('keywordsInlineIconBtn');
     const glyph = icon.querySelector('.material-symbols-rounded');
@@ -1253,6 +1257,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const hasSuggestions = wrap.style.display === 'flex' && wrap.querySelector('.chip');
     const staticWandMode = currentMode === '242' || currentMode === '244';
     if(mainKeywords.length >= 7){
+      icon.classList.remove('hidden-mode');
       icon.disabled = true;
       icon.title = 'Maximum keywords reached';
       icon.setAttribute('aria-label', 'Maximum keywords reached');
@@ -1261,16 +1266,17 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       // 242 and 244: Title/Description use a static wand icon (prompt-box
       // pattern, or 244's fallback) — Keywords matches that here instead of
       // the dynamic sparkle/refresh swap used in 245's instant-suggestion pattern.
+      icon.classList.remove('hidden-mode');
       icon.disabled = false;
       icon.title = 'Suggest keywords';
       icon.setAttribute('aria-label', 'Suggest keywords with AI');
       glyph.textContent = 'auto_fix_high';
     } else if(hasSuggestions){
-      icon.disabled = false;
-      icon.title = 'Suggest more keywords';
-      icon.setAttribute('aria-label', 'Suggest more keywords with AI');
-      glyph.textContent = 'refresh';
+      // 245: once suggestions are showing, "suggest more" lives on the text
+      // link next to the label (kwSuggestRefreshBtn) instead of the field icon.
+      icon.classList.add('hidden-mode');
     } else {
+      icon.classList.remove('hidden-mode');
       icon.disabled = false;
       icon.title = 'Suggest keywords';
       icon.setAttribute('aria-label', 'Suggest keywords with AI');
@@ -1281,10 +1287,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function renderKwSuggestChips(advance){
     const wrap = document.getElementById('kwSuggestChips');
     const label = document.getElementById('kwSuggestLabel');
+    const labelRow = document.getElementById('kwSuggestLabelRow');
+    // 242/244 already regenerate via the prompt box's own Generate button —
+    // the "Suggest more" link is only needed for 245's dynamic icon pattern.
+    document.getElementById('kwSuggestRefreshBtn').style.display = currentMode === '245' ? 'inline-flex' : 'none';
     wrap.style.display = 'flex';
     wrap.innerHTML = '';
     if(mainKeywords.length >= 7){
-      label.style.display = 'none';
+      labelRow.style.display = 'none';
       wrap.innerHTML = '<p class="hint" style="margin:0;">Maximum keywords reached. Remove one to see more suggestions.</p>';
       updateKeywordsHint();
       updateKeywordsIconState();
@@ -1323,7 +1333,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     label.textContent = mainKeywords.length > 0
       ? "More ideas, based on what you're building"
       : 'Suggested keywords';
-    label.style.display = remaining.length ? 'block' : 'none';
+    labelRow.style.display = remaining.length ? 'flex' : 'none';
     remaining.forEach(kw=>{
       if(mainKeywords.length >= 7) return;
       const chip = document.createElement('div');
@@ -1435,8 +1445,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // of one instant swap or a single blocking spinner over everything.
   function showKeywordSkeleton(){
     const wrap = document.getElementById('kwSuggestChips');
-    const label = document.getElementById('kwSuggestLabel');
-    label.style.display = 'none';
+    document.getElementById('kwSuggestLabelRow').style.display = 'none';
     wrap.style.display = 'flex';
     wrap.innerHTML = '<span class="chip-skeleton"></span><span class="chip-skeleton"></span><span class="chip-skeleton"></span>';
   }
@@ -1578,7 +1587,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutDismissUndo').classList.remove('show');
     document.getElementById('kwSuggestChips').style.display = 'none';
     document.getElementById('kwSuggestChips').innerHTML = '';
-    document.getElementById('kwSuggestLabel').style.display = 'none';
+    document.getElementById('kwSuggestLabelRow').style.display = 'none';
     titleLastPrompt = '';
     aboutLastPrompt = '';
     setContextLine('titleContextLine', '');
@@ -1619,7 +1628,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(mainKeywords.length >= 7){
       hint.textContent = 'Maximum keywords reached. Remove one to add another.';
     } else if(hasSuggestions){
-      hint.textContent = 'Press Enter to add a keyword, or click a suggestion below. Up to 7 keywords.';
+      hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
     } else {
       hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
     }
