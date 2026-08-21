@@ -633,7 +633,7 @@
   <div class="page">
   <div class="container">
     <div class="breadcrumb">Checkout links <span>&gt;</span> <span class="breadcrumb-current">Pride and Preconceptions</span></div>
-    <h1 class="title">Pride and Preconceptions</h1>
+    <h1 class="title" id="projectTitle">Pride and Preconceptions</h1>
 
     <!-- Book details -->
     <div class="section no-divider">
@@ -667,7 +667,7 @@
       </button>
       <div class="bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
         <div id="bulkPromptHeading" style="display:none; margin:0 0 16px;">
-          <p style="margin:0 0 4px; font-weight:600; font-size:15px; color:var(--bold);">Draft a title, description and keywords</p>
+          <p style="margin:0 0 4px; font-weight:600; font-size:15px; color:var(--bold);">Draft a description and keywords</p>
           <p style="margin:0; font-size:13px; color:var(--subtle);">Drafted from your book's details — edit anything afterwards</p>
         </div>
         <p class="prompt-copy" style="margin:0 0 8px;" id="bulkPromptCopy">Help us get it right. What's your book about?</p>
@@ -1079,12 +1079,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); }
     };
   }
-  // Title: instant popover in 245 always, and in 244 once a bulk prompt has
-  // been entered — otherwise 244 falls back to the prompt-box pattern below
+  // Title: instant popover in 244 once a bulk prompt has been entered —
+  // otherwise 244 falls back to the prompt-box pattern below
   // (titlePromptBoxD), since there's no context yet to draft a title from.
+  // 245 gets no AI help for Title at all — it's prefilled from the project
+  // title instead (see applyDemoMode).
   const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
     ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
-    'titleDismissUndo', 'titleUndoBtn', ['244','245'],
+    'titleDismissUndo', 'titleUndoBtn', ['244'],
     ()=> currentMode === '244' && isFieldEmpty(bulkPromptInput));
   document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
   document.getElementById('titleTryAgainBtn').addEventListener('click', titleA.tryAgain);
@@ -1456,7 +1458,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const aboutInput = document.getElementById('aboutBook');
     const titleOverlay = document.getElementById('titleSkeletonOverlay');
     const aboutOverlay = document.getElementById('aboutSkeletonOverlay');
-    const willFillTitle = regenerate || isFieldEmpty(titleInput);
+    // 245: Title is prefilled from the project title, not drafted, so the
+    // bulk flow (initial or regenerate) never touches it there.
+    const willFillTitle = currentMode !== '245' && (regenerate || isFieldEmpty(titleInput));
     const willFillAbout = regenerate || isFieldEmpty(aboutInput);
 
     if(willFillTitle){ titleOverlay.classList.add('show'); titleInput.disabled = true; }
@@ -1514,10 +1518,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
 
   function updateInlineSparkleVisibility(){
-    // 245 gates the icon behind the AI prompt box being generated first;
-    // 242 has no such gate, so its icon is always available.
+    // 245 gates Description/Keywords' icons behind the AI prompt box being
+    // generated first; 242 has no such gate, so its icons are always
+    // available. Title gets no AI help at all in 245 (see the prefill in
+    // applyDemoMode), so its icon stays hidden regardless of unlock state.
     const hide = currentMode === '245' && !inlineSparkleUnlocked;
-    document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', hide);
+    document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245');
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', hide);
   }
@@ -1530,6 +1536,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const isD = val === '242';
     const isFourFour = val === '244';
     const bulkStagedMode = isA || isFourFour; // both use the instant staggered bulk-fill
+
+    // 245: Title needs no AI help — it's already known from the project
+    // itself, so it's prefilled from that instead of drafted (never
+    // overwrites a title the seller already typed).
+    const titleField = document.getElementById('listingTitle');
+    if(isA && isFieldEmpty(titleField)){
+      titleField.value = document.getElementById('projectTitle').textContent.trim();
+    }
 
     document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : (isA ? 'Draft this for me' : 'Suggest content with AI');
     document.getElementById('bulkPromptHeading').style.display = isA ? 'block' : 'none';
