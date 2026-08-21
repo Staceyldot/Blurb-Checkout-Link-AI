@@ -1369,7 +1369,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
     label.textContent = mainKeywords.length > 0
       ? "More ideas, based on what you're building"
-      : 'More ideas based on your book details.';
+      : "More ideas from what you've written so far.";
     labelRow.style.display = remaining.length ? 'flex' : 'none';
     remaining.forEach(kw=>{
       if(mainKeywords.length >= 7) return;
@@ -1619,15 +1619,18 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
     document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : (isA ? 'Draft this for me' : 'Draft content with AI');
     document.getElementById('bulkPromptHeading').style.display = isA ? 'block' : 'none';
+    // 244: the banner above already says this, so the prompt box drops it
+    // instead of repeating the same line twice.
+    document.getElementById('bulkPromptCopy').style.display = isFourFour ? 'none' : '';
     document.getElementById('bulkPromptCopy').textContent = isA
       ? "Tell us about your book, and we'll draft the rest –– edit it afterwards"
-      : bulkStagedMode
-        ? "Tell us about your book, and we'll suggest a title, description, and keywords."
+      : isFourFour
+        ? ''
         : "Help us get it right. What's your book about?";
     document.getElementById('bulkPromptInput').placeholder = bulkStagedMode
       ? "A travel photo book of two weeks backpacking through Patagonia"
       : "e.g. a cozy mystery set in a small-town bakery, playful tone";
-    document.getElementById('bulkToneWrap').style.display = isA ? 'block' : 'none';
+    document.getElementById('bulkToneWrap').style.display = bulkStagedMode ? 'block' : 'none';
     document.querySelectorAll('#bulkToneOptions .tone-option').forEach(option => {
       option.classList.remove('selected');
     });
