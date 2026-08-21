@@ -456,6 +456,17 @@
   }
   .chip-main .icon:hover{background:var(--gray-subtler);}
 
+  /* 245: tone is a single pick (optional), not a multi-select set of
+     pills, so it's a row of icon-over-label options rather than chips. */
+  .tone-row{display:flex; gap:28px;}
+  .tone-option{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    border:none; background:none; cursor:pointer; padding:10px 16px; border-radius:10px;
+    font-family:var(--font-sans); font-size:13px; color:var(--subtle); min-width:64px;
+  }
+  .tone-option .material-symbols-rounded{font-size:22px;}
+  .tone-option.selected{background:#CCBDF5; color:var(--subtle);}
+
   /* --- Iteration A / D: inline, ambient AI per field ---
      No side panel. The AI trigger sits beside the field as its own icon
      button rather than floating on top of the text. */
@@ -677,15 +688,29 @@
           <p style="margin:0; font-weight:600; font-size:15px; color:var(--bold);">Draft a description and keywords</p>
         </div>
         <p class="prompt-copy" style="margin:0 0 8px;" id="bulkPromptCopy">Help us get it right. What's your book about?</p>
+        <p class="hint" id="bulkFillHint" style="margin:0 0 8px;">The more detail you give, the better the results.</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
-        <div class="chip-group" id="bulkToneChips" style="display:none; margin-top:12px;">
-          <div class="chip unselected" data-tone="Warm">Warm</div>
-          <div class="chip unselected" data-tone="Playful">Playful</div>
-          <div class="chip unselected" data-tone="Formal">Formal</div>
-          <div class="chip unselected" data-tone="Gift edition">Gift edition</div>
-          <div class="chip unselected" data-tone="Short">Short</div>
+        <div id="bulkToneWrap" style="display:none; margin-top:12px;">
+          <p style="margin:0 0 8px; font-size:13px; color:var(--subtle);">Tone (optional)</p>
+          <div class="tone-row" id="bulkToneOptions">
+            <button type="button" class="tone-option" data-tone="Playful">
+              <span class="material-symbols-rounded">mood</span>
+              <span>Playful</span>
+            </button>
+            <button type="button" class="tone-option" data-tone="Warm">
+              <span class="material-symbols-rounded">favorite</span>
+              <span>Warm</span>
+            </button>
+            <button type="button" class="tone-option" data-tone="Literary">
+              <span class="material-symbols-rounded">history_edu</span>
+              <span>Literary</span>
+            </button>
+            <button type="button" class="tone-option" data-tone="Bold">
+              <span class="material-symbols-rounded">local_fire_department</span>
+              <span>Bold</span>
+            </button>
+          </div>
         </div>
-        <p class="hint" id="bulkFillHint" style="margin:8px 0 0;">The more detail you give, the better the results.</p>
         <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
           <button class="btn btn-outline-bold" id="bulkPromptCancel">Cancel</button>
           <button class="btn btn-disabled" id="bulkPromptSubmit" disabled>Generate</button>
@@ -1433,12 +1458,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       bulkPromptInput.dispatchEvent(new Event('input'));
     }
   });
-  // 245: tone chips are a lightweight visual toggle, matching the design —
-  // no wiring into the mock draft content beyond that.
-  document.querySelectorAll('#bulkToneChips .chip').forEach(chip => {
-    chip.addEventListener('click', ()=>{
-      const selected = chip.classList.toggle('selected');
-      chip.classList.toggle('unselected', !selected);
+  // 245: tone is a single, optional pick — clicking a selected option again
+  // clears it. Lightweight visual state only, not wired into the mock draft
+  // content beyond that.
+  document.querySelectorAll('#bulkToneOptions .tone-option').forEach(option => {
+    option.addEventListener('click', ()=>{
+      const wasSelected = option.classList.contains('selected');
+      document.querySelectorAll('#bulkToneOptions .tone-option').forEach(o => o.classList.remove('selected'));
+      if(!wasSelected) option.classList.add('selected');
     });
   });
   function runBulkFill(regenerate){
@@ -1601,12 +1628,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('bulkPromptInput').placeholder = bulkStagedMode
       ? "A travel photo book of two weeks backpacking through Patagonia"
       : "e.g. a cozy mystery set in a small-town bakery, playful tone";
-    document.getElementById('bulkToneChips').style.display = isA ? 'flex' : 'none';
-    document.querySelectorAll('#bulkToneChips .chip').forEach(chip => {
-      chip.classList.remove('selected');
-      chip.classList.add('unselected');
+    document.getElementById('bulkToneWrap').style.display = isA ? 'block' : 'none';
+    document.querySelectorAll('#bulkToneOptions .tone-option').forEach(option => {
+      option.classList.remove('selected');
     });
-    document.getElementById('bulkFillHint').style.display = isA ? 'none' : '';
+    document.getElementById('bulkFillHint').style.display = '';
     document.getElementById('bulkFillHint').textContent = bulkStagedMode
       ? 'The more detail you give, the better the results.'
       : "Fills every empty field below at once. Each one stays editable and can be redrafted on its own.";
