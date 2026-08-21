@@ -678,8 +678,8 @@
       <button class="ai-banner" id="bulkGenerateBanner" type="button">
         <span class="material-symbols-rounded ts-grad-icon ai-banner-icon">auto_awesome</span>
         <span class="ai-banner-text">
-          <strong>Suggest content with AI</strong>
-          <span>We'll draft a title, description, and keywords from your book's details.</span>
+          <strong>Draft content with AI</strong>
+          <span>Tell us about your book, and we'll draft a title, description, and keywords.</span>
         </span>
         <span class="material-symbols-rounded ai-banner-chevron">chevron_right</span>
       </button>
@@ -813,7 +813,6 @@
             <div id="aboutPromptInputStepD">
               <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll draft a description.</p>
               <textarea id="aboutPromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
-              <p class="hint" style="margin:8px 0 0;">The more detail you give, the better the draft.</p>
               <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
                 <button class="btn btn-outline-bold" id="aboutPromptCancelD" type="button">Cancel</button>
                 <button class="btn btn-disabled" id="aboutPromptGenerateD" type="button" disabled>Write a description</button>
@@ -1408,7 +1407,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   }
   function updateBulkPromptSubmitLabel(){
     const stagedMode = (currentMode === '244' || currentMode === '245');
-    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : (stagedMode ? 'Suggest content' : 'Generate');
+    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : (stagedMode ? 'Draft content' : 'Generate');
   }
 
   // 242: expand the box as an accordion (animated height) instead
@@ -1618,7 +1617,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       titleField.value = document.getElementById('projectTitle').textContent.trim();
     }
 
-    document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : (isA ? 'Draft this for me' : 'Suggest content with AI');
+    document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : (isA ? 'Draft this for me' : 'Draft content with AI');
     document.getElementById('bulkPromptHeading').style.display = isA ? 'block' : 'none';
     document.getElementById('bulkPromptCopy').textContent = isA
       ? "Tell us about your book, and we'll draft the rest –– edit it afterwards"
