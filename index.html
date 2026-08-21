@@ -49,6 +49,8 @@
     --gray-subtler:#f7f7f7;
     --ai-purple:#7a3dc4;
     --ai-mid:#0d5a84;
+    --shimmer-base:#ece4fb;
+    --shimmer-highlight:#d3bdf5;
     --font-sans: "Proxima Nova", "Jost", Arial, sans-serif;
     --font-heading: "Futura PT", "Mulish", Georgia, sans-serif;
     --font-mono: "Roboto Mono", "Courier New", monospace;
@@ -574,13 +576,13 @@
   .skeleton-overlay.show{display:flex; flex-direction:column; gap:8px;}
   .skeleton-line{
     height:16px; border-radius:4px;
-    background:linear-gradient(90deg, var(--gray-subtler) 25%, #ececec 50%, var(--gray-subtler) 75%);
-    background-size:200% 100%; animation:skeleton-shimmer 1.3s ease-in-out infinite;
+    background:linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-highlight) 50%, var(--shimmer-base) 75%);
+    background-size:200% 100%; animation:skeleton-shimmer 3.2s ease-in-out infinite;
   }
   .chip-skeleton{
     display:inline-block; width:100px; height:30px; border-radius:100px;
-    background:linear-gradient(90deg, var(--gray-subtler) 25%, #ececec 50%, var(--gray-subtler) 75%);
-    background-size:200% 100%; animation:skeleton-shimmer 1.3s ease-in-out infinite;
+    background:linear-gradient(90deg, var(--shimmer-base) 25%, var(--shimmer-highlight) 50%, var(--shimmer-base) 75%);
+    background-size:200% 100%; animation:skeleton-shimmer 3.2s ease-in-out infinite;
   }
 
   /* Shows what prompt/guidance is driving the current suggestion, so
@@ -1651,6 +1653,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
     updateKeywordsIconState();
+    updateKeywordsHint();
   }
   demoPhaseSelect.addEventListener('change', applyDemoMode);
   applyDemoMode();
@@ -1679,10 +1682,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const suggestChips = document.getElementById('kwSuggestChips');
     const hasSuggestions = suggestChips.style.display === 'flex' && suggestChips.querySelector('.chip');
     if(mainKeywords.length >= 7){
+      // 245: the suggestions area below already says "Maximum keywords
+      // reached. Remove one to see more suggestions." — this hint would
+      // just be a redundant, near-identical second copy of the same message.
+      hint.style.display = currentMode === '245' ? 'none' : '';
       hint.textContent = 'Maximum keywords reached. Remove one to add another.';
     } else if(hasSuggestions){
+      hint.style.display = '';
       hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
     } else {
+      hint.style.display = '';
       hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
     }
   }
