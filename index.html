@@ -313,10 +313,8 @@
   .ai-banner{
     display:none; align-items:center; gap:14px; width:100%;
     margin:-8px 0 20px; padding:16px 18px; box-sizing:border-box;
-    border:2px solid transparent; border-radius:8px; cursor:pointer;
-    background:
-      linear-gradient(#F3F0FD, #F3F0FD) padding-box,
-      linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%) border-box;
+    border:none; border-radius:8px; cursor:pointer;
+    background:#F3F0FD;
     font-family:var(--font-sans); text-align:left;
   }
   .ai-banner:hover{filter:brightness(0.98);}
@@ -705,7 +703,7 @@
             </button>
           </div>
           <div class="count" id="titleCount">24/40</div>
-          <div class="mode-d hidden-mode bulk-prompt-box" id="titlePromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+          <div class="mode-title-d hidden-mode bulk-prompt-box" id="titlePromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
             <div id="titlePromptInputStepD">
               <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest a title.</p>
               <textarea id="titlePromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
@@ -826,10 +824,10 @@
           <div class="inline-ai-wrap">
             <input type="text" id="keywordsField" placeholder="Add a keyword...">
             <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="keywordsInlineIconBtn" type="button" title="Suggest keywords" aria-label="Suggest keywords with AI">
-              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+              <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
             </button>
           </div>
-          <div class="mode-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
+          <div class="mode-keywords-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
             <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll suggest keywords.</p>
             <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
             <p class="hint" style="margin:8px 0 0;">The more detail you give, the better the suggestions.</p>
@@ -1067,11 +1065,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); }
     };
   }
-  // Title: instant popover in both 241 and 244 — 244 just hides "Suggest
-  // another" for it (handled in applyDemoMode), same underlying mechanism.
+  // Title: instant popover in 241 always, and in 244 once a bulk prompt has
+  // been entered — otherwise 244 falls back to the prompt-box pattern below
+  // (titlePromptBoxD), since there's no context yet to draft a title from.
   const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
     ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
-    'titleDismissUndo', 'titleUndoBtn', ['241','244']);
+    'titleDismissUndo', 'titleUndoBtn', ['241','244'],
+    ()=> currentMode === '244' && isFieldEmpty(bulkPromptInput));
   document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
   document.getElementById('titleTryAgainBtn').addEventListener('click', titleA.tryAgain);
   document.getElementById('titleDismissBtn').addEventListener('click', titleA.dismiss);
@@ -1144,7 +1144,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
 
     document.getElementById(iconBtnId).addEventListener('click', ()=>{
-      if(!activeModes.includes(currentMode)) return;
+      const active = typeof activeModes === 'function' ? activeModes() : activeModes.includes(currentMode);
+      if(!active) return;
       const opening = box.style.display !== 'block';
       box.style.display = opening ? 'block' : 'none';
       if(opening) showInputStep();
@@ -1172,14 +1173,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } }
     };
   }
-  // Title's prompt-box pattern stays exclusive to 242 — 244 uses the
-  // simpler instant popover for Title instead (wired above via titleA).
+  // Title's prompt-box pattern is 242's default, and also 244's fallback for
+  // when the seller hasn't entered a bulk prompt yet — once they have, 244
+  // switches to the simpler instant popover for Title instead (titleA).
   const titlePromptBoxD = wirePromptBoxWithReviewD(
     'titleInlineIconBtn', 'titlePromptBoxD', 'titlePromptInputStepD', 'titlePromptInputD', 'titlePromptGenerateD', 'titlePromptCancelD',
     'titlePromptResultD', 'titlePromptResultText', 'titlePromptUseD', 'titlePromptAnotherD', 'titlePromptDismissD',
     document.getElementById('listingTitle'), titleVariants,
     ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
-    'titlePromptContextLine', ['242']);
+    'titlePromptContextLine',
+    ()=> currentMode === '242' || (currentMode === '244' && isFieldEmpty(bulkPromptInput)));
   // Description's prompt-box pattern is shared by 242 and 244 — this is the
   // one field where 244 keeps the more capable refine-first flow.
   const aboutPromptBoxD = wirePromptBoxWithReviewD(
@@ -1189,15 +1192,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
     'aboutPromptContextLine', ['242','244']);
 
-  // Keywords keeps the original pattern — Generate reveals suggestion chips,
-  // which already requires an explicit click to add each one (its own
-  // review step), so no change needed there.
-  function wirePromptBoxD(iconBtnId, boxId, inputId, generateBtnId, cancelBtnId, onGenerate){
+  // Keywords keeps its own pattern below Generate — reveals suggestion chips,
+  // which already requires an explicit click to add each one (its own review
+  // step) — rather than the Use/Suggest another/Dismiss review used for Title/Description.
+  function wirePromptBoxD(iconBtnId, boxId, inputId, generateBtnId, cancelBtnId, onGenerate, activeModes){
     const box = document.getElementById(boxId);
     const input = document.getElementById(inputId);
     const generateBtn = document.getElementById(generateBtnId);
     document.getElementById(iconBtnId).addEventListener('click', ()=>{
-      if(currentMode !== '242') return;
+      const active = typeof activeModes === 'function' ? activeModes() : activeModes.includes(currentMode);
+      if(!active) return;
       box.style.display = box.style.display === 'block' ? 'none' : 'block';
     });
     document.getElementById(cancelBtnId).addEventListener('click', ()=>{
@@ -1214,14 +1218,19 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
     return box;
   }
+  // Same fallback rule as Title's prompt box: always active in 242, and in
+  // 244 only until a bulk prompt has been entered — after that, 244 goes
+  // straight to the chip suggestions below instead.
+  const keywordsPromptBoxActive = ()=> currentMode === '242' || (currentMode === '244' && isFieldEmpty(bulkPromptInput));
   const keywordsPromptBoxD = wirePromptBoxD('keywordsInlineIconBtn', 'keywordsPromptBoxD', 'keywordsPromptInputD', 'keywordsPromptGenerateD', 'keywordsPromptCancelD',
-    renderKwSuggestChips);
+    renderKwSuggestChips, keywordsPromptBoxActive);
 
   // Keywords (241): the manual "Suggest keywords" text link reveals chips;
   // clicking a chip adds it directly (tops up remaining empty slots only,
   // same rule as the bulk button).
   document.getElementById('kwSuggestBtn').addEventListener('click', ()=> renderKwSuggestChips(false));
   document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
+    if(keywordsPromptBoxActive()) return;
     const wrap = document.getElementById('kwSuggestChips');
     const isRefresh = wrap.style.display === 'flex' && wrap.querySelector('.chip');
     renderKwSuggestChips(isRefresh);
@@ -1231,15 +1240,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const glyph = icon.querySelector('.material-symbols-rounded');
     const wrap = document.getElementById('kwSuggestChips');
     const hasSuggestions = wrap.style.display === 'flex' && wrap.querySelector('.chip');
+    const staticWandMode = currentMode === '242' || currentMode === '244';
     if(mainKeywords.length >= 7){
       icon.disabled = true;
       icon.title = 'Maximum keywords reached';
       icon.setAttribute('aria-label', 'Maximum keywords reached');
-      glyph.textContent = currentMode === '242' ? 'auto_fix_high' : 'auto_awesome';
-    } else if(currentMode === '242'){
-      // 242: Title/Description use a static wand icon (prompt-box pattern) —
-      // Keywords matches that here instead of the dynamic sparkle/refresh
-      // swap used in 241's instant-suggestion pattern.
+      glyph.textContent = staticWandMode ? 'auto_fix_high' : 'auto_awesome';
+    } else if(staticWandMode){
+      // 242 and 244: Title/Description use a static wand icon (prompt-box
+      // pattern, or 244's fallback) — Keywords matches that here instead of
+      // the dynamic sparkle/refresh swap used in 241's instant-suggestion pattern.
       icon.disabled = false;
       icon.title = 'Suggest keywords';
       icon.setAttribute('aria-label', 'Suggest keywords with AI');
@@ -1507,11 +1517,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutCount').style.display = 'none';
     // mode-a-d: per-field AI icons + keyword suggestions — available in every mode.
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', false));
-    // mode-d: Title's and Keywords' 242-only per-field prompt-box pattern stays exclusive to 242.
+    // mode-d: Title's 242-only attribution line (iteration D's link-fill pattern) stays exclusive to 242.
     document.querySelectorAll('.mode-d').forEach(el => el.classList.toggle('hidden-mode', !isD));
+    // mode-title-d: Title's prompt-box pattern is 242's default, and 244's fallback
+    // for when no bulk prompt has been entered yet (see titlePromptBoxD below).
+    document.querySelectorAll('.mode-title-d').forEach(el => el.classList.toggle('hidden-mode', !(isD || isFourFour)));
+    // mode-keywords-d: same fallback pattern as Title, for Keywords.
+    document.querySelectorAll('.mode-keywords-d').forEach(el => el.classList.toggle('hidden-mode', !(isD || isFourFour)));
     // mode-about-d: Description's prompt-box-first pattern is shared by 242 and 244 —
-    // 244's whole premise is that Description benefits from the more capable flow
-    // Title and Keywords don't need.
+    // 244's whole premise is that Description benefits from the more capable flow.
     document.querySelectorAll('.mode-about-d').forEach(el => el.classList.toggle('hidden-mode', !(isD || isFourFour)));
     // 244: Title's popover drops "Suggest another" — one suggestion, Use or
     // Dismiss, no cycling. Editing a 40-character field by hand is trivial,
