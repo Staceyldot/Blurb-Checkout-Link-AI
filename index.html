@@ -604,8 +604,8 @@
     <label for="demoPhase">Iteration</label>
     <div class="select-wrap">
       <select id="demoPhase">
-        <option value="244" selected>244</option>
         <option value="245">245</option>
+        <option value="244" selected>244</option>
         <option value="242">242</option>
       </select>
       <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
@@ -1258,6 +1258,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const wrap = document.getElementById('kwSuggestChips');
     const hasSuggestions = wrap.style.display === 'flex' && wrap.querySelector('.chip');
     const staticWandMode = currentMode === '242' || currentMode === '244';
+    // 245: no per-field icon at all — see updateInlineSparkleVisibility.
+    if(currentMode === '245'){
+      icon.classList.add('hidden-mode');
+      return;
+    }
     if(mainKeywords.length >= 7){
       icon.classList.remove('hidden-mode');
       icon.disabled = true;
@@ -1518,14 +1523,16 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
 
   function updateInlineSparkleVisibility(){
-    // 245 gates Description/Keywords' icons behind the AI prompt box being
-    // generated first; 242 has no such gate, so its icons are always
-    // available. Title gets no AI help at all in 245 (see the prefill in
-    // applyDemoMode), so its icon stays hidden regardless of unlock state.
+    // 245 gates Description's icon behind the AI prompt box being generated
+    // first; 242 has no such gate, so its icon is always available. Title
+    // and Keywords get no per-field AI icon at all in 245 — Title is
+    // prefilled from the project title (see applyDemoMode), and Keywords is
+    // drafted only through the bulk flow, refreshed via the text link next
+    // to its suggestions instead of a field icon.
     const hide = currentMode === '245' && !inlineSparkleUnlocked;
     document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245');
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
-    document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', hide);
+    document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245');
   }
 
   // --- Mode switching across 245/242 ---
