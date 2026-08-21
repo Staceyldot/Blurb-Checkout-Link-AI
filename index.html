@@ -852,9 +852,9 @@
           </button>
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
-          <div class="kw-suggest-row" id="kwSuggestLabelRow" style="display:none; justify-content:space-between; margin-top:8px;">
+          <div class="kw-suggest-row" id="kwSuggestLabelRow" style="display:none; gap:8px; margin-top:8px;">
             <p class="hint" id="kwSuggestLabel" style="margin:0;"></p>
-            <button type="button" class="popover-link-btn" id="kwSuggestRefreshBtn"><span class="material-symbols-rounded">refresh</span>Suggest more</button>
+            <button type="button" class="popover-link-btn" id="kwSuggestRefreshBtn"><span class="material-symbols-rounded">refresh</span>Refresh suggestions</button>
           </div>
           <div class="chip-group mode-a-d hidden-mode" id="kwSuggestChips" style="margin-top:4px;"></div>
         </div>
@@ -1243,7 +1243,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // clicking a chip adds it directly (tops up remaining empty slots only,
   // same rule as the bulk button). The field icon only ever triggers the
   // first suggestion — once chips are showing, it hides in favor of the
-  // "Suggest more" link next to the label (kwSuggestRefreshBtn) below.
+  // "Refresh suggestions" link next to the label (kwSuggestRefreshBtn) below.
   document.getElementById('kwSuggestBtn').addEventListener('click', ()=> renderKwSuggestChips(false));
   document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
     if(keywordsPromptBoxActive()) return;
@@ -1289,7 +1289,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const label = document.getElementById('kwSuggestLabel');
     const labelRow = document.getElementById('kwSuggestLabelRow');
     // 242/244 already regenerate via the prompt box's own Generate button —
-    // the "Suggest more" link is only needed for 245's dynamic icon pattern.
+    // the "Refresh suggestions" link is only needed for 245's dynamic icon pattern.
     document.getElementById('kwSuggestRefreshBtn').style.display = currentMode === '245' ? 'inline-flex' : 'none';
     wrap.style.display = 'flex';
     wrap.innerHTML = '';
@@ -1332,7 +1332,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
     label.textContent = mainKeywords.length > 0
       ? "More ideas, based on what you're building"
-      : 'Suggested keywords';
+      : 'More ideas based on your book details.';
     labelRow.style.display = remaining.length ? 'flex' : 'none';
     remaining.forEach(kw=>{
       if(mainKeywords.length >= 7) return;
