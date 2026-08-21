@@ -657,6 +657,11 @@
           <span id="bulkGenerateLabel">Let AI help you</span>
         </button>
       </div>
+      <div id="aiDraftedBanner" style="display:none; align-items:center; gap:10px; margin:-8px 0 20px; padding:14px 16px; border-radius:8px; background:var(--gray-subtler);">
+        <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+        <span style="flex:1; font-size:14px; color:var(--bold);">Drafted with AI. Review and edit before you go live.</span>
+        <button type="button" class="popover-link-btn" id="aiDraftedUndoBtn">Undo</button>
+      </div>
       <button class="ai-banner" id="bulkGenerateBanner" type="button">
         <span class="material-symbols-rounded ts-grad-icon ai-banner-icon">auto_awesome</span>
         <span class="ai-banner-text">
@@ -1366,6 +1371,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // 245: the per-field sparkle stays hidden until the seller has actually
   // clicked Generate/Regenerate — typing in the prompt box alone isn't enough.
   let inlineSparkleUnlocked = false;
+  // 245: what Description looked like right before the most recent draft/
+  // redraft, so the "Drafted with AI" banner's Undo can put it back.
+  let bulkUndoSnapshot = null;
 
   function isBulkDraftFull(){
     return !isFieldEmpty(document.getElementById('listingTitle'))
@@ -1467,6 +1475,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     // bulk flow (initial or regenerate) never touches it there.
     const willFillTitle = currentMode !== '245' && (regenerate || isFieldEmpty(titleInput));
     const willFillAbout = regenerate || isFieldEmpty(aboutInput);
+    if(currentMode === '245'){
+      bulkUndoSnapshot = { about: aboutInput.value };
+    }
 
     if(willFillTitle){ titleOverlay.classList.add('show'); titleInput.disabled = true; }
     if(willFillAbout){ aboutOverlay.classList.add('show'); aboutInput.disabled = true; }
@@ -1510,13 +1521,30 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkRegenConfirm.style.display = 'none';
     runBulkFill(true);
   });
+  document.getElementById('aiDraftedUndoBtn').addEventListener('click', ()=>{
+    if(!bulkUndoSnapshot) return;
+    const aboutInput = document.getElementById('aboutBook');
+    aboutInput.value = bulkUndoSnapshot.about;
+    document.getElementById('aboutCount').textContent = aboutInput.value.length + '/1466';
+    document.getElementById('kwSuggestChips').style.display = 'none';
+    document.getElementById('kwSuggestChips').innerHTML = '';
+    document.getElementById('kwSuggestLabelRow').style.display = 'none';
+    bulkUndoSnapshot = null;
+    inlineSparkleUnlocked = false;
+    updateInlineSparkleVisibility();
+    updateKeywordsIconState();
+    updateBulkGenerateState();
+  });
   function updateBulkGenerateState(){
     // 242 relies entirely on the per-field prompt boxes — no section-level
     // "generate everything" entry point in that mode. 244 has one too, but
-    // as the banner below the header instead of this small button.
-    const hideHeaderBtn = currentMode === '242' || currentMode === '244';
+    // as the banner below the header instead of this small button. 245's
+    // button gives way to the "Drafted with AI" banner once a draft exists.
+    const drafted245 = currentMode === '245' && inlineSparkleUnlocked;
+    const hideHeaderBtn = currentMode === '242' || currentMode === '244' || drafted245;
     document.getElementById('bulkGenerate').className = 'btn btn-outline-ai' + (hideHeaderBtn ? ' hidden-mode' : '');
     document.getElementById('bulkGenerateBanner').style.display = currentMode === '244' ? 'flex' : 'none';
+    document.getElementById('aiDraftedBanner').style.display = drafted245 ? 'flex' : 'none';
     updateBulkPromptSubmitLabel();
   }
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
@@ -1611,6 +1639,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('kwSuggestLabelRow').style.display = 'none';
     titleLastPrompt = '';
     aboutLastPrompt = '';
+    bulkUndoSnapshot = null;
     setContextLine('titleContextLine', '');
     setContextLine('aboutContextLine', '');
     setContextLine('titlePromptContextLine', '');
