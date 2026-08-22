@@ -872,7 +872,7 @@
           <div class="mode-keywords-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
             <div id="keywordsPromptInputStepD">
               <p class="prompt-copy" style="margin:0 0 8px;">What else should we know about your book?</p>
-              <textarea id="keywordsPromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
+              <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
               <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
                 <button class="btn btn-outline-bold" id="keywordsPromptCancelD" type="button">Cancel</button>
                 <button class="btn btn-disabled" id="keywordsPromptGenerateD" type="button" disabled>Suggest keywords</button>
@@ -1278,11 +1278,19 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const generateBtn = document.getElementById('keywordsPromptGenerateD');
     const resultStep = document.getElementById('keywordsPromptResultD');
     const resultChips = document.getElementById('keywordsPromptResultChips');
+    const defaultGenerateLabel = generateBtn.textContent;
     let idx = 0;
 
     function showInputStep(){
       resultStep.style.display = 'none';
       inputStep.style.display = 'block';
+      // Once keywords already exist, reopening this box is a redraft, not
+      // a first draft — matching Title/Description's dynamic CTA.
+      generateBtn.textContent = mainKeywords.length > 0 ? 'Draft again' : defaultGenerateLabel;
+      // Same reasoning as showResultStep: the bulk flow's own suggestions
+      // shouldn't sit below this box once it's open.
+      document.getElementById('kwSuggestLabelRow').style.display = 'none';
+      document.getElementById('kwSuggestChips').style.display = 'none';
     }
     function renderResultChips(){
       resultChips.innerHTML = '';
