@@ -1367,9 +1367,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       : [];
     const remaining = rotated.slice(0, 6);
 
-    label.textContent = mainKeywords.length > 0
-      ? "More ideas, based on what you're building"
-      : "More ideas from what you've written so far.";
+    label.textContent = "More ideas from what you've written so far.";
     labelRow.style.display = remaining.length ? 'flex' : 'none';
     remaining.forEach(kw=>{
       if(mainKeywords.length >= 7) return;
@@ -1583,12 +1581,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function updateInlineSparkleVisibility(){
     // 245 gates Description's icon behind the AI prompt box being generated
     // first; 242 has no such gate, so its icon is always available. Title
-    // and Keywords get no per-field AI icon at all in 245 — Title is
-    // prefilled from the project title (see applyDemoMode), and Keywords is
-    // drafted only through the bulk flow, refreshed via the text link next
-    // to its suggestions instead of a field icon.
+    // gets no per-field AI icon in 244 or 245 — it's only ever drafted (or,
+    // in 245, prefilled) through the bulk flow. Keywords gets no per-field
+    // icon in 245 either — drafted only through the bulk flow there,
+    // refreshed via the text link next to its suggestions instead.
     const hide = currentMode === '245' && !inlineSparkleUnlocked;
-    document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245');
+    document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245' || currentMode === '244');
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245');
     // 245: by the time this icon is visible, Description is already
