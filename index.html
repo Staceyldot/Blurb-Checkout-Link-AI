@@ -811,7 +811,7 @@
 
           <div class="mode-about-d hidden-mode bulk-prompt-box" id="aboutPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
             <div id="aboutPromptInputStepD">
-              <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll draft a description.</p>
+              <p class="prompt-copy" style="margin:0 0 8px;">What else should we know about your book?</p>
               <textarea id="aboutPromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
               <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
                 <button class="btn btn-outline-bold" id="aboutPromptCancelD" type="button">Cancel</button>
@@ -870,12 +870,22 @@
           </div>
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
           <div class="mode-keywords-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-            <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll suggest keywords.</p>
-            <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
-            <p class="hint" style="margin:8px 0 0;">The more detail you give, the better the suggestions.</p>
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-              <button class="btn btn-outline-bold" id="keywordsPromptCancelD" type="button">Cancel</button>
-              <button class="btn btn-disabled" id="keywordsPromptGenerateD" type="button" disabled>Suggest keywords</button>
+            <div id="keywordsPromptInputStepD">
+              <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll suggest keywords.</p>
+              <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
+              <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+                <button class="btn btn-outline-bold" id="keywordsPromptCancelD" type="button">Cancel</button>
+                <button class="btn btn-disabled" id="keywordsPromptGenerateD" type="button" disabled>Suggest keywords</button>
+              </div>
+            </div>
+            <div id="keywordsPromptResultD" style="display:none; background:#fff; border-radius:8px; padding:14px 16px;">
+              <div class="chip-group" id="keywordsPromptResultChips" style="margin:0 0 12px;"></div>
+              <div class="row" style="display:flex; align-items:center; gap:16px;">
+                <button class="popover-link-btn primary" id="keywordsPromptUseD"><span class="material-symbols-rounded">check</span>Use these keywords</button>
+                <button class="popover-link-btn" id="keywordsPromptAnotherD"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
+                <span class="spacer"></span>
+                <button class="popover-link-btn muted" id="keywordsPromptDismissD">Dismiss</button>
+              </div>
             </div>
           </div>
           <button class="kw-suggest-btn hidden-mode" id="kwSuggestBtn" type="button" style="margin-left:0; margin-top:8px;">
@@ -1080,6 +1090,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
   function isFieldEmpty(el){ return el.value.trim().length === 0; }
 
+  // 244: Title gets a longer max (70) and a visible counter to match —
+  // other modes keep the shorter 40-character cap with the counter hidden.
+  function updateTitleCountDisplay(){
+    const titleInput = document.getElementById('listingTitle');
+    const max = currentMode === '244' ? 70 : 40;
+    titleInput.maxLength = max;
+    document.getElementById('titleCount').textContent = titleInput.value.length + '/' + max;
+  }
+
   // Iteration A: icon opens an inline popover under the field
   function wireInlineA(iconBtnId, popoverId, textId, inputEl, variants, countUpdateFn, undoWrapId, undoBtnId, activeModes, flagOverride){
     let idx = 0;
@@ -1115,7 +1134,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // 245 gets no AI help for Title at all — it's prefilled from the project
   // title instead (see applyDemoMode).
   const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
-    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
+    ()=> updateTitleCountDisplay(),
     'titleDismissUndo', 'titleUndoBtn', ['244'],
     ()=> currentMode === '244' && isFieldEmpty(bulkPromptInput));
   document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
@@ -1161,7 +1180,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     };
   }
   const titleD = wireInlineD('titleDraftLinkD','titleAttrD','titleRedraftD', document.getElementById('listingTitle'), titleVariants,
-    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40');
+    ()=> updateTitleCountDisplay());
   const aboutD = wireInlineD('aboutDraftLinkD','aboutAttrD','aboutRedraftD', document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466');
 
@@ -1176,11 +1195,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const generateBtn = document.getElementById(generateBtnId);
     const resultStep = document.getElementById(resultStepId);
     const resultText = document.getElementById(resultTextId);
+    const defaultGenerateLabel = generateBtn.textContent;
     let idx = 0;
 
     function showInputStep(){
       resultStep.style.display = 'none';
       inputStep.style.display = 'block';
+      // Once the field already has content, reopening this box is a
+      // redraft, not a first draft — the CTA should say so.
+      generateBtn.textContent = isFieldEmpty(inputEl) ? defaultGenerateLabel : 'Draft again';
     }
     function showResultStep(){
       resultText.textContent = variants[idx];
@@ -1226,7 +1249,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     'titleInlineIconBtn', 'titlePromptBoxD', 'titlePromptInputStepD', 'titlePromptInputD', 'titlePromptGenerateD', 'titlePromptCancelD',
     'titlePromptResultD', 'titlePromptResultText', 'titlePromptUseD', 'titlePromptAnotherD', 'titlePromptDismissD',
     document.getElementById('listingTitle'), titleVariants,
-    ()=> document.getElementById('titleCount').textContent = document.getElementById('listingTitle').value.length + '/40',
+    ()=> updateTitleCountDisplay(),
     'titlePromptContextLine',
     ()=> currentMode === '242' || (currentMode === '244' && isFieldEmpty(bulkPromptInput)));
   // Description's prompt-box pattern is shared by 242 and 244 — this is the
@@ -1238,38 +1261,73 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
     'aboutPromptContextLine', ['242','244']);
 
-  // Keywords keeps its own pattern below Generate — reveals suggestion chips,
-  // which already requires an explicit click to add each one (its own review
-  // step) — rather than the Use/Suggest another/Dismiss review used for Title/Description.
-  function wirePromptBoxD(iconBtnId, boxId, inputId, generateBtnId, cancelBtnId, onGenerate, activeModes){
-    const box = document.getElementById(boxId);
-    const input = document.getElementById(inputId);
-    const generateBtn = document.getElementById(generateBtnId);
-    document.getElementById(iconBtnId).addEventListener('click', ()=>{
-      const active = typeof activeModes === 'function' ? activeModes() : activeModes.includes(currentMode);
-      if(!active) return;
-      box.style.display = box.style.display === 'block' ? 'none' : 'block';
-    });
-    document.getElementById(cancelBtnId).addEventListener('click', ()=>{
-      box.style.display = 'none';
-    });
-    input.addEventListener('input', ()=>{
-      const has = !isFieldEmpty(input);
-      generateBtn.disabled = !has;
-      generateBtn.className = has ? 'btn btn-primary' : 'btn btn-disabled';
-    });
-    generateBtn.addEventListener('click', ()=>{
-      onGenerate();
-      box.style.display = 'none';
-    });
-    return box;
-  }
+  // Keywords' prompt box mirrors Title/Description's input-step/result-step
+  // review flow (244) — "Use" adds a whole suggested batch at once (up to
+  // remaining empty slots) instead of overwriting a single field's value.
+  const keywordBatchVariants = [
+    ["contemporary romance", "enemies to lovers", "slow burn", "second chances"],
+    ["first impressions", "small town romance", "women's fiction", "banter-heavy"]
+  ];
   // Same fallback rule as Title's prompt box: always active in 242, and in
   // 244 only until a bulk prompt has been entered — after that, 244 goes
   // straight to the chip suggestions below instead.
   const keywordsPromptBoxActive = ()=> currentMode === '242' || (currentMode === '244' && isFieldEmpty(bulkPromptInput));
-  const keywordsPromptBoxD = wirePromptBoxD('keywordsInlineIconBtn', 'keywordsPromptBoxD', 'keywordsPromptInputD', 'keywordsPromptGenerateD', 'keywordsPromptCancelD',
-    renderKwSuggestChips, keywordsPromptBoxActive);
+  (function wireKeywordsPromptBoxWithReviewD(){
+    const box = document.getElementById('keywordsPromptBoxD');
+    const inputStep = document.getElementById('keywordsPromptInputStepD');
+    const promptInput = document.getElementById('keywordsPromptInputD');
+    const generateBtn = document.getElementById('keywordsPromptGenerateD');
+    const resultStep = document.getElementById('keywordsPromptResultD');
+    const resultChips = document.getElementById('keywordsPromptResultChips');
+    let idx = 0;
+
+    function showInputStep(){
+      resultStep.style.display = 'none';
+      inputStep.style.display = 'block';
+    }
+    function renderResultChips(){
+      resultChips.innerHTML = '';
+      keywordBatchVariants[idx].forEach(kw=>{
+        const chip = document.createElement('div');
+        chip.className = 'chip unselected';
+        chip.textContent = kw;
+        resultChips.appendChild(chip);
+      });
+    }
+    function showResultStep(){
+      renderResultChips();
+      inputStep.style.display = 'none';
+      resultStep.style.display = 'block';
+    }
+
+    document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
+      if(!keywordsPromptBoxActive()) return;
+      const opening = box.style.display !== 'block';
+      box.style.display = opening ? 'block' : 'none';
+      if(opening) showInputStep();
+    });
+    document.getElementById('keywordsPromptCancelD').addEventListener('click', ()=>{
+      box.style.display = 'none';
+    });
+    promptInput.addEventListener('input', ()=>{
+      const has = !isFieldEmpty(promptInput);
+      generateBtn.disabled = !has;
+      generateBtn.className = has ? 'btn btn-primary' : 'btn btn-disabled';
+    });
+    generateBtn.addEventListener('click', showResultStep);
+    document.getElementById('keywordsPromptAnotherD').addEventListener('click', ()=>{
+      idx = (idx + 1) % keywordBatchVariants.length;
+      renderResultChips();
+    });
+    document.getElementById('keywordsPromptDismissD').addEventListener('click', showInputStep);
+    document.getElementById('keywordsPromptUseD').addEventListener('click', ()=>{
+      keywordBatchVariants[idx].forEach(kw=>{
+        if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
+      });
+      renderMainKeywords();
+      box.style.display = 'none';
+    });
+  })();
 
   // Keywords (245): the manual "Suggest keywords" text link reveals chips;
   // clicking a chip adds it directly (tops up remaining empty slots only,
@@ -1643,7 +1701,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('bulkFillHint').textContent = bulkStagedMode
       ? 'The more detail you give, the better the results.'
       : "Fills every empty field below at once. Each one stays editable and can be redrafted on its own.";
-    document.getElementById('titleCount').style.display = 'none';
+    document.getElementById('titleCount').style.display = isFourFour ? 'block' : 'none';
+    updateTitleCountDisplay();
     document.getElementById('aboutCount').style.display = 'none';
     // mode-a-d: per-field AI icons + keyword suggestions — available in every mode.
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', false));
@@ -1674,6 +1733,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutPromptResultD').style.display = 'none';
     document.getElementById('aboutPromptInputStepD').style.display = 'block';
     document.getElementById('keywordsPromptBoxD').style.display = 'none';
+    document.getElementById('keywordsPromptResultD').style.display = 'none';
+    document.getElementById('keywordsPromptInputStepD').style.display = 'block';
     document.getElementById('titleDraftPopover').classList.remove('open');
     document.getElementById('aboutDraftPopover').classList.remove('open');
     document.getElementById('titleDismissUndo').classList.remove('show');
@@ -1742,9 +1803,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     f.addEventListener('animationend', ()=> f.classList.remove('flash'));
   });
 
-  document.getElementById('listingTitle').addEventListener('input', e=>{
-    document.getElementById('titleCount').textContent = e.target.value.length + '/40';
-  });
+  document.getElementById('listingTitle').addEventListener('input', updateTitleCountDisplay);
   document.getElementById('aboutBook').addEventListener('input', e=>{
     document.getElementById('aboutCount').textContent = e.target.value.length + '/1466';
   });
