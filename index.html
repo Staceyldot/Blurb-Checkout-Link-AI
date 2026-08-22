@@ -737,46 +737,8 @@
                 <div class="skeleton-line" style="width:65%;"></div>
               </div>
             </div>
-            <button class="inline-ai-icon-btn mode-a-d hidden-mode" id="titleInlineIconBtn" type="button" title="Improve with AI" aria-label="Improve title with AI">
-              <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
-            </button>
           </div>
           <div class="count" id="titleCount">24/40</div>
-          <div class="mode-title-d hidden-mode bulk-prompt-box" id="titlePromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-            <div id="titlePromptInputStepD">
-              <p class="prompt-copy" style="margin:0 0 8px;">Tell us what it's about, and we'll suggest a title.</p>
-              <textarea id="titlePromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
-              <p class="hint" style="margin:8px 0 0;">A sentence or two is enough.</p>
-              <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-                <button class="btn btn-outline-bold" id="titlePromptCancelD" type="button">Cancel</button>
-                <button class="btn btn-disabled" id="titlePromptGenerateD" type="button" disabled>Suggest a title</button>
-              </div>
-            </div>
-            <div id="titlePromptResultD" style="display:none; background:#fff; border-radius:8px; padding:14px 16px;">
-              <p class="suggestion-context" id="titlePromptContextLine" style="display:none;"></p>
-              <p id="titlePromptResultText" style="margin:0 0 12px; font-size:15px; color:var(--subtle); white-space:pre-line;"></p>
-              <div class="row" style="display:flex; align-items:center; gap:16px;">
-                <button class="popover-link-btn primary" id="titlePromptUseD"><span class="material-symbols-rounded">check</span>Use this title</button>
-                <button class="popover-link-btn" id="titlePromptAnotherD"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
-                <span class="spacer"></span>
-                <button class="popover-link-btn muted" id="titlePromptDismissD">Dismiss</button>
-              </div>
-            </div>
-          </div>
-          <div class="inline-draft-popover" id="titleDraftPopover">
-            <p class="suggestion-context" id="titleContextLine" style="display:none;"></p>
-            <p id="titleDraftText"></p>
-            <div class="row">
-              <button class="popover-link-btn primary" id="titleInsertBtn"><span class="material-symbols-rounded">check</span>Use this title</button>
-              <button class="popover-link-btn" id="titleTryAgainBtn"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
-              <span class="spacer"></span>
-              <button class="popover-link-btn muted" id="titleDismissBtn">Dismiss</button>
-            </div>
-          </div>
-          <div class="dismiss-undo" id="titleDismissUndo">
-            <span>Suggestion dismissed</span>
-            <button class="popover-link-btn" id="titleUndoBtn">Undo</button>
-          </div>
         </div>
       </div>
 
@@ -1050,7 +1012,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // Tracks whatever prompt/guidance actually informed each field's current
   // suggestion, so "Suggest another" works from the same context instead of
   // silently discarding it. Updated whenever a new prompt or guidance is used.
-  let titleLastPrompt = '';
   let aboutLastPrompt = '';
   function setContextLine(lineId, text){
     const el = document.getElementById(lineId);
@@ -1109,21 +1070,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); }
     };
   }
-  // Title: instant popover in 244 once a bulk prompt has been entered —
-  // otherwise 244 falls back to the prompt-box pattern below
-  // (titlePromptBoxD), since there's no context yet to draft a title from.
-  // 245 gets no AI help for Title at all — it's prefilled from the project
-  // title instead (see applyDemoMode).
-  const titleA = wireInlineA('titleInlineIconBtn','titleDraftPopover','titleDraftText', document.getElementById('listingTitle'), titleVariants,
-    ()=> updateTitleCountDisplay(),
-    'titleDismissUndo', 'titleUndoBtn', ['244'],
-    ()=> currentMode === '244' && isFieldEmpty(bulkPromptInput));
-  document.getElementById('titleInsertBtn').addEventListener('click', titleA.insert);
-  document.getElementById('titleTryAgainBtn').addEventListener('click', titleA.tryAgain);
-  document.getElementById('titleDismissBtn').addEventListener('click', titleA.dismiss);
-  document.getElementById('titleInlineIconBtn').addEventListener('click', ()=>{
-    setContextLine('titleContextLine', titleLastPrompt);
-  });
+  // Title has no per-field AI icon in either remaining mode — 244 still
+  // drafts it through the bulk flow (245 prefills it instead; see
+  // applyDemoMode), so this just fills the field directly.
+  let titleDraftIdx = 0;
+  function fillTitleFromDraft(regenerate){
+    if(regenerate) titleDraftIdx = (titleDraftIdx + 1) % titleVariants.length;
+    document.getElementById('listingTitle').value = titleVariants[titleDraftIdx];
+    updateTitleCountDisplay();
+  }
 
   // Description: instant popover in 245 — 244 routes Description through
   // the more capable prompt-box-first pattern instead (below).
@@ -1195,20 +1150,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } }
     };
   }
-  // Title's prompt-box pattern is 244's fallback for when the seller hasn't
-  // entered a bulk prompt yet — once they have, 244 switches to the
-  // simpler instant popover for Title instead (titleA). Note: Title's
-  // per-field icon is hidden in every remaining mode (see
-  // updateInlineSparkleVisibility), so this box is currently unreachable —
-  // kept as-is pending a decision on removing Title's per-field AI
-  // machinery entirely now that 242 (its last live mode) is gone.
-  const titlePromptBoxD = wirePromptBoxWithReviewD(
-    'titleInlineIconBtn', 'titlePromptBoxD', 'titlePromptInputStepD', 'titlePromptInputD', 'titlePromptGenerateD', 'titlePromptCancelD',
-    'titlePromptResultD', 'titlePromptResultText', 'titlePromptUseD', 'titlePromptAnotherD', 'titlePromptDismissD',
-    document.getElementById('listingTitle'), titleVariants,
-    ()=> updateTitleCountDisplay(),
-    'titlePromptContextLine',
-    ()=> currentMode === '244' && isFieldEmpty(bulkPromptInput));
   // Description's prompt-box pattern is 244's refine-first flow.
   const aboutPromptBoxD = wirePromptBoxWithReviewD(
     'aboutInlineIconBtn', 'aboutPromptBoxD', 'aboutPromptInputStepD', 'aboutPromptInputD', 'aboutPromptGenerateD', 'aboutPromptCancelD',
@@ -1530,10 +1471,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
     setTimeout(()=>{
       if(willFillTitle){
-        if(regenerate) titleA.regenerate(); else titleA.generateIfEmpty();
+        fillTitleFromDraft(regenerate);
         titleOverlay.classList.remove('show');
         titleInput.disabled = false;
-        titleLastPrompt = promptUsed;
       }
       if(willFillAbout){
         if(regenerate) aboutA.regenerate(); else aboutA.generateIfEmpty();
@@ -1597,11 +1537,10 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
   function updateInlineSparkleVisibility(){
     // 244 and 245 both gate Description/Keywords' icons behind "Draft
-    // content" being clicked at least once. Title gets no per-field AI
-    // icon in either mode — it's only ever drafted (or, in 245, prefilled)
-    // through the bulk flow.
+    // content" being clicked at least once. Title has no per-field AI icon
+    // at all — it's only ever drafted (or, in 245, prefilled) through the
+    // bulk flow.
     const hide = (currentMode === '244' || currentMode === '245') && !inlineSparkleUnlocked;
-    document.getElementById('titleInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245' || currentMode === '244');
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245' || hide);
     // 245: by the time this icon is visible, Description is already
@@ -1662,45 +1601,29 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutCount').style.display = 'none';
     // mode-a-d: per-field AI icons + keyword suggestions — available in every mode.
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', false));
-    // mode-title-d: Title's prompt-box pattern is 244's fallback for when no
-    // bulk prompt has been entered yet (see titlePromptBoxD below).
-    document.querySelectorAll('.mode-title-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour));
-    // mode-keywords-d: same fallback pattern as Title, for Keywords.
+    // mode-keywords-d: Keywords' review-based prompt box (244 only).
     document.querySelectorAll('.mode-keywords-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour));
     // mode-about-d: Description's prompt-box-first, refine-first flow (244).
     document.querySelectorAll('.mode-about-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour));
-    // 244: Title's popover drops "Suggest another" — one suggestion, Use or
-    // Dismiss, no cycling. Editing a 40-character field by hand is trivial,
-    // so the refinement machinery 245 builds for Title isn't needed here.
-    document.getElementById('titleTryAgainBtn').style.display = isFourFour ? 'none' : 'inline-flex';
-
     // Switching modes always closes the bulk prompt box fresh, so no
     // open/accordion state leaks from one mode into another.
     bulkPromptBox.style.display = 'none';
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
-    document.getElementById('titlePromptBoxD').style.display = 'none';
     document.getElementById('aboutPromptBoxD').style.display = 'none';
-    document.getElementById('titlePromptResultD').style.display = 'none';
-    document.getElementById('titlePromptInputStepD').style.display = 'block';
     document.getElementById('aboutPromptResultD').style.display = 'none';
     document.getElementById('aboutPromptInputStepD').style.display = 'block';
     document.getElementById('keywordsPromptBoxD').style.display = 'none';
     document.getElementById('keywordsPromptResultD').style.display = 'none';
     document.getElementById('keywordsPromptInputStepD').style.display = 'block';
-    document.getElementById('titleDraftPopover').classList.remove('open');
     document.getElementById('aboutDraftPopover').classList.remove('open');
-    document.getElementById('titleDismissUndo').classList.remove('show');
     document.getElementById('aboutDismissUndo').classList.remove('show');
     document.getElementById('kwSuggestChips').style.display = 'none';
     document.getElementById('kwSuggestChips').innerHTML = '';
     document.getElementById('kwSuggestLabelRow').style.display = 'none';
-    titleLastPrompt = '';
     aboutLastPrompt = '';
     bulkUndoSnapshot = null;
-    setContextLine('titleContextLine', '');
     setContextLine('aboutContextLine', '');
-    setContextLine('titlePromptContextLine', '');
     setContextLine('aboutPromptContextLine', '');
     if(!isA) inlineSparkleUnlocked = false;
     updateBulkGenerateState();
