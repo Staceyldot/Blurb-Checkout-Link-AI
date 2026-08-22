@@ -868,6 +868,7 @@
               <span class="material-symbols-rounded ts-grad-icon">auto_fix_high</span>
             </button>
           </div>
+          <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
           <div class="mode-keywords-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
             <p class="prompt-copy" style="margin:0 0 8px;">Share a few details, and we'll suggest keywords.</p>
             <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
@@ -881,7 +882,6 @@
             <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span> Suggest keywords
           </button>
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
-          <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
           <div class="kw-suggest-row" id="kwSuggestLabelRow" style="display:none; gap:8px; margin-top:8px;">
             <p class="hint" id="kwSuggestLabel" style="margin:0;"></p>
             <button type="button" class="popover-link-btn" id="kwSuggestRefreshBtn"><span class="material-symbols-rounded">refresh</span>Refresh suggestions</button>
@@ -1712,22 +1712,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateKeywordsIconState();
   }
   function updateKeywordsHint(){
+    // Stays constant across every state and iteration — maxed-out feedback
+    // already lives in the suggestions area below ("Maximum keywords
+    // reached. Remove one to see more suggestions."), so this hint never
+    // needs to change or hide.
     const hint = document.getElementById('keywordsHint');
-    const suggestChips = document.getElementById('kwSuggestChips');
-    const hasSuggestions = suggestChips.style.display === 'flex' && suggestChips.querySelector('.chip');
-    if(mainKeywords.length >= 7){
-      // 245: the suggestions area below already says "Maximum keywords
-      // reached. Remove one to see more suggestions." — this hint would
-      // just be a redundant, near-identical second copy of the same message.
-      hint.style.display = currentMode === '245' ? 'none' : '';
-      hint.textContent = 'Maximum keywords reached. Remove one to add another.';
-    } else if(hasSuggestions){
-      hint.style.display = '';
-      hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
-    } else {
-      hint.style.display = '';
-      hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
-    }
+    hint.style.display = '';
+    hint.textContent = 'Press Enter to add each keyword. Up to 7 keywords.';
   }
   document.getElementById('keywordsField').addEventListener('keydown', (e)=>{
     if(e.key === 'Enter'){
