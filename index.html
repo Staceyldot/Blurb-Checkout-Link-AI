@@ -1600,6 +1600,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
   // --- Mode switching across 245/242 ---
   function applyDemoMode(){
+    const previousMode = currentMode;
     const val = demoPhaseSelect.value;
     currentMode = val;
     const isA = val === '245';
@@ -1611,8 +1612,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     // itself, so it's prefilled from that instead of drafted (never
     // overwrites a title the seller already typed).
     const titleField = document.getElementById('listingTitle');
+    const projectTitleText = document.getElementById('projectTitle').textContent.trim();
     if(isA && isFieldEmpty(titleField)){
-      titleField.value = document.getElementById('projectTitle').textContent.trim();
+      titleField.value = projectTitleText;
+    }
+    // Leaving 245 without editing that prefill shouldn't leak it into
+    // 242/244, where Title is genuinely empty until drafted or typed.
+    if(previousMode === '245' && !isA && titleField.value === projectTitleText){
+      titleField.value = '';
     }
 
     document.getElementById('bulkGenerateLabel').textContent = isD ? 'Let AI help you' : (isA ? 'Draft this for me' : 'Draft content with AI');
