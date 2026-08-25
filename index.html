@@ -804,8 +804,7 @@
             </div>
           </div>
           <div class="inline-draft-popover" id="aboutDraftPopover">
-            <p class="suggestion-context" id="aboutContextLine" style="display:none;"></p>
-            <p id="aboutDraftText"></p>
+            <textarea id="aboutDraftText" style="margin:0 0 10px; min-height:100px;"></textarea>
             <div class="row">
               <button class="popover-link-btn primary" id="aboutInsertBtn"><span class="material-symbols-rounded">check</span>Use this description</button>
               <button class="popover-link-btn" id="aboutTryAgainBtn"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
@@ -1031,11 +1030,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     ]
   };
   let currentMode = null;
+  // The raw picker value (246/245/244), before 246 is aliased to 245's logic
+  // in currentMode — lets a specific spot diverge 246 without re-threading
+  // every currentMode check in the file.
+  let demoPhase = null;
   let mainKeywords = [];
-  // Tracks whatever prompt/guidance actually informed each field's current
-  // suggestion, so "Suggest another" works from the same context instead of
-  // silently discarding it. Updated whenever a new prompt or guidance is used.
-  let aboutLastPrompt = '';
   function setContextLine(lineId, text){
     const el = document.getElementById(lineId);
     if(text){
@@ -1076,21 +1075,32 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       if(!activeModes.includes(currentMode)) return;
       if(flagOverride && flagOverride()) return;
       undoWrap.classList.remove('show');
-      textEl.textContent = variants[idx];
+      textEl.value = variants[idx];
       popover.classList.toggle('open');
     });
     undoBtn.addEventListener('click', ()=>{
       undoWrap.classList.remove('show');
-      textEl.textContent = variants[idx];
+      textEl.value = variants[idx];
       popover.classList.add('open');
     });
     return {
-      insert(){ inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); },
-      tryAgain(){ idx = (idx + 1) % variants.length; textEl.textContent = variants[idx]; },
+      // Inserts whatever's currently in the (editable) draft box, not the
+      // original suggestion — so edits made before "Use this description" stick.
+      insert(){ inputEl.value = textEl.value; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); },
+      tryAgain(){ idx = (idx + 1) % variants.length; textEl.value = variants[idx]; },
       // Dismissing hides the suggestion without discarding it — Undo brings the same draft right back.
       dismiss(){ popover.classList.remove('open'); undoWrap.classList.add('show'); },
       generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } },
-      regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); }
+      regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); },
+      // 246: the bulk flow shows the draft for review instead of writing it
+      // straight into the field — same popover the per-field icon uses.
+      preview(regenerate){
+        if(regenerate){ idx = (idx + 1) % variants.length; }
+        else if(!isFieldEmpty(inputEl)){ return; }
+        textEl.value = variants[idx];
+        popover.classList.add('open');
+        undoWrap.classList.remove('show');
+      }
     };
   }
   // Title has no per-field AI icon in either remaining mode — 244 still
@@ -1111,9 +1121,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('aboutInsertBtn').addEventListener('click', aboutA.insert);
   document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
   document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
-  document.getElementById('aboutInlineIconBtn').addEventListener('click', ()=>{
-    setContextLine('aboutContextLine', aboutLastPrompt);
-  });
 
   // Title/Description's prompt box shows the result for review (Use /
   // Suggest another / Dismiss) before it ever touches the real field —
@@ -1191,7 +1198,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // Same rule as Description's prompt box: always active in 244,
   // regardless of whether the bulk prompt has content.
   const keywordsPromptBoxActive = ()=> currentMode === '244';
-  (function wireKeywordsPromptBoxWithReviewD(){
+  const keywordsPromptBoxD = (function wireKeywordsPromptBoxWithReviewD(){
     const box = document.getElementById('keywordsPromptBoxD');
     const inputStep = document.getElementById('keywordsPromptInputStepD');
     const promptInput = document.getElementById('keywordsPromptInputD');
@@ -1259,6 +1266,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       renderMainKeywords();
       box.style.display = 'none';
     });
+    return {
+      // 246: the bulk flow opens straight to the reviewable batch — no
+      // separate prompt-input step, since the bulk prompt already covered that.
+      showResult(regenerate){
+        if(regenerate){ idx = (idx + 1) % keywordBatchVariants.length; }
+        box.style.display = 'block';
+        showResultStep();
+      }
+    };
   })();
 
   // Keywords (245): the manual "Suggest keywords" text link reveals chips;
@@ -1494,7 +1510,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(willFillAbout){ aboutOverlay.classList.add('show'); aboutInput.disabled = true; }
     showKeywordSkeleton();
     bulkPromptSubmit.disabled = true;
-    const promptUsed = bulkPromptInput.value.trim();
 
     setTimeout(()=>{
       if(willFillTitle){
@@ -1503,12 +1518,25 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
         titleInput.disabled = false;
       }
       if(willFillAbout){
-        if(regenerate) aboutA.regenerate(); else aboutA.generateIfEmpty();
+        if(demoPhase === '246'){
+          // 246: show the draft for review below the field instead of
+          // writing it straight into "About the book".
+          aboutA.preview(regenerate);
+        } else if(regenerate){
+          aboutA.regenerate();
+        } else {
+          aboutA.generateIfEmpty();
+        }
         aboutOverlay.classList.remove('show');
         aboutInput.disabled = false;
-        aboutLastPrompt = promptUsed;
       }
-      renderKwSuggestChips();
+      if(demoPhase === '246'){
+        // 246: show suggested keywords for review in a purple box below the
+        // field instead of surfacing them as plain inline chips.
+        keywordsPromptBoxD.showResult(regenerate);
+      } else {
+        renderKwSuggestChips();
+      }
       const hasText = bulkPromptInput.value.trim().length > 0;
       bulkPromptSubmit.disabled = !hasText;
       bulkPromptSubmit.className = hasText ? 'btn btn-primary' : 'btn btn-disabled';
@@ -1582,8 +1610,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // --- Mode switching across 244/245 ---
   function applyDemoMode(){
     const previousMode = currentMode;
+    demoPhase = demoPhaseSelect.value;
     // 246 starts as an exact copy of 245 — same logic path, distinct label in the picker.
-    const val = demoPhaseSelect.value === '246' ? '245' : demoPhaseSelect.value;
+    const val = demoPhase === '246' ? '245' : demoPhase;
     currentMode = val;
     const isA = val === '245';
     const isFourFour = val === '244';
@@ -1629,8 +1658,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutCount').style.display = 'none';
     // mode-a-d: per-field AI icons + keyword suggestions — available in every mode.
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', false));
-    // mode-keywords-d: Keywords' review-based prompt box (244 only).
-    document.querySelectorAll('.mode-keywords-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour));
+    // mode-keywords-d: Keywords' review-based prompt box — 244's own icon
+    // opens it directly; 246 opens it (result step only) from the bulk flow.
+    document.querySelectorAll('.mode-keywords-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour && demoPhase !== '246'));
     // mode-about-d: Description's prompt-box-first, refine-first flow (244).
     document.querySelectorAll('.mode-about-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour));
     // Switching modes always closes the bulk prompt box fresh, so no
@@ -1649,9 +1679,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('kwSuggestChips').style.display = 'none';
     document.getElementById('kwSuggestChips').innerHTML = '';
     document.getElementById('kwSuggestLabelRow').style.display = 'none';
-    aboutLastPrompt = '';
     bulkUndoSnapshot = null;
-    setContextLine('aboutContextLine', '');
     setContextLine('aboutPromptContextLine', '');
     if(!isA) inlineSparkleUnlocked = false;
     updateBulkGenerateState();
