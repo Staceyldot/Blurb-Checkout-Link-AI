@@ -466,6 +466,8 @@
   }
   .tone-option .material-symbols-rounded{font-size:22px;}
   .tone-option.selected{background:#CCBDF5; color:var(--subtle);}
+  .tone-option-label{display:inline-flex; align-items:center; gap:4px;}
+  .tone-option-label .info-icon .material-symbols-rounded{font-size:14px;}
 
   /* --- Iteration A / D: inline, ambient AI per field ---
      No side panel. The AI trigger sits beside the field as its own icon
@@ -615,7 +617,8 @@
     <label for="demoPhase">Iteration</label>
     <div class="select-wrap">
       <select id="demoPhase">
-        <option value="245" selected>245</option>
+        <option value="246" selected>246</option>
+        <option value="245">245</option>
         <option value="244">244</option>
       </select>
       <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
@@ -692,19 +695,39 @@
           <div class="tone-row" id="bulkToneOptions">
             <button type="button" class="tone-option" data-tone="Playful">
               <span class="material-symbols-rounded">mood</span>
-              <span>Playful</span>
+              <span class="tone-option-label">Playful
+                <span class="info-icon" tabindex="0">
+                  <span class="material-symbols-rounded">info</span>
+                  <span class="tooltip-popup" role="tooltip">Light, fun, and a little cheeky.</span>
+                </span>
+              </span>
             </button>
             <button type="button" class="tone-option" data-tone="Warm">
               <span class="material-symbols-rounded">favorite</span>
-              <span>Warm</span>
+              <span class="tone-option-label">Warm
+                <span class="info-icon" tabindex="0">
+                  <span class="material-symbols-rounded">info</span>
+                  <span class="tooltip-popup" role="tooltip">Friendly and inviting, like talking to a friend.</span>
+                </span>
+              </span>
             </button>
             <button type="button" class="tone-option" data-tone="Literary">
               <span class="material-symbols-rounded">history_edu</span>
-              <span>Literary</span>
+              <span class="tone-option-label">Literary
+                <span class="info-icon" tabindex="0">
+                  <span class="material-symbols-rounded">info</span>
+                  <span class="tooltip-popup" role="tooltip">Descriptive and evocative, with polished prose.</span>
+                </span>
+              </span>
             </button>
             <button type="button" class="tone-option" data-tone="Bold">
               <span class="material-symbols-rounded">local_fire_department</span>
-              <span>Bold</span>
+              <span class="tone-option-label">Bold
+                <span class="info-icon" tabindex="0">
+                  <span class="material-symbols-rounded">info</span>
+                  <span class="tooltip-popup" role="tooltip">Confident and direct, straight to the point.</span>
+                </span>
+              </span>
             </button>
           </div>
         </div>
@@ -1439,6 +1462,10 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       if(!wasSelected) option.classList.add('selected');
     });
   });
+  // Info icon just shows a tooltip on hover/focus — clicking it shouldn't also select the tone.
+  document.querySelectorAll('#bulkToneOptions .info-icon').forEach(icon => {
+    icon.addEventListener('click', e => e.stopPropagation());
+  });
 
   // 245/244: each field resolves independently with its own shimmer, instead
   // of one instant swap or a single blocking spinner over everything.
@@ -1555,7 +1582,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   // --- Mode switching across 244/245 ---
   function applyDemoMode(){
     const previousMode = currentMode;
-    const val = demoPhaseSelect.value;
+    // 246 starts as an exact copy of 245 — same logic path, distinct label in the picker.
+    const val = demoPhaseSelect.value === '246' ? '245' : demoPhaseSelect.value;
     currentMode = val;
     const isA = val === '245';
     const isFourFour = val === '244';
