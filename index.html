@@ -243,6 +243,13 @@
     flex-direction:column;
     gap:8px;
   }
+  /* 246: while a bulk-drafted suggestion is pending review, the whole field
+     (label included) is highlighted, not just the suggestion box inside it. */
+  .field-row.ai-field-highlight{
+    background:#F3F0FD;
+    border-radius:8px;
+    padding:20px;
+  }
   .label-with-info{display:flex; align-items:center; gap:6px;}
   .info-icon{
     position:relative; display:inline-flex; color:var(--subtle); cursor:default;
@@ -502,6 +509,9 @@
   .inline-draft-popover.open{display:block;}
   .inline-draft-popover p{font-size:15px; line-height:1.5; margin:0 0 10px; color:var(--subtle); white-space:pre-line;}
   .inline-draft-popover .row{display:flex; align-items:center; gap:16px;}
+  /* 246: the draft goes straight into the real field, so this box holds only
+     the Use/Suggest another/Dismiss row — no card chrome needed under it. */
+  .inline-draft-popover.plain-row{background:transparent; padding:0; margin-top:8px;}
   /* Not scoped to .inline-draft-popover — the same Use/Suggest another/
      Dismiss row layout is reused by the other review boxes (Keywords, 244's
      Description prompt box), and Dismiss should sit right-aligned there too. */
@@ -516,6 +526,7 @@
   .popover-link-btn.primary{font-weight:600;}
   .popover-link-btn.muted{color:var(--subtle);}
   .popover-link-btn:hover{filter:brightness(0.85);}
+  .popover-link-btn.thumb-selected{color:var(--brand);}
 
   .dismiss-undo{
     display:none; align-items:center; gap:10px; margin-top:8px;
@@ -768,7 +779,7 @@
         </div>
       </div>
 
-      <div class="field-row">
+      <div class="field-row" id="aboutFieldRow">
         <label>About the book</label>
         <div class="field-body">
           <div class="inline-ai-wrap">
@@ -811,8 +822,11 @@
             <div class="row">
               <button class="popover-link-btn primary" id="aboutInsertBtn"><span class="material-symbols-rounded">check</span>Use this description</button>
               <button class="popover-link-btn" id="aboutTryAgainBtn"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
+              <button class="popover-link-btn hidden-mode" id="aboutRevertBtn" type="button"><span class="material-symbols-rounded">undo</span>Revert</button>
               <span class="spacer"></span>
               <button class="popover-link-btn muted" id="aboutDismissBtn">Dismiss</button>
+              <button class="popover-link-btn muted hidden-mode" id="aboutThumbsUpBtn" type="button" title="Good suggestion" aria-label="Good suggestion"><span class="material-symbols-rounded">thumb_up</span></button>
+              <button class="popover-link-btn muted hidden-mode" id="aboutThumbsDownBtn" type="button" title="Not helpful" aria-label="Not helpful"><span class="material-symbols-rounded">thumb_down</span></button>
             </div>
           </div>
           <div class="dismiss-undo" id="aboutDismissUndo">
@@ -822,7 +836,7 @@
         </div>
       </div>
 
-      <div class="field-row">
+      <div class="field-row" id="keywordsFieldRow">
         <label class="label-with-info kw-suggest-row">Keywords
           <span class="info-icon" tabindex="0">
             <span class="material-symbols-rounded">info</span>
@@ -850,8 +864,8 @@
             <div id="keywordsPromptResultD" style="display:none; background:#fff; border-radius:8px; padding:14px 16px;">
               <div class="chip-group" id="keywordsPromptResultChips" style="margin:0 0 12px;"></div>
               <div class="row" style="display:flex; align-items:center; gap:16px;">
-                <button class="popover-link-btn primary" id="keywordsPromptUseD"><span class="material-symbols-rounded">check</span>Use these keywords</button>
-                <button class="popover-link-btn" id="keywordsPromptAnotherD"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
+                <button class="popover-link-btn" id="keywordsPromptAnotherD"><span class="material-symbols-rounded">refresh</span>Suggest more</button>
+                <button class="popover-link-btn" id="keywordsRevertD" type="button"><span class="material-symbols-rounded">undo</span>Revert</button>
                 <span class="spacer"></span>
                 <button class="popover-link-btn muted" id="keywordsPromptDismissD">Dismiss</button>
               </div>
@@ -1087,23 +1101,48 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       popover.classList.add('open');
     });
     return {
-      // Inserts whatever's currently in the (editable) draft box, not the
-      // original suggestion — so edits made before "Use this description" stick.
-      insert(){ inputEl.value = textEl.value; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); },
-      tryAgain(){ idx = (idx + 1) % variants.length; textEl.value = variants[idx]; },
+      // 246 writes straight into the real field (preview() below), so there's
+      // nothing to copy from the draft box — 245's icon flow still drafts in
+      // the separate box first, so it copies textEl's (possibly edited) value.
+      insert(){
+        if(demoPhase !== '246') inputEl.value = textEl.value;
+        if(countUpdateFn) countUpdateFn();
+        popover.classList.remove('open');
+        undoWrap.classList.remove('show');
+      },
+      tryAgain(){
+        idx = (idx + 1) % variants.length;
+        if(demoPhase === '246'){ inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); }
+        else { textEl.value = variants[idx]; }
+      },
       // Dismissing hides the suggestion without discarding it — Undo brings the same draft right back.
-      dismiss(){ popover.classList.remove('open'); undoWrap.classList.add('show'); },
+      // 246 has no separate draft box to fall back to, so Dismiss there just clears the field outright.
+      dismiss(){
+        if(demoPhase === '246'){
+          inputEl.value = '';
+          if(countUpdateFn) countUpdateFn();
+          popover.classList.remove('open');
+        } else {
+          popover.classList.remove('open');
+          undoWrap.classList.add('show');
+        }
+      },
       generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } },
       regenerate(){ idx = (idx + 1) % variants.length; inputEl.value = variants[idx]; if(countUpdateFn) countUpdateFn(); popover.classList.remove('open'); undoWrap.classList.remove('show'); },
-      // 246: the bulk flow shows the draft for review instead of writing it
-      // straight into the field — same popover the per-field icon uses.
+      // 246: the bulk flow drafts straight into "About the book" itself and
+      // shows Use/Suggest another/Dismiss right under it, instead of holding
+      // the draft in a separate box first.
       preview(regenerate){
         if(regenerate){ idx = (idx + 1) % variants.length; }
         else if(!isFieldEmpty(inputEl)){ return; }
-        textEl.value = variants[idx];
+        inputEl.value = variants[idx];
+        if(countUpdateFn) countUpdateFn();
         popover.classList.add('open');
         undoWrap.classList.remove('show');
-      }
+      },
+      // 246: there are exactly 3 fixed drafts — the button always names
+      // whichever one it would show next, instead of a generic "Suggest another".
+      nextOptionNumber(){ return ((idx + 1) % variants.length) + 1; }
     };
   }
   // Title has no per-field AI icon in either remaining mode — 244 still
@@ -1121,9 +1160,52 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
     'aboutDismissUndo', 'aboutUndoBtn', ['245']);
-  document.getElementById('aboutInsertBtn').addEventListener('click', aboutA.insert);
+  function setAboutOptionLabel(){
+    document.getElementById('aboutInsertBtn').innerHTML =
+      '<span class="material-symbols-rounded">refresh</span>Show option ' + aboutA.nextOptionNumber();
+  }
+  // Feedback is per-option — a new draft shouldn't inherit the last one's rating.
+  function resetAboutThumbs(){
+    document.getElementById('aboutThumbsUpBtn').classList.remove('thumb-selected');
+    document.getElementById('aboutThumbsDownBtn').classList.remove('thumb-selected');
+  }
+  document.getElementById('aboutInsertBtn').addEventListener('click', ()=>{
+    // 246: there's no separate "accept" step — the draft's already live in
+    // the field, so this button just cycles through the 3 fixed options.
+    if(demoPhase === '246'){
+      aboutA.tryAgain();
+      setAboutOptionLabel();
+      resetAboutThumbs();
+    } else {
+      aboutA.insert();
+    }
+  });
   document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
   document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
+  document.getElementById('aboutRevertBtn').addEventListener('click', aboutA.dismiss);
+  document.getElementById('aboutThumbsUpBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutThumbsUpBtn').classList.add('thumb-selected');
+    document.getElementById('aboutThumbsDownBtn').classList.remove('thumb-selected');
+  });
+  document.getElementById('aboutThumbsDownBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutThumbsDownBtn').classList.add('thumb-selected');
+    document.getElementById('aboutThumbsUpBtn').classList.remove('thumb-selected');
+  });
+  // 246: the field-wide purple highlight tracks review state — cycling
+  // options keeps it open; only Revert/Dismiss (or the seller typing their
+  // own edit, wired near the field's other input listeners) closes it.
+  document.getElementById('aboutInsertBtn').addEventListener('click', ()=>{
+    if(demoPhase !== '246') document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
+  });
+  document.getElementById('aboutDismissBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
+  });
+  document.getElementById('aboutRevertBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
+  });
+  document.getElementById('aboutUndoBtn').addEventListener('click', ()=>{
+    if(demoPhase === '246') document.getElementById('aboutFieldRow').classList.add('ai-field-highlight');
+  });
 
   // Title/Description's prompt box shows the result for review (Use /
   // Suggest another / Dismiss) before it ever touches the real field —
@@ -1258,6 +1340,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
     document.getElementById('keywordsPromptCancelD').addEventListener('click', ()=>{
       box.style.display = 'none';
+      document.getElementById('keywordsFieldRow').classList.remove('ai-field-highlight');
+      box.style.background = '#F3F0FD';
     });
     promptInput.addEventListener('input', ()=>{
       const has = !isFieldEmpty(promptInput);
@@ -1269,14 +1353,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       idx = (idx + 1) % keywordBatchVariants.length;
       renderResultChips();
     });
-    document.getElementById('keywordsPromptDismissD').addEventListener('click', showInputStep);
-    document.getElementById('keywordsPromptUseD').addEventListener('click', ()=>{
-      keywordBatchVariants[idx].forEach(kw=>{
-        if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
-      });
+    // Reverts only what this suggestion batch added — not any keyword the
+    // seller typed in manually or picked from a different batch.
+    document.getElementById('keywordsRevertD').addEventListener('click', ()=>{
+      mainKeywords = mainKeywords.filter(kw => !keywordBatchVariants[idx].includes(kw));
       renderMainKeywords();
-      box.style.display = 'none';
+      renderResultChips();
     });
+    document.getElementById('keywordsPromptDismissD').addEventListener('click', showInputStep);
     return {
       // 246: the bulk flow opens straight to the reviewable batch — no
       // separate prompt-input step, since the bulk prompt already covered that.
@@ -1533,6 +1617,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
           // 246: show the draft for review below the field instead of
           // writing it straight into "About the book".
           aboutA.preview(regenerate);
+          setAboutOptionLabel();
+          resetAboutThumbs();
+          document.getElementById('aboutFieldRow').classList.add('ai-field-highlight');
         } else if(regenerate){
           aboutA.regenerate();
         } else {
@@ -1545,6 +1632,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
         // 246: show suggested keywords for review in a purple box below the
         // field instead of surfacing them as plain inline chips.
         keywordsPromptBoxD.showResult(regenerate);
+        document.getElementById('keywordsFieldRow').classList.add('ai-field-highlight');
+        document.getElementById('keywordsPromptBoxD').style.background = '#fff';
       } else {
         renderKwSuggestChips();
       }
@@ -1600,6 +1689,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   }
   document.getElementById('listingTitle').addEventListener('input', updateBulkGenerateState);
   document.getElementById('aboutBook').addEventListener('input', updateBulkGenerateState);
+  // 246: typing is the seller taking over — with no separate "accept" step,
+  // that's what closes the review row (this only fires on real keystrokes,
+  // never on the .value assignments the cycle/preview code makes above).
+  document.getElementById('aboutBook').addEventListener('input', ()=>{
+    if(demoPhase === '246' && document.getElementById('aboutFieldRow').classList.contains('ai-field-highlight')){
+      document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
+      document.getElementById('aboutDraftPopover').classList.remove('open');
+    }
+  });
 
   function updateInlineSparkleVisibility(){
     // 244 and 245 both gate Description/Keywords' icons behind "Draft
@@ -1617,6 +1715,20 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     aboutIcon.querySelector('.material-symbols-rounded').textContent = currentMode === '245' ? 'refresh' : 'auto_fix_high';
     aboutIcon.title = currentMode === '245' ? 'Regenerate description' : 'Improve description with AI';
     aboutIcon.setAttribute('aria-label', currentMode === '245' ? 'Regenerate description with AI' : 'Improve description with AI');
+    // 246: the draft box holds only Show option/Revert plus thumbs feedback —
+    // the draft itself goes straight into "About the book". "Suggest another"
+    // is redundant there since "Show option N" already cycles the 3 drafts,
+    // and Revert takes over Dismiss's spot (next to Show option, not at the end).
+    document.getElementById('aboutDraftPopover').classList.toggle('plain-row', demoPhase === '246');
+    document.getElementById('aboutDraftText').style.display = demoPhase === '246' ? 'none' : '';
+    document.getElementById('aboutTryAgainBtn').classList.toggle('hidden-mode', demoPhase === '246');
+    document.getElementById('aboutRevertBtn').classList.toggle('hidden-mode', demoPhase !== '246');
+    document.getElementById('aboutDismissBtn').classList.toggle('hidden-mode', demoPhase === '246');
+    document.getElementById('aboutThumbsUpBtn').classList.toggle('hidden-mode', demoPhase !== '246');
+    document.getElementById('aboutThumbsDownBtn').classList.toggle('hidden-mode', demoPhase !== '246');
+    if(demoPhase !== '246'){
+      document.getElementById('aboutInsertBtn').innerHTML = '<span class="material-symbols-rounded">check</span>Use this description';
+    }
   }
 
   // --- Mode switching across 244/245 ---
@@ -1691,6 +1803,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('kwSuggestChips').style.display = 'none';
     document.getElementById('kwSuggestChips').innerHTML = '';
     document.getElementById('kwSuggestLabelRow').style.display = 'none';
+    document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
+    document.getElementById('keywordsFieldRow').classList.remove('ai-field-highlight');
+    document.getElementById('keywordsPromptBoxD').style.background = '#F3F0FD';
     bulkUndoSnapshot = null;
     setContextLine('aboutPromptContextLine', '');
     if(!isA) inlineSparkleUnlocked = false;
