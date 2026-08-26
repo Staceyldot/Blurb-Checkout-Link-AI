@@ -825,8 +825,6 @@
               <button class="popover-link-btn hidden-mode" id="aboutRevertBtn" type="button"><span class="material-symbols-rounded">undo</span>Revert</button>
               <span class="spacer"></span>
               <button class="popover-link-btn muted" id="aboutDismissBtn">Dismiss</button>
-              <button class="popover-link-btn muted hidden-mode" id="aboutThumbsUpBtn" type="button" title="Good suggestion" aria-label="Good suggestion"><span class="material-symbols-rounded">thumb_up</span></button>
-              <button class="popover-link-btn muted hidden-mode" id="aboutThumbsDownBtn" type="button" title="Not helpful" aria-label="Not helpful"><span class="material-symbols-rounded">thumb_down</span></button>
             </div>
           </div>
           <div class="dismiss-undo" id="aboutDismissUndo">
@@ -868,6 +866,8 @@
                 <button class="popover-link-btn" id="keywordsRevertD" type="button"><span class="material-symbols-rounded">undo</span>Revert</button>
                 <span class="spacer"></span>
                 <button class="popover-link-btn muted" id="keywordsPromptDismissD">Dismiss</button>
+                <button class="popover-link-btn muted" id="keywordsThumbsUpBtn" type="button" title="Good suggestions" aria-label="Good suggestions"><span class="material-symbols-rounded">thumb_up</span></button>
+                <button class="popover-link-btn muted" id="keywordsThumbsDownBtn" type="button" title="Not helpful" aria-label="Not helpful"><span class="material-symbols-rounded">thumb_down</span></button>
               </div>
             </div>
           </div>
@@ -1164,18 +1164,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutInsertBtn').innerHTML =
       '<span class="material-symbols-rounded">refresh</span>Show option ' + aboutA.nextOptionNumber();
   }
-  // Feedback is per-option — a new draft shouldn't inherit the last one's rating.
-  function resetAboutThumbs(){
-    document.getElementById('aboutThumbsUpBtn').classList.remove('thumb-selected');
-    document.getElementById('aboutThumbsDownBtn').classList.remove('thumb-selected');
-  }
   document.getElementById('aboutInsertBtn').addEventListener('click', ()=>{
     // 246: there's no separate "accept" step — the draft's already live in
     // the field, so this button just cycles through the 3 fixed options.
     if(demoPhase === '246'){
       aboutA.tryAgain();
       setAboutOptionLabel();
-      resetAboutThumbs();
     } else {
       aboutA.insert();
     }
@@ -1183,14 +1177,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   document.getElementById('aboutTryAgainBtn').addEventListener('click', aboutA.tryAgain);
   document.getElementById('aboutDismissBtn').addEventListener('click', aboutA.dismiss);
   document.getElementById('aboutRevertBtn').addEventListener('click', aboutA.dismiss);
-  document.getElementById('aboutThumbsUpBtn').addEventListener('click', ()=>{
-    document.getElementById('aboutThumbsUpBtn').classList.add('thumb-selected');
-    document.getElementById('aboutThumbsDownBtn').classList.remove('thumb-selected');
-  });
-  document.getElementById('aboutThumbsDownBtn').addEventListener('click', ()=>{
-    document.getElementById('aboutThumbsDownBtn').classList.add('thumb-selected');
-    document.getElementById('aboutThumbsUpBtn').classList.remove('thumb-selected');
-  });
   // 246: the field-wide purple highlight tracks review state — cycling
   // options keeps it open; only Revert/Dismiss (or the seller typing their
   // own edit, wired near the field's other input listeners) closes it.
@@ -1330,6 +1316,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       // what's already on screen.
       document.getElementById('kwSuggestLabelRow').style.display = 'none';
       document.getElementById('kwSuggestChips').style.display = 'none';
+      resetKeywordsThumbs();
+    }
+    // Feedback is per-batch — a new set of suggestions shouldn't inherit the last one's rating.
+    function resetKeywordsThumbs(){
+      document.getElementById('keywordsThumbsUpBtn').classList.remove('thumb-selected');
+      document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
     }
 
     document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
@@ -1352,6 +1344,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('keywordsPromptAnotherD').addEventListener('click', ()=>{
       idx = (idx + 1) % keywordBatchVariants.length;
       renderResultChips();
+      resetKeywordsThumbs();
     });
     // Reverts only what this suggestion batch added — not any keyword the
     // seller typed in manually or picked from a different batch.
@@ -1361,6 +1354,14 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       renderResultChips();
     });
     document.getElementById('keywordsPromptDismissD').addEventListener('click', showInputStep);
+    document.getElementById('keywordsThumbsUpBtn').addEventListener('click', ()=>{
+      document.getElementById('keywordsThumbsUpBtn').classList.add('thumb-selected');
+      document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
+    });
+    document.getElementById('keywordsThumbsDownBtn').addEventListener('click', ()=>{
+      document.getElementById('keywordsThumbsDownBtn').classList.add('thumb-selected');
+      document.getElementById('keywordsThumbsUpBtn').classList.remove('thumb-selected');
+    });
     return {
       // 246: the bulk flow opens straight to the reviewable batch — no
       // separate prompt-input step, since the bulk prompt already covered that.
@@ -1618,7 +1619,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
           // writing it straight into "About the book".
           aboutA.preview(regenerate);
           setAboutOptionLabel();
-          resetAboutThumbs();
           document.getElementById('aboutFieldRow').classList.add('ai-field-highlight');
         } else if(regenerate){
           aboutA.regenerate();
@@ -1715,17 +1715,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     aboutIcon.querySelector('.material-symbols-rounded').textContent = currentMode === '245' ? 'refresh' : 'auto_fix_high';
     aboutIcon.title = currentMode === '245' ? 'Regenerate description' : 'Improve description with AI';
     aboutIcon.setAttribute('aria-label', currentMode === '245' ? 'Regenerate description with AI' : 'Improve description with AI');
-    // 246: the draft box holds only Show option/Revert plus thumbs feedback —
-    // the draft itself goes straight into "About the book". "Suggest another"
-    // is redundant there since "Show option N" already cycles the 3 drafts,
-    // and Revert takes over Dismiss's spot (next to Show option, not at the end).
+    // 246: the draft box holds only Show option/Revert/Dismiss — the draft
+    // itself goes straight into "About the book". "Suggest another" is
+    // redundant there since "Show option N" already cycles the 3 drafts.
     document.getElementById('aboutDraftPopover').classList.toggle('plain-row', demoPhase === '246');
     document.getElementById('aboutDraftText').style.display = demoPhase === '246' ? 'none' : '';
     document.getElementById('aboutTryAgainBtn').classList.toggle('hidden-mode', demoPhase === '246');
     document.getElementById('aboutRevertBtn').classList.toggle('hidden-mode', demoPhase !== '246');
-    document.getElementById('aboutDismissBtn').classList.toggle('hidden-mode', demoPhase === '246');
-    document.getElementById('aboutThumbsUpBtn').classList.toggle('hidden-mode', demoPhase !== '246');
-    document.getElementById('aboutThumbsDownBtn').classList.toggle('hidden-mode', demoPhase !== '246');
     if(demoPhase !== '246'){
       document.getElementById('aboutInsertBtn').innerHTML = '<span class="material-symbols-rounded">check</span>Use this description';
     }
@@ -1806,6 +1802,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
     document.getElementById('keywordsFieldRow').classList.remove('ai-field-highlight');
     document.getElementById('keywordsPromptBoxD').style.background = '#F3F0FD';
+    document.getElementById('keywordsThumbsUpBtn').classList.remove('thumb-selected');
+    document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
     bulkUndoSnapshot = null;
     setContextLine('aboutPromptContextLine', '');
     if(!isA) inlineSparkleUnlocked = false;
