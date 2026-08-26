@@ -51,6 +51,8 @@
     --ai-mid:#0d5a84;
     --shimmer-base:#ece4fb;
     --shimmer-highlight:#d3bdf5;
+    --panel-width:360px;
+    --footer-bar-right:0px;
     --font-sans: "Proxima Nova", "Jost", Arial, sans-serif;
     --font-heading: "Futura PT", "Mulish", Georgia, sans-serif;
     --font-mono: "Roboto Mono", "Courier New", monospace;
@@ -429,8 +431,9 @@
   .link-with-icon .material-symbols-rounded{font-size:20px; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
 
   .footer-bar{
-    position:fixed; bottom:0; left:0; right:0; z-index:10;
+    position:fixed; bottom:0; left:0; right:var(--footer-bar-right, 0px); z-index:10;
     background:#fff; border-top:1px solid var(--border-subtle);
+    transition:right .22s ease;
   }
   .footer-bar-inner{
     display:flex; align-items:center; justify-content:space-between;
@@ -621,6 +624,140 @@
     0%{background:#eaf6fc;}
     100%{background:transparent;}
   }
+
+  /* --- Side panel: reinstated "Optimize listing" drawer ---
+     Sits as a flex sibling of the sidenav/page (not a fixed overlay), so opening it
+     pushes/shrinks the main content instead of floating on top of it. It stretches to
+     match the row's full height (like the sidenav) rather than capping at 100vh, since
+     capping at 100vh made its bottom render off-screen until the page was scrolled past
+     the panel's own natural offset below the demo banner/topnav. */
+  .drawer{
+    flex-shrink:0;
+    width:0; overflow:hidden;
+    background:#F6F6F6; border-left:0 solid var(--border-subtle);
+    transition:width .22s ease, border-left-width .22s ease;
+  }
+  .drawer.open{width:var(--panel-width); border-left-width:1px;}
+  .drawer-inner{
+    width:var(--panel-width); height:100%; display:flex; flex-direction:column;
+  }
+  .step-hidden{display:none !important;}
+  .close{
+    cursor:pointer; border:none; background:none; font-size:20px; color:var(--subtle); line-height:1;
+    padding:4px;
+  }
+  .drawer-body{
+    padding:24px 32px; flex:1; min-height:0; display:flex; flex-direction:column; gap:20px;
+  }
+  /* Pins the panel's own action row (Cancel/Apply, plus the pill bar in Results) to the
+     bottom of the viewport as the page scrolls, mirroring .footer-bar's own stickiness. */
+  .drawer-sticky-bottom{
+    position:sticky; bottom:0; background:#F6F6F6; flex-shrink:0;
+  }
+  .drawer-footer{
+    border-top:1px solid var(--border-subtle); padding:16px 32px; flex-shrink:0;
+  }
+  .drawer-footer .row{display:flex; gap:8px; justify-content:flex-end;}
+  .drawer-footer .disclaimer{
+    font-size:12px; color:var(--subtle); text-align:right; margin-top:8px;
+  }
+
+  .drawer-prompt-copy{font-size:16px; line-height:1.4; margin:0;}
+
+  .suggestion-group{display:flex; flex-direction:column; gap:8px;}
+  .suggestion-group label{font-size:16px; font-weight:600; display:block;}
+  .suggestion-cards{display:flex; flex-direction:column; gap:10px;}
+  .suggestion-card{
+    display:flex; gap:10px; align-items:flex-start; cursor:pointer;
+    border:1px solid var(--border-subtle); border-radius:8px; padding:16px;
+  }
+  .suggestion-card:hover{background:var(--gray-subtler);}
+  .suggestion-card-body{flex:1; min-width:0;}
+  .suggestion-field{
+    border:1px solid var(--border-input); border-radius:4px; padding:10px 12px; font-size:16px;
+    line-height:1.4; background:#fff; width:100%;
+  }
+  .suggestion-card.selectable .radio-icon{
+    font-size:22px; color:var(--border-input); flex-shrink:0; margin-top:1px;
+  }
+  .suggestion-card.selectable.selected{
+    border-color:var(--brand); border-width:2px; padding:15px;
+  }
+  .suggestion-card.selectable.selected .radio-icon{color:var(--brand);}
+
+  .prompt-pill-wrap{padding:16px 32px 0; flex-shrink:0;}
+  .prompt-pill-bar{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--border-input); border-radius:100px;
+    padding:8px 8px 8px 18px;
+    background:#fff;
+  }
+  .prompt-pill-bar input{
+    flex:1; min-width:0; border:none; outline:none; background:transparent;
+    font-family:var(--font-sans); font-size:15px; color:var(--bold); padding:6px 0;
+  }
+  .pill-action-btn{
+    flex-shrink:0; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer;
+    background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pill-action-btn:hover{filter:brightness(0.95);}
+  .pill-action-btn:disabled{opacity:.5; cursor:default;}
+  .pill-action-btn .material-symbols-rounded{
+    font-size:20px; color:#fff; font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
+  }
+  .prompt-pill-bar input:disabled{opacity:.6;}
+
+  /* Empty-state composer: bordered textarea with an overlaid square button. */
+  .prompt-textarea-field{
+    width:100%; box-sizing:border-box; height:150px; resize:none;
+    border:1px solid var(--border-input); border-radius:4px; background:#f6f6f6;
+    padding:8px 44px 8px 8px; font-family:var(--font-sans); font-size:16px;
+    line-height:24px; color:var(--bold);
+  }
+  .prompt-textarea-field::placeholder{color:#7c7c7c;}
+  .prompt-textarea-field:disabled{opacity:.6;}
+  .prompt-textarea-btn{
+    position:absolute; right:8px; bottom:8px; width:auto; height:auto;
+    border-radius:4px; padding:8px; border:none; cursor:pointer;
+    background:linear-gradient(120deg, var(--ai-purple) 0%, var(--ai-mid) 50%, var(--brand) 100%);
+  }
+  .prompt-textarea-btn:hover{filter:brightness(0.95);}
+  .prompt-textarea-btn:disabled{opacity:.5; cursor:default; background:var(--disabled);}
+  .prompt-textarea-btn .material-symbols-rounded{
+    font-size:24px; color:#fff; display:block;
+  }
+
+  .kw-label-row{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+  .kw-label-row label{font-size:16px; font-weight:600;}
+  .kw-count{font-size:13px; color:var(--subtle);}
+
+  /* Thinking state — Codex "Thinking States" doc, variant 1a */
+  .think-wrap{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:28px; padding:64px 0; flex:1;
+  }
+  .ts-stars{position:relative; width:96px; height:88px;}
+  .ts-stars svg{position:absolute; overflow:visible; transform-origin:center;}
+  .ts-star-1{width:58px; height:58px; left:2px; top:16px; animation:ts-appear1 3.6s ease-in-out infinite 0s;}
+  .ts-star-2{width:34px; height:34px; right:6px; top:0; animation:ts-appear1 3.6s ease-in-out infinite 1.2s;}
+  .ts-star-3{width:22px; height:22px; right:0; bottom:4px; animation:ts-appear1 3.6s ease-in-out infinite 2.4s;}
+  @keyframes ts-appear1{
+    0%{opacity:0; transform:scale(0.3);}
+    8%{opacity:1; transform:scale(1.1);}
+    14%,33%{opacity:1; transform:scale(1);}
+    41%,100%{opacity:0; transform:scale(0.3);}
+  }
+  .ts-thinking-label{
+    display:flex; align-items:baseline; gap:2px; font-size:16px; font-weight:500; color:var(--bold);
+  }
+  .ts-thinking-label span.dot{animation:ts-dots 1.4s infinite 0s;}
+  .ts-thinking-label span.dot:nth-child(3){animation-delay:.2s;}
+  .ts-thinking-label span.dot:nth-child(4){animation-delay:.4s;}
+  @keyframes ts-dots{
+    0%,20%{opacity:0;}
+    50%,100%{opacity:1;}
+  }
 </style>
 </head>
 <body>
@@ -683,6 +820,10 @@
         <button class="btn btn-outline-ai" id="bulkGenerate">
           <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
           <span id="bulkGenerateLabel">Let AI help you</span>
+        </button>
+        <button class="btn btn-outline-ai hidden-mode" id="openOptimize" type="button">
+          <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+          Optimize listing
         </button>
       </div>
       <div id="aiDraftedBanner" style="display:none; align-items:center; gap:10px; margin:-8px 0 20px; padding:14px 16px; border-radius:8px; background:var(--gray-subtler);">
@@ -997,6 +1138,134 @@
       </div>
     </div>
   </div>
+  </div>
+
+  <!-- Optimize listing side panel: flex sibling of sidenav/page, not an overlay -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-inner">
+
+      <!-- STEP 1: prompt -->
+      <div id="stepPrompt" style="display:flex; flex-direction:column; flex:1; min-height:0; background:#e7e7e7;">
+        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
+          <button class="close" id="closePrompt">✕</button>
+        </div>
+        <div class="drawer-body" style="flex:1; display:flex; flex-direction:column; align-items:center; padding-top:64px; gap:16px;">
+          <div class="ts-stars" style="width:40px; height:36px;">
+            <svg viewBox="0 0 100 100" width="0" height="0" style="position:absolute;">
+              <defs>
+                <linearGradient id="ts-star-empty" x1="8%" y1="0%" x2="92%" y2="100%">
+                  <stop offset="0%" stop-color="#7a3dc4"/>
+                  <stop offset="50%" stop-color="#0d5a84"/>
+                  <stop offset="100%" stop-color="#107eb1"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <svg style="position:absolute; width:24px; height:24px; left:1px; top:7px;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg style="position:absolute; width:14px; height:14px; right:2px; top:0;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg style="position:absolute; width:9px; height:9px; right:0; bottom:1px;" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-empty)" stroke="url(#ts-star-empty)" stroke-width="8" stroke-linejoin="round"/></svg>
+          </div>
+          <p style="font-family:var(--font-heading); font-size:20px; font-weight:500; line-height:1.2; color:var(--subtle); text-align:center; margin:0; width:312px; max-width:100%;">Tell us about your book and we'll draft a title, description, and keywords.</p>
+        </div>
+        <div class="drawer-sticky-bottom" style="background:#e7e7e7;">
+          <div class="prompt-pill-wrap" style="padding-bottom:24px;">
+            <div style="position:relative;">
+              <textarea class="prompt-textarea-field" id="panelPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone"></textarea>
+              <button class="prompt-textarea-btn" id="panelContinueBtn" type="button" title="Generate" disabled>
+                <span class="material-symbols-rounded">arrow_upward</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: thinking -->
+      <div id="stepThinking" class="step-hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
+          <button class="close" id="closeThinking">✕</button>
+        </div>
+        <div class="think-wrap">
+          <div class="ts-stars">
+            <svg viewBox="0 0 100 100" width="0" height="0" style="position:absolute;">
+              <defs>
+                <linearGradient id="ts-star-a" x1="8%" y1="0%" x2="92%" y2="100%">
+                  <stop offset="0%" stop-color="#7a3dc4"/>
+                  <stop offset="50%" stop-color="#0d5a84"/>
+                  <stop offset="100%" stop-color="#107eb1"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <svg class="ts-star-1" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg class="ts-star-2" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
+            <svg class="ts-star-3" viewBox="0 0 100 100"><path d="M50 6 C55 40 60 45 94 50 C60 55 55 60 50 94 C45 60 40 55 6 50 C40 45 45 40 50 6 Z" fill="url(#ts-star-a)" stroke="url(#ts-star-a)" stroke-width="8" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ts-thinking-label">
+            <span>Thinking</span>
+            <span class="dot">.</span>
+            <span class="dot">.</span>
+            <span class="dot">.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: results -->
+      <div id="stepResults" class="step-hidden" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div style="display:flex; justify-content:flex-end; padding:16px 32px 0; flex-shrink:0;">
+          <button class="close" id="closeResults">✕</button>
+        </div>
+        <div class="drawer-body">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <button class="link-with-icon" id="previousDraftBtn" type="button" style="display:none; border:none; background:none; padding:0; font-weight:600; font-size:13px; color:var(--bold); cursor:pointer; align-items:center; gap:5px;">
+              <span class="material-symbols-rounded" style="font-size:16px;">history</span> Previous draft
+            </button>
+          </div>
+          <div id="draftSwapConfirm" style="display:none; margin-bottom:14px; padding:12px 14px; border:1px solid var(--brand); border-radius:8px; background:#fff;">
+            <p style="font-size:14px; margin:0 0 10px; color:var(--bold);">Switch drafts? Your edits to the title and description here will be replaced.</p>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button class="btn btn-outline-bold" id="draftSwapCancel" style="padding:6px 16px; font-size:14px; min-width:auto;">Cancel</button>
+              <button class="btn btn-primary" id="draftSwapContinue" style="padding:6px 16px; font-size:14px; min-width:auto;">Switch</button>
+            </div>
+          </div>
+          <p class="drawer-prompt-copy">Here's what we came up with. Check what you'd like to use.</p>
+
+          <div class="suggestion-group">
+            <label>Listing title</label>
+            <div class="suggestion-cards" id="titleCards"></div>
+          </div>
+
+          <div class="suggestion-group">
+            <label>About the book</label>
+            <div class="suggestion-cards" id="aboutCards"></div>
+          </div>
+
+          <div>
+            <div class="kw-label-row">
+              <label>Keywords</label>
+              <span class="kw-count" id="kwCount"></span>
+            </div>
+            <div class="chip-group" id="chipGroup"></div>
+          </div>
+        </div>
+        <div class="drawer-sticky-bottom">
+          <div class="prompt-pill-wrap">
+            <div class="prompt-pill-bar">
+              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
+              <input type="text" id="panelRefineInput" placeholder="Try something different...">
+              <button class="pill-action-btn" id="panelPillActionBtn" type="button" title="Regenerate">
+                <span class="material-symbols-rounded">refresh</span>
+              </button>
+            </div>
+          </div>
+          <div class="drawer-footer">
+            <div class="row">
+              <button class="btn btn-outline-bold" id="cancelResults">Cancel</button>
+              <button class="btn btn-primary" id="applyBtn">Apply selected</button>
+            </div>
+            <div class="disclaimer">Suggestions generated with AI. Review before applying.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
 <div class="footer-bar">
@@ -1394,6 +1663,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const wrap = document.getElementById('kwSuggestChips');
     const hasSuggestions = wrap.style.display === 'flex' && wrap.querySelector('.chip');
     const staticWandMode = currentMode === '244';
+    // Side panel: the "Optimize listing" drawer is the only entry point —
+    // no per-field icon, regardless of how many keywords are picked.
+    if(currentMode === 'sidepanel'){
+      icon.classList.add('hidden-mode');
+      return;
+    }
     // 245: no per-field icon at all — see updateInlineSparkleVisibility.
     if(currentMode === '245'){
       icon.classList.add('hidden-mode');
@@ -1682,7 +1957,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     // header instead of this small button. 245's button gives way to the
     // "Drafted with AI" banner once a draft exists.
     const drafted245 = currentMode === '245' && inlineSparkleUnlocked;
-    const hideHeaderBtn = currentMode === '244' || drafted245;
+    // Side panel: "Optimize listing" is the only entry point, regardless of
+    // what the seller types into the fields directly.
+    const hideHeaderBtn = currentMode === '244' || currentMode === 'sidepanel' || drafted245;
     document.getElementById('bulkGenerate').className = 'btn btn-outline-ai' + (hideHeaderBtn ? ' hidden-mode' : '');
     document.getElementById('bulkGenerateBanner').style.display = currentMode === '244' ? 'flex' : 'none';
     document.getElementById('aiDraftedBanner').style.display = drafted245 ? 'flex' : 'none';
@@ -1728,13 +2005,279 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
   }
 
+  // --- Side panel: reinstated "Optimize listing" drawer ---
+  const panelState = { titleChecked:false, aboutChecked:false, keywordsSelected:new Set() };
+  const drawer = document.getElementById('drawer');
+  const stepPrompt = document.getElementById('stepPrompt');
+  const stepThinking = document.getElementById('stepThinking');
+  const stepResults = document.getElementById('stepResults');
+  const panelPromptInput = document.getElementById('panelPromptInput');
+  const panelContinueBtn = document.getElementById('panelContinueBtn');
+
+  const rootEl = document.documentElement;
+  function updateFooterBarOffset(){
+    if(!document.body.classList.contains('panel-open')){
+      rootEl.style.setProperty('--footer-bar-right', '0px');
+      return;
+    }
+    const panelWidth = parseFloat(getComputedStyle(rootEl).getPropertyValue('--panel-width')) || 0;
+    const shellRight = document.querySelector('.app-shell').getBoundingClientRect().right;
+    const viewportGap = window.innerWidth - shellRight;
+    rootEl.style.setProperty('--footer-bar-right', (viewportGap + panelWidth) + 'px');
+  }
+  window.addEventListener('resize', updateFooterBarOffset);
+
+  // overflow:hidden clips the width transition (so the panel looks like it slides
+  // into view), but left on permanently it would also trap position:sticky
+  // descendants (like .drawer-sticky-bottom) into sticking relative to the drawer
+  // itself instead of the viewport. So it's only held during the transition, then
+  // released once fully open.
+  drawer.addEventListener('transitionend', (e)=>{
+    if(e.propertyName === 'width' && drawer.classList.contains('open')){
+      drawer.style.overflow = 'visible';
+    }
+  });
+
+  function openDrawer(){
+    drawer.style.overflow = 'hidden';
+    drawer.classList.add('open');
+    document.body.classList.add('panel-open');
+    updateFooterBarOffset();
+  }
+  function closeDrawer(){
+    drawer.style.overflow = 'hidden';
+    drawer.classList.remove('open');
+    document.body.classList.remove('panel-open');
+    updateFooterBarOffset();
+  }
+  function showPanelStep(step){
+    stepPrompt.classList.add('step-hidden');
+    stepThinking.classList.add('step-hidden');
+    stepResults.classList.add('step-hidden');
+    step.classList.remove('step-hidden');
+  }
+
+  let panelHasGeneratedOnce = false;
+
+  document.getElementById('openOptimize').addEventListener('click', ()=>{
+    // A draft (and possibly a previous draft) already exists from earlier
+    // in this session — resume where the seller left off instead of
+    // sending them back through the prompt step.
+    showPanelStep(panelHasGeneratedOnce ? stepResults : stepPrompt);
+    openDrawer();
+  });
+  document.getElementById('closePrompt').addEventListener('click', closeDrawer);
+  document.getElementById('closeThinking').addEventListener('click', closeDrawer);
+  document.getElementById('closeResults').addEventListener('click', closeDrawer);
+  document.getElementById('cancelResults').addEventListener('click', closeDrawer);
+
+  panelPromptInput.addEventListener('input', ()=>{
+    panelContinueBtn.disabled = panelPromptInput.value.trim().length === 0;
+  });
+  panelPromptInput.addEventListener('click', ()=>{
+    if(panelPromptInput.value.trim().length === 0){
+      panelPromptInput.value = "It's a modern rom-com retelling of Pride and Prejudice. Witty, a little chaotic, second-chance romance vibes. Great gift for anyone who loves a slow burn with banter";
+      panelPromptInput.dispatchEvent(new Event('input'));
+    }
+  });
+
+  function buildCheckboxCard(field, text, checkboxId, inputId, isTextarea){
+    const card = document.createElement('div');
+    card.className = 'suggestion-card selectable';
+    card.innerHTML = isTextarea
+      ? `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
+         <div class="suggestion-card-body">
+           <textarea class="suggestion-field" id="${inputId}" style="height:220px;"></textarea>
+           <div class="hint suggestion-count" style="text-align:right; margin-top:8px;"></div>
+         </div>`
+      : `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
+         <div class="suggestion-card-body">
+           <input type="text" class="suggestion-field" id="${inputId}">
+         </div>`;
+    const fieldEl = card.querySelector('.suggestion-field');
+    fieldEl.value = text;
+    const icon = card.querySelector(`#${checkboxId}`);
+    const checkedKey = field === 'title' ? 'titleChecked' : 'aboutChecked';
+    const applyCheckedState = ()=>{
+      const checked = panelState[checkedKey];
+      card.classList.toggle('selected', checked);
+      icon.textContent = checked ? 'check_circle' : 'radio_button_unchecked';
+    };
+    applyCheckedState();
+    if(isTextarea){
+      const countEl = card.querySelector('.suggestion-count');
+      const updateCount = ()=> countEl.textContent = fieldEl.value.length + '/1466';
+      updateCount();
+      fieldEl.addEventListener('input', updateCount);
+    }
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest('.suggestion-field')) return;
+      panelState[checkedKey] = !panelState[checkedKey];
+      applyCheckedState();
+    });
+    return card;
+  }
+
+  function renderPanelTitleSuggestion(){
+    const container = document.getElementById('titleCards');
+    container.innerHTML = '';
+    container.appendChild(buildCheckboxCard('title', mockSuggestions.title[0], 'checkTitle', 'titleSuggestionInput', false));
+  }
+  function renderPanelAboutSuggestion(){
+    const container = document.getElementById('aboutCards');
+    container.innerHTML = '';
+    container.appendChild(buildCheckboxCard('about', mockSuggestions.description[0], 'checkAbout', 'aboutSuggestionInput', true));
+  }
+
+  // --- Previous draft: two-slot swap (current <-> previous), not a growing history ---
+  let previousPanelDraft = null;
+  let lastRenderedPanelTitle = '';
+  let lastRenderedPanelAbout = '';
+  const previousDraftBtn = document.getElementById('previousDraftBtn');
+  const draftSwapConfirm = document.getElementById('draftSwapConfirm');
+
+  function currentPanelDraftValues(){
+    const titleInput = document.getElementById('titleSuggestionInput');
+    const aboutInput = document.getElementById('aboutSuggestionInput');
+    return { title: titleInput ? titleInput.value : '', about: aboutInput ? aboutInput.value : '' };
+  }
+  function markPanelRendered(){
+    const v = currentPanelDraftValues();
+    lastRenderedPanelTitle = v.title;
+    lastRenderedPanelAbout = v.about;
+  }
+  function hasPanelUnsavedEdits(){
+    const v = currentPanelDraftValues();
+    return v.title !== lastRenderedPanelTitle || v.about !== lastRenderedPanelAbout;
+  }
+  function updatePreviousDraftButton(){
+    previousDraftBtn.style.display = previousPanelDraft ? 'inline-flex' : 'none';
+  }
+  function doPanelDraftSwap(){
+    const current = currentPanelDraftValues();
+    const titleInput = document.getElementById('titleSuggestionInput');
+    const aboutInput = document.getElementById('aboutSuggestionInput');
+    titleInput.value = previousPanelDraft.title;
+    aboutInput.value = previousPanelDraft.about;
+    const countEl = aboutInput.closest('.suggestion-card-body').querySelector('.suggestion-count');
+    if(countEl) countEl.textContent = aboutInput.value.length + '/1466';
+    previousPanelDraft = current; // whichever was showing becomes the new "previous"
+    markPanelRendered();
+  }
+  previousDraftBtn.addEventListener('click', ()=>{
+    if(!previousPanelDraft) return;
+    if(hasPanelUnsavedEdits()) draftSwapConfirm.style.display = 'block';
+    else doPanelDraftSwap();
+  });
+  document.getElementById('draftSwapCancel').addEventListener('click', ()=>{
+    draftSwapConfirm.style.display = 'none';
+  });
+  document.getElementById('draftSwapContinue').addEventListener('click', ()=>{
+    draftSwapConfirm.style.display = 'none';
+    doPanelDraftSwap();
+  });
+
+  panelContinueBtn.addEventListener('click', ()=>{
+    if(panelContinueBtn.disabled) return;
+    showPanelStep(stepThinking);
+    setTimeout(()=>{
+      panelState.titleChecked = true;
+      panelState.aboutChecked = true;
+      renderPanelTitleSuggestion();
+      renderPanelAboutSuggestion();
+      KEYWORDS.forEach(kw => panelState.keywordsSelected.add(kw));
+      renderPanelChips();
+      markPanelRendered();
+      updatePreviousDraftButton();
+      panelHasGeneratedOnce = true;
+      showPanelStep(stepResults);
+    }, 1200);
+  });
+
+  function resetAndRerenderPanelSuggestions(){
+    // Snapshot the draft that's about to be replaced so the seller can swap
+    // back to it, before regenerating overwrites it.
+    previousPanelDraft = currentPanelDraftValues();
+    panelState.titleChecked = true;
+    panelState.aboutChecked = true;
+    renderPanelTitleSuggestion();
+    renderPanelAboutSuggestion();
+    panelRefineInput.value = '';
+    markPanelRendered();
+    updatePreviousDraftButton();
+    draftSwapConfirm.style.display = 'none';
+  }
+  function regeneratePanel(){
+    showPanelStep(stepThinking);
+    setTimeout(()=>{
+      resetAndRerenderPanelSuggestions();
+      showPanelStep(stepResults);
+    }, 900);
+  }
+  const panelRefineInput = document.getElementById('panelRefineInput');
+  const panelPillActionBtn = document.getElementById('panelPillActionBtn');
+  panelPillActionBtn.addEventListener('click', regeneratePanel);
+  panelRefineInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      regeneratePanel();
+    }
+  });
+
+  function renderPanelChips(){
+    const group = document.getElementById('chipGroup');
+    group.innerHTML = '';
+    KEYWORDS.forEach(kw=>{
+      const selected = panelState.keywordsSelected.has(kw);
+      const chip = document.createElement('div');
+      chip.className = 'chip ' + (selected ? 'selected' : 'unselected');
+      chip.innerHTML = `<span>${kw}</span><span class="icon">${selected ? '✕' : '+'}</span>`;
+      chip.addEventListener('click', ()=>{
+        if(selected) panelState.keywordsSelected.delete(kw);
+        else panelState.keywordsSelected.add(kw);
+        renderPanelChips();
+      });
+      group.appendChild(chip);
+    });
+    const n = panelState.keywordsSelected.size;
+    document.getElementById('kwCount').textContent = n > 0 ? `${n} of ${KEYWORDS.length} selected` : '';
+  }
+
+  document.getElementById('applyBtn').addEventListener('click', ()=>{
+    if(panelState.titleChecked){
+      const t = document.getElementById('listingTitle');
+      t.value = document.getElementById('titleSuggestionInput').value;
+      t.closest('.field-body').classList.add('flash');
+      updateTitleCountDisplay();
+    }
+    if(panelState.aboutChecked){
+      const a = document.getElementById('aboutBook');
+      a.value = document.getElementById('aboutSuggestionInput').value;
+      a.closest('.field-body').classList.add('flash');
+      document.getElementById('aboutCount').textContent = a.value.length + '/1466';
+    }
+    if(panelState.keywordsSelected.size > 0){
+      panelState.keywordsSelected.forEach(kw=>{
+        if(mainKeywords.length < 7 && !mainKeywords.includes(kw)) mainKeywords.push(kw);
+      });
+      renderMainKeywords();
+      document.getElementById('keywordsField').closest('.field-body').classList.add('flash');
+    }
+    closeDrawer();
+
+    // Apply is the natural endpoint of this session — the current/previous
+    // draft comparison no longer means anything once a decision's been made,
+    // so the next "Optimize listing" open should start fresh.
+    previousPanelDraft = null;
+    panelHasGeneratedOnce = false;
+    previousDraftBtn.style.display = 'none';
+    draftSwapConfirm.style.display = 'none';
+  });
+
   // --- Mode switching across 244/245 ---
   function applyDemoMode(){
     const previousMode = currentMode;
     demoPhase = demoPhaseSelect.value;
-    // Side panel is a placeholder entry — behaves exactly like 246 until its
-    // own UI/behavior is designed.
-    if(demoPhase === 'sidepanel') demoPhase = '246';
     // 246 starts as an exact copy of 245 — same logic path, distinct label in the picker.
     const val = demoPhase === '246' ? '245' : demoPhase;
     currentMode = val;
@@ -1815,6 +2358,20 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateInlineSparkleVisibility();
     updateKeywordsIconState();
     updateKeywordsHint();
+
+    // Side panel: the reinstated "Optimize listing" drawer replaces every
+    // inline/bulk entry point above with its own single trigger button.
+    const isPanelMode = currentMode === 'sidepanel';
+    document.getElementById('openOptimize').classList.toggle('hidden-mode', !isPanelMode);
+    if(isPanelMode){
+      document.getElementById('bulkGenerate').classList.add('hidden-mode');
+      document.getElementById('bulkGenerateBanner').style.display = 'none';
+      document.getElementById('aiDraftedBanner').style.display = 'none';
+      document.getElementById('aboutInlineIconBtn').classList.add('hidden-mode');
+      document.getElementById('keywordsInlineIconBtn').classList.add('hidden-mode');
+      document.getElementById('kwSuggestBtn').classList.add('hidden-mode');
+    }
+    if(!isPanelMode && drawer.classList.contains('open')) closeDrawer();
   }
   demoPhaseSelect.addEventListener('change', applyDemoMode);
   applyDemoMode();
