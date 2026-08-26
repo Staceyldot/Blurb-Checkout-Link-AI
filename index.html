@@ -631,6 +631,7 @@
     <label for="demoPhase">Iteration</label>
     <div class="select-wrap">
       <select id="demoPhase">
+        <option value="sidepanel">Side panel</option>
         <option value="246" selected>246</option>
         <option value="245">245</option>
         <option value="244">244</option>
@@ -1731,6 +1732,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function applyDemoMode(){
     const previousMode = currentMode;
     demoPhase = demoPhaseSelect.value;
+    // Side panel is a placeholder entry — behaves exactly like 246 until its
+    // own UI/behavior is designed.
+    if(demoPhase === 'sidepanel') demoPhase = '246';
     // 246 starts as an exact copy of 245 — same logic path, distinct label in the picker.
     const val = demoPhase === '246' ? '245' : demoPhase;
     currentMode = val;
