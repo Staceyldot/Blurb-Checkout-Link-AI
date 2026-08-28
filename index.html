@@ -318,23 +318,6 @@
   .btn:hover.btn-outline-bold, .btn:hover.btn-outline-brand{filter:brightness(0.98);}
   .btn-outline-ai:hover{filter:brightness(0.97);}
 
-  /* --- 244: a full-width banner replaces the small header button as the
-     AI entry point — more confident/prominent, matching the flagship
-     positioning of this iteration. */
-  .ai-banner{
-    display:none; align-items:center; gap:14px; width:100%;
-    margin:-8px 0 20px; padding:16px 18px; box-sizing:border-box;
-    border:none; border-radius:8px; cursor:pointer;
-    background:#F3F0FD;
-    font-family:var(--font-sans); text-align:left;
-  }
-  .ai-banner:hover{filter:brightness(0.98);}
-  .ai-banner-icon{font-size:28px; flex-shrink:0;}
-  .ai-banner-text{display:flex; flex-direction:column; gap:2px; flex:1;}
-  .ai-banner-text strong{font-size:16px; color:var(--bold);}
-  .ai-banner-text span{font-size:13px; color:var(--subtle);}
-  .ai-banner-chevron{font-size:22px; color:var(--subtle); flex-shrink:0;}
-
   .sparkle{
     width:20px;height:20px;flex-shrink:0;
     display:inline-block;
@@ -516,8 +499,8 @@
      the Use/Suggest another/Dismiss row — no card chrome needed under it. */
   .inline-draft-popover.plain-row{background:transparent; padding:0; margin-top:8px;}
   /* Not scoped to .inline-draft-popover — the same Use/Suggest another/
-     Dismiss row layout is reused by the other review boxes (Keywords, 244's
-     Description prompt box), and Dismiss should sit right-aligned there too. */
+     Dismiss row layout is reused by the Keywords review box too, and
+     Dismiss should sit right-aligned there too. */
   .row .spacer{flex:1;}
 
   .popover-link-btn{
@@ -795,8 +778,6 @@
       <select id="demoPhase">
         <option value="sidepanel">Side panel</option>
         <option value="246" selected>Fast follow</option>
-        <option value="245">245</option>
-        <option value="244">244</option>
       </select>
       <span class="select-chevron"><span class="material-symbols-rounded">expand_more</span></span>
     </div>
@@ -856,14 +837,6 @@
         <span style="flex:1; font-size:14px; color:var(--bold);">Drafted with AI. Review and edit before you go live.</span>
         <button type="button" class="popover-link-btn" id="aiDraftedUndoBtn">Undo</button>
       </div>
-      <button class="ai-banner" id="bulkGenerateBanner" type="button">
-        <span class="material-symbols-rounded ts-grad-icon ai-banner-icon">auto_awesome</span>
-        <span class="ai-banner-text">
-          <strong>Draft content with AI</strong>
-          <span>Tell us about your book, and we'll draft a title, description, and keywords.</span>
-        </span>
-        <span class="material-symbols-rounded ai-banner-chevron">chevron_right</span>
-      </button>
       <div class="bulk-prompt-box" id="bulkPromptBox" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
         <div id="bulkPromptHeading" style="display:none; margin:0 0 16px;">
           <p style="margin:0; font-weight:600; font-size:15px; color:var(--bold);">Draft a description and keywords</p>
@@ -949,26 +922,6 @@
           </div>
           <div class="count" id="aboutCount">0/1466</div>
 
-          <div class="mode-about-d hidden-mode bulk-prompt-box" id="aboutPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-            <div id="aboutPromptInputStepD">
-              <p class="prompt-copy" style="margin:0 0 8px;">What else should we know about your book?</p>
-              <textarea id="aboutPromptInputD" placeholder="e.g. keep it playful, mention it's a gift edition" style="min-height:80px;"></textarea>
-              <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-                <button class="btn btn-outline-bold" id="aboutPromptCancelD" type="button">Cancel</button>
-                <button class="btn btn-disabled" id="aboutPromptGenerateD" type="button" disabled>Write a description</button>
-              </div>
-            </div>
-            <div id="aboutPromptResultD" style="display:none; background:#fff; border-radius:8px; padding:14px 16px;">
-              <p class="suggestion-context" id="aboutPromptContextLine" style="display:none;"></p>
-              <p id="aboutPromptResultText" style="margin:0 0 12px; font-size:15px; color:var(--subtle); white-space:pre-line;"></p>
-              <div class="row" style="display:flex; align-items:center; gap:16px;">
-                <button class="popover-link-btn primary" id="aboutPromptUseD"><span class="material-symbols-rounded">check</span>Use this description</button>
-                <button class="popover-link-btn" id="aboutPromptAnotherD"><span class="material-symbols-rounded">refresh</span>Suggest another</button>
-                <span class="spacer"></span>
-                <button class="popover-link-btn muted" id="aboutPromptDismissD">Dismiss</button>
-              </div>
-            </div>
-          </div>
           <div class="inline-draft-popover" id="aboutDraftPopover">
             <textarea id="aboutDraftText" style="margin:0 0 10px; min-height:100px;"></textarea>
             <div class="row">
@@ -1374,21 +1327,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
   }
   wireSessionFeedbackBar();
-  // The raw picker value (246/245/244), before 246 is aliased to 245's logic
-  // in currentMode — lets a specific spot diverge 246 without re-threading
+  // The raw picker value (sidepanel/246), before 246 is aliased to '245' in
+  // currentMode — lets a specific spot diverge 246 without re-threading
   // every currentMode check in the file.
   let demoPhase = null;
   let mainKeywords = [];
-  function setContextLine(lineId, text){
-    const el = document.getElementById(lineId);
-    if(text){
-      el.textContent = 'Based on: "' + text + '"';
-      el.style.display = 'block';
-    } else {
-      el.textContent = '';
-      el.style.display = 'none';
-    }
-  }
   const demoPhaseSelect = document.getElementById('demoPhase');
 
   // --- Iteration A / D: inline field-level AI (no side panel) ---
@@ -1398,11 +1341,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
 
   function isFieldEmpty(el){ return el.value.trim().length === 0; }
 
-  // 244: Title gets a longer max (70) and a visible counter to match —
-  // other modes keep the shorter 40-character cap with the counter hidden.
   function updateTitleCountDisplay(){
     const titleInput = document.getElementById('listingTitle');
-    const max = currentMode === '244' ? 70 : 40;
+    const max = 40;
     titleInput.maxLength = max;
     document.getElementById('titleCount').textContent = titleInput.value.length + '/' + max;
   }
@@ -1472,9 +1413,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       nextOptionNumber(){ return ((idx + 1) % variants.length) + 1; }
     };
   }
-  // Title has no per-field AI icon in either remaining mode — 244 still
-  // drafts it through the bulk flow (245 prefills it instead; see
-  // applyDemoMode), so this just fills the field directly.
+  // Title has no per-field AI icon — it's only ever drafted (or prefilled;
+  // see applyDemoMode) through the bulk flow, so this just fills the field
+  // directly.
   let titleDraftIdx = 0;
   function fillTitleFromDraft(regenerate){
     if(regenerate) titleDraftIdx = (titleDraftIdx + 1) % titleVariants.length;
@@ -1482,8 +1423,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateTitleCountDisplay();
   }
 
-  // Description: instant popover in 245 — 244 routes Description through
-  // the more capable prompt-box-first pattern instead (below).
   const aboutA = wireInlineA('aboutInlineIconBtn','aboutDraftPopover','aboutDraftText', document.getElementById('aboutBook'), aboutVariants,
     ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
     'aboutDismissUndo', 'aboutUndoBtn', ['245']);
@@ -1520,82 +1459,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(demoPhase === '246') document.getElementById('aboutFieldRow').classList.add('ai-field-highlight');
   });
 
-  // Title/Description's prompt box shows the result for review (Use /
-  // Suggest another / Dismiss) before it ever touches the real field —
-  // mirrors 245's popover instead of writing on Generate.
-  function wirePromptBoxWithReviewD(iconBtnId, boxId, inputStepId, inputId, generateBtnId, cancelBtnId,
-      resultStepId, resultTextId, useBtnId, anotherBtnId, dismissBtnId, inputEl, variants, countUpdateFn, contextLineId, activeModes){
-    const box = document.getElementById(boxId);
-    const inputStep = document.getElementById(inputStepId);
-    const promptInput = document.getElementById(inputId);
-    const generateBtn = document.getElementById(generateBtnId);
-    const resultStep = document.getElementById(resultStepId);
-    const resultText = document.getElementById(resultTextId);
-    const defaultGenerateLabel = generateBtn.textContent;
-    let idx = 0;
-
-    function showInputStep(){
-      resultStep.style.display = 'none';
-      inputStep.style.display = 'block';
-      // Once the field already has content, reopening this box is a
-      // redraft, not a first draft — the CTA should say so.
-      generateBtn.textContent = isFieldEmpty(inputEl) ? defaultGenerateLabel : 'Draft again';
-    }
-    function showResultStep(){
-      resultText.textContent = variants[idx];
-      if(contextLineId) setContextLine(contextLineId, promptInput.value.trim());
-      inputStep.style.display = 'none';
-      resultStep.style.display = 'block';
-    }
-
-    document.getElementById(iconBtnId).addEventListener('click', ()=>{
-      const active = typeof activeModes === 'function' ? activeModes() : activeModes.includes(currentMode);
-      if(!active) return;
-      const opening = box.style.display !== 'block';
-      box.style.display = opening ? 'block' : 'none';
-      if(opening) showInputStep();
-    });
-    document.getElementById(cancelBtnId).addEventListener('click', ()=>{
-      box.style.display = 'none';
-    });
-    promptInput.addEventListener('input', ()=>{
-      const has = !isFieldEmpty(promptInput);
-      generateBtn.disabled = !has;
-      generateBtn.className = has ? 'btn btn-primary' : 'btn btn-disabled';
-    });
-    generateBtn.addEventListener('click', showResultStep);
-    document.getElementById(anotherBtnId).addEventListener('click', ()=>{
-      idx = (idx + 1) % variants.length;
-      resultText.textContent = variants[idx];
-    });
-    document.getElementById(dismissBtnId).addEventListener('click', showInputStep);
-    document.getElementById(useBtnId).addEventListener('click', ()=>{
-      inputEl.value = variants[idx];
-      if(countUpdateFn) countUpdateFn();
-      box.style.display = 'none';
-    });
-    return {
-      generateIfEmpty(){ if(isFieldEmpty(inputEl)){ inputEl.value = variants[0]; if(countUpdateFn) countUpdateFn(); } }
-    };
-  }
-  // Description's prompt-box pattern is 244's refine-first flow.
-  const aboutPromptBoxD = wirePromptBoxWithReviewD(
-    'aboutInlineIconBtn', 'aboutPromptBoxD', 'aboutPromptInputStepD', 'aboutPromptInputD', 'aboutPromptGenerateD', 'aboutPromptCancelD',
-    'aboutPromptResultD', 'aboutPromptResultText', 'aboutPromptUseD', 'aboutPromptAnotherD', 'aboutPromptDismissD',
-    document.getElementById('aboutBook'), aboutVariants,
-    ()=> document.getElementById('aboutCount').textContent = document.getElementById('aboutBook').value.length + '/1466',
-    'aboutPromptContextLine', ['244']);
-
   // Keywords' prompt box mirrors Title/Description's input-step/result-step
-  // review flow (244) — "Use" adds a whole suggested batch at once (up to
+  // review flow — "Use" adds a whole suggested batch at once (up to
   // remaining empty slots) instead of overwriting a single field's value.
   const keywordBatchVariants = [
     ["contemporary romance", "enemies to lovers", "slow burn", "second chances"],
     ["first impressions", "small town romance", "women's fiction", "banter-heavy"]
   ];
-  // Same rule as Description's prompt box: always active in 244,
-  // regardless of whether the bulk prompt has content.
-  const keywordsPromptBoxActive = ()=> currentMode === '244';
   const keywordsPromptBoxD = (function wireKeywordsPromptBoxWithReviewD(){
     const box = document.getElementById('keywordsPromptBoxD');
     const inputStep = document.getElementById('keywordsPromptInputStepD');
@@ -1608,9 +1478,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     function showInputStep(){
       resultStep.style.display = 'none';
       inputStep.style.display = 'block';
-      // This box is only ever reachable in 244, and the icon that opens it
-      // stays hidden until "Draft content" has run — so by the time it's
-      // reachable, a first draft has already happened. Always "Draft again".
+      // Only reachable via this box's own Dismiss (back to the prompt step),
+      // and by then a first draft has already happened. Always "Draft again".
       generateBtn.textContent = 'Draft again';
       // Same reasoning as showResultStep: the bulk flow's own suggestions
       // shouldn't sit below this box once it's open.
@@ -1651,12 +1520,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
     }
 
-    document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
-      if(!keywordsPromptBoxActive()) return;
-      const opening = box.style.display !== 'block';
-      box.style.display = opening ? 'block' : 'none';
-      if(opening) showInputStep();
-    });
     document.getElementById('keywordsPromptCancelD').addEventListener('click', ()=>{
       box.style.display = 'none';
       document.getElementById('keywordsFieldRow').classList.remove('ai-field-highlight');
@@ -1700,76 +1563,26 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     };
   })();
 
-  // Keywords (245): the manual "Suggest keywords" text link reveals chips;
-  // clicking a chip adds it directly (tops up remaining empty slots only,
-  // same rule as the bulk button). The field icon in 245 only ever triggers
-  // the first suggestion — once chips are showing, it hides in favor of the
-  // "Refresh suggestions" link next to the label (kwSuggestRefreshBtn)
-  // below. In 244 the icon always opens the review box above instead
-  // (keywordsPromptBoxActive is true there), so this direct-render path is
-  // only ever reached in 245.
+  // The manual "Suggest keywords" text link reveals chips; clicking a chip
+  // adds it directly (tops up remaining empty slots only, same rule as the
+  // bulk button). The field icon only ever triggers the first suggestion —
+  // once chips are showing, it hides in favor of the "Refresh suggestions"
+  // link next to the label (kwSuggestRefreshBtn) below.
   document.getElementById('kwSuggestBtn').addEventListener('click', ()=> renderKwSuggestChips(false));
-  document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=>{
-    if(keywordsPromptBoxActive()) return;
-    renderKwSuggestChips(false);
-  });
+  document.getElementById('keywordsInlineIconBtn').addEventListener('click', ()=> renderKwSuggestChips(false));
   document.getElementById('kwSuggestRefreshBtn').addEventListener('click', ()=> renderKwSuggestChips(true));
+  // No mode has a per-field Keywords icon anymore: Side panel's "Optimize
+  // listing" drawer is the only entry point there, and the remaining
+  // bulk/inline mode surfaces suggestions via kwSuggestChips/the bulk
+  // review box instead — see updateInlineSparkleVisibility.
   function updateKeywordsIconState(){
-    const icon = document.getElementById('keywordsInlineIconBtn');
-    const glyph = icon.querySelector('.material-symbols-rounded');
-    const wrap = document.getElementById('kwSuggestChips');
-    const hasSuggestions = wrap.style.display === 'flex' && wrap.querySelector('.chip');
-    const staticWandMode = currentMode === '244';
-    // Side panel: the "Optimize listing" drawer is the only entry point —
-    // no per-field icon, regardless of how many keywords are picked.
-    if(currentMode === 'sidepanel'){
-      icon.classList.add('hidden-mode');
-      return;
-    }
-    // 245: no per-field icon at all — see updateInlineSparkleVisibility.
-    if(currentMode === '245'){
-      icon.classList.add('hidden-mode');
-      return;
-    }
-    // 244: stays hidden until "Draft content" has been clicked at least once.
-    if(currentMode === '244' && !inlineSparkleUnlocked){
-      icon.classList.add('hidden-mode');
-      return;
-    }
-    if(mainKeywords.length >= 7){
-      icon.classList.remove('hidden-mode');
-      icon.disabled = true;
-      icon.title = 'Maximum keywords reached';
-      icon.setAttribute('aria-label', 'Maximum keywords reached');
-      glyph.textContent = staticWandMode ? 'auto_fix_high' : 'auto_awesome';
-    } else if(staticWandMode){
-      // 244: Description uses a static wand icon (prompt-box pattern) —
-      // Keywords matches that here instead of the dynamic sparkle/refresh
-      // swap used in 245's instant-suggestion pattern.
-      icon.classList.remove('hidden-mode');
-      icon.disabled = false;
-      icon.title = 'Suggest keywords';
-      icon.setAttribute('aria-label', 'Suggest keywords with AI');
-      glyph.textContent = 'auto_fix_high';
-    } else if(hasSuggestions){
-      // 245: once suggestions are showing, "suggest more" lives on the text
-      // link next to the label (kwSuggestRefreshBtn) instead of the field icon.
-      icon.classList.add('hidden-mode');
-    } else {
-      icon.classList.remove('hidden-mode');
-      icon.disabled = false;
-      icon.title = 'Suggest keywords';
-      icon.setAttribute('aria-label', 'Suggest keywords with AI');
-      glyph.textContent = 'auto_awesome';
-    }
+    document.getElementById('keywordsInlineIconBtn').classList.add('hidden-mode');
   }
   let kwSuggestOffset = 0;
   function renderKwSuggestChips(advance){
     const wrap = document.getElementById('kwSuggestChips');
     const label = document.getElementById('kwSuggestLabel');
     const labelRow = document.getElementById('kwSuggestLabelRow');
-    // 244 already regenerates via the prompt box's own Generate button —
-    // the "Refresh suggestions" link is only needed for 245's dynamic icon pattern.
     document.getElementById('kwSuggestRefreshBtn').style.display = currentMode === '245' ? 'inline-flex' : 'none';
     wrap.style.display = 'flex';
     wrap.innerHTML = '';
@@ -1847,8 +1660,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       && mainKeywords.length >= 7;
   }
   function updateBulkPromptSubmitLabel(){
-    const stagedMode = (currentMode === '244' || currentMode === '245');
-    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : (stagedMode ? 'Draft content' : 'Generate');
+    bulkPromptSubmit.textContent = isBulkDraftFull() ? 'Regenerate with new prompt' : (currentMode === '245' ? 'Draft content' : 'Generate');
   }
 
   // Expands the bulk prompt box as an animated-height accordion.
@@ -1881,7 +1693,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkPromptInput.focus();
   }
   document.getElementById('bulkGenerate').addEventListener('click', openBulkPrompt);
-  document.getElementById('bulkGenerateBanner').addEventListener('click', openBulkPrompt);
   document.getElementById('bulkPromptCancel').addEventListener('click', ()=>{
     bulkRegenConfirm.style.display = 'none';
     closeBulkAccordion();
@@ -1908,8 +1719,8 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     });
   });
 
-  // 245/244: each field resolves independently with its own shimmer, instead
-  // of one instant swap or a single blocking spinner over everything.
+  // Each field resolves independently with its own shimmer, instead of one
+  // instant swap or a single blocking spinner over everything.
   function showKeywordSkeleton(){
     const wrap = document.getElementById('kwSuggestChips');
     document.getElementById('kwSuggestLabelRow').style.display = 'none';
@@ -2007,15 +1818,12 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     updateBulkGenerateState();
   });
   function updateBulkGenerateState(){
-    // 244's "generate everything" entry point is the banner below the
-    // header instead of this small button. 245's button gives way to the
-    // "Drafted with AI" banner once a draft exists.
+    // This button gives way to the "Drafted with AI" banner once a draft exists.
     const drafted245 = currentMode === '245' && inlineSparkleUnlocked;
     // Side panel: "Optimize listing" is the only entry point, regardless of
     // what the seller types into the fields directly.
-    const hideHeaderBtn = currentMode === '244' || currentMode === 'sidepanel' || drafted245;
+    const hideHeaderBtn = currentMode === 'sidepanel' || drafted245;
     document.getElementById('bulkGenerate').className = 'btn btn-outline-ai' + (hideHeaderBtn ? ' hidden-mode' : '');
-    document.getElementById('bulkGenerateBanner').style.display = currentMode === '244' ? 'flex' : 'none';
     document.getElementById('aiDraftedBanner').style.display = drafted245 ? 'flex' : 'none';
     updateBulkPromptSubmitLabel();
   }
@@ -2032,17 +1840,17 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   });
 
   function updateInlineSparkleVisibility(){
-    // 244 and 245 both gate Description/Keywords' icons behind "Draft
-    // content" being clicked at least once. Title has no per-field AI icon
-    // at all — it's only ever drafted (or, in 245, prefilled) through the
-    // bulk flow. 246 drops the per-field regenerate icon entirely — the
-    // purple review box from the bulk flow is the only place to redraft.
-    const hide = demoPhase === '246' || ((currentMode === '244' || currentMode === '245') && !inlineSparkleUnlocked);
+    // 245 gates Description/Keywords' icons behind "Draft content" being
+    // clicked at least once. Title has no per-field AI icon at all — it's
+    // only ever drafted (or, in 245, prefilled) through the bulk flow. 246
+    // drops the per-field regenerate icon entirely — the purple review box
+    // from the bulk flow is the only place to redraft.
+    const hide = demoPhase === '246' || (currentMode === '245' && !inlineSparkleUnlocked);
     document.getElementById('aboutInlineIconBtn').classList.toggle('hidden-mode', hide);
     document.getElementById('keywordsInlineIconBtn').classList.toggle('hidden-mode', currentMode === '245' || hide);
     // 245: by the time this icon is visible, Description is already
     // drafted — a regenerate icon reads better than the wand used for
-    // 244's "draft this for the first time" framing.
+    // "draft this for the first time" framing.
     const aboutIcon = document.getElementById('aboutInlineIconBtn');
     aboutIcon.querySelector('.material-symbols-rounded').textContent = currentMode === '245' ? 'refresh' : 'auto_fix_high';
     aboutIcon.title = currentMode === '245' ? 'Regenerate description' : 'Improve description with AI';
@@ -2329,7 +2137,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     showSessionFeedback();
   });
 
-  // --- Mode switching across 244/245 ---
+  // --- Mode switching: Side panel vs Fast follow ---
   function applyDemoMode(){
     const previousMode = currentMode;
     demoPhase = demoPhaseSelect.value;
@@ -2337,8 +2145,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     const val = demoPhase === '246' ? '245' : demoPhase;
     currentMode = val;
     const isA = val === '245';
-    const isFourFour = val === '244';
-    const bulkStagedMode = isA || isFourFour; // both use the instant staggered bulk-fill
 
     // 245: Title needs no AI help — it's already known from the project
     // itself, so it's prefilled from that instead of drafted (never
@@ -2348,51 +2154,41 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(isA && isFieldEmpty(titleField)){
       titleField.value = projectTitleText;
     }
-    // Leaving 245 without editing that prefill shouldn't leak it into 244,
-    // where Title is genuinely empty until drafted or typed.
+    // Leaving Fast follow without editing that prefill shouldn't leak it
+    // into Side panel, where Title is genuinely empty until drafted or typed.
     if(previousMode === '245' && !isA && titleField.value === projectTitleText){
       titleField.value = '';
     }
 
     document.getElementById('bulkGenerateLabel').textContent = isA ? 'Draft this for me' : 'Draft content with AI';
     document.getElementById('bulkPromptHeading').style.display = isA ? 'block' : 'none';
-    // 244: the banner above already says this, so the prompt box drops it
-    // instead of repeating the same line twice.
-    document.getElementById('bulkPromptCopy').style.display = isFourFour ? 'none' : '';
     document.getElementById('bulkPromptCopy').textContent = isA
       ? "Tell us about your book, and we'll draft the rest –– edit it afterwards"
-      : isFourFour
-        ? ''
-        : "Help us get it right. What's your book about?";
-    document.getElementById('bulkPromptInput').placeholder = bulkStagedMode
+      : "Help us get it right. What's your book about?";
+    document.getElementById('bulkPromptInput').placeholder = isA
       ? "A travel photo book of two weeks backpacking through Patagonia"
       : "e.g. a cozy mystery set in a small-town bakery, playful tone";
-    document.getElementById('bulkToneWrap').style.display = bulkStagedMode ? 'block' : 'none';
+    document.getElementById('bulkToneWrap').style.display = isA ? 'block' : 'none';
     document.querySelectorAll('#bulkToneOptions .tone-option').forEach(option => {
       option.classList.remove('selected');
     });
     document.getElementById('bulkFillHint').style.display = '';
-    document.getElementById('bulkFillHint').textContent = bulkStagedMode
+    document.getElementById('bulkFillHint').textContent = isA
       ? 'The more detail you give, the better the results.'
       : "Fills every empty field below at once. Each one stays editable and can be redrafted on its own.";
-    document.getElementById('titleCount').style.display = isFourFour ? 'block' : 'none';
+    document.getElementById('titleCount').style.display = 'none';
     updateTitleCountDisplay();
     document.getElementById('aboutCount').style.display = 'none';
     // mode-a-d: per-field AI icons + keyword suggestions — available in every mode.
     document.querySelectorAll('.mode-a-d').forEach(el => el.classList.toggle('hidden-mode', false));
-    // mode-keywords-d: Keywords' review-based prompt box — 244's own icon
-    // opens it directly; 246 opens it (result step only) from the bulk flow.
-    document.querySelectorAll('.mode-keywords-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour && demoPhase !== '246'));
-    // mode-about-d: Description's prompt-box-first, refine-first flow (244).
-    document.querySelectorAll('.mode-about-d').forEach(el => el.classList.toggle('hidden-mode', !isFourFour));
+    // mode-keywords-d: Keywords' review-based prompt box — 246 opens it
+    // (result step only) from the bulk flow; stays hidden otherwise.
+    document.querySelectorAll('.mode-keywords-d').forEach(el => el.classList.toggle('hidden-mode', demoPhase !== '246'));
     // Switching modes always closes the bulk prompt box fresh, so no
     // open/accordion state leaks from one mode into another.
     bulkPromptBox.style.display = 'none';
     bulkPromptBox.classList.remove('bulk-accordion', 'open');
     bulkRegenConfirm.style.display = 'none';
-    document.getElementById('aboutPromptBoxD').style.display = 'none';
-    document.getElementById('aboutPromptResultD').style.display = 'none';
-    document.getElementById('aboutPromptInputStepD').style.display = 'block';
     document.getElementById('keywordsPromptBoxD').style.display = 'none';
     document.getElementById('keywordsPromptResultD').style.display = 'none';
     document.getElementById('keywordsPromptInputStepD').style.display = 'block';
@@ -2407,7 +2203,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('keywordsThumbsUpBtn').classList.remove('thumb-selected');
     document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
     bulkUndoSnapshot = null;
-    setContextLine('aboutPromptContextLine', '');
     resetSessionFeedback();
     if(!isA) inlineSparkleUnlocked = false;
     updateBulkGenerateState();
@@ -2421,7 +2216,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('openOptimize').classList.toggle('hidden-mode', !isPanelMode);
     if(isPanelMode){
       document.getElementById('bulkGenerate').classList.add('hidden-mode');
-      document.getElementById('bulkGenerateBanner').style.display = 'none';
       document.getElementById('aiDraftedBanner').style.display = 'none';
       document.getElementById('aboutInlineIconBtn').classList.add('hidden-mode');
       document.getElementById('keywordsInlineIconBtn').classList.add('hidden-mode');
