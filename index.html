@@ -525,7 +525,11 @@
     font-family:var(--font-sans); font-size:14px; color:var(--link);
     text-decoration:underline; display:inline-flex; align-items:center; gap:4px;
   }
-  .popover-link-btn .material-symbols-rounded{font-size:16px; text-decoration:none;}
+  /* display:inline-block (not just text-decoration:none) so the underline
+     can't paint through the icon glyph — some browsers draw an ancestor's
+     underline across nested inline content regardless of its own
+     text-decoration value; an atomic inline box blocks that. */
+  .popover-link-btn .material-symbols-rounded{font-size:16px; text-decoration:none; display:inline-block;}
   .popover-link-btn.primary{font-weight:600;}
   .popover-link-btn.muted{color:var(--subtle);}
   .popover-link-btn:hover{filter:brightness(0.85);}
