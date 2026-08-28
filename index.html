@@ -956,14 +956,6 @@
           <div class="hint" id="keywordsHint">Press Enter to add each keyword. Up to 7 keywords.</div>
           <div class="chip-group" id="mainKeywordChips" style="display:none;"></div>
           <div class="mode-keywords-d hidden-mode bulk-prompt-box" id="keywordsPromptBoxD" style="display:none; border:none; border-radius:4px; background:#F3F0FD;">
-            <div id="keywordsPromptInputStepD">
-              <p class="prompt-copy" style="margin:0 0 8px;">What else should we know about your book?</p>
-              <textarea id="keywordsPromptInputD" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:80px;"></textarea>
-              <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
-                <button class="btn btn-outline-bold" id="keywordsPromptCancelD" type="button">Cancel</button>
-                <button class="btn btn-disabled" id="keywordsPromptGenerateD" type="button" disabled>Suggest keywords</button>
-              </div>
-            </div>
             <div id="keywordsPromptResultD" style="display:none; background:#fff; border-radius:8px; padding:14px 16px;">
               <div class="chip-group" id="keywordsPromptResultChips" style="margin:0 0 12px;"></div>
               <div class="row" style="display:flex; align-items:center; gap:16px;">
@@ -1300,6 +1292,15 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(sessionFeedbackDismissed) return;
     document.getElementById('sessionFeedbackBar').style.display = 'flex';
   }
+  // 246: rather than asking right when a draft lands, wait until the seller
+  // is actually done with it — both Description and Keywords' review boxes
+  // closed (Dismiss, Revert, or typing their own edit over the draft).
+  function maybeShowSessionFeedbackAfterReview(){
+    if(!inlineSparkleUnlocked) return;
+    const aboutDone = !document.getElementById('aboutFieldRow').classList.contains('ai-field-highlight');
+    const keywordsDone = !document.getElementById('keywordsFieldRow').classList.contains('ai-field-highlight');
+    if(aboutDone && keywordsDone) showSessionFeedback();
+  }
   function resetSessionFeedback(){
     sessionFeedbackDismissed = false;
     const bar = document.getElementById('sessionFeedbackBar');
@@ -1451,9 +1452,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   });
   document.getElementById('aboutDismissBtn').addEventListener('click', ()=>{
     document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
+    maybeShowSessionFeedbackAfterReview();
   });
   document.getElementById('aboutRevertBtn').addEventListener('click', ()=>{
     document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
+    maybeShowSessionFeedbackAfterReview();
   });
   document.getElementById('aboutUndoBtn').addEventListener('click', ()=>{
     if(demoPhase === '246') document.getElementById('aboutFieldRow').classList.add('ai-field-highlight');
@@ -1468,24 +1471,10 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   ];
   const keywordsPromptBoxD = (function wireKeywordsPromptBoxWithReviewD(){
     const box = document.getElementById('keywordsPromptBoxD');
-    const inputStep = document.getElementById('keywordsPromptInputStepD');
-    const promptInput = document.getElementById('keywordsPromptInputD');
-    const generateBtn = document.getElementById('keywordsPromptGenerateD');
     const resultStep = document.getElementById('keywordsPromptResultD');
     const resultChips = document.getElementById('keywordsPromptResultChips');
     let idx = 0;
 
-    function showInputStep(){
-      resultStep.style.display = 'none';
-      inputStep.style.display = 'block';
-      // Only reachable via this box's own Dismiss (back to the prompt step),
-      // and by then a first draft has already happened. Always "Draft again".
-      generateBtn.textContent = 'Draft again';
-      // Same reasoning as showResultStep: the bulk flow's own suggestions
-      // shouldn't sit below this box once it's open.
-      document.getElementById('kwSuggestLabelRow').style.display = 'none';
-      document.getElementById('kwSuggestChips').style.display = 'none';
-    }
     function renderResultChips(){
       resultChips.innerHTML = '';
       // Each chip can be added on its own — once picked, it drops out of
@@ -1505,7 +1494,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
     function showResultStep(){
       renderResultChips();
-      inputStep.style.display = 'none';
       resultStep.style.display = 'block';
       // The bulk flow's "More ideas..." suggestions (if already showing)
       // would otherwise sit directly below this review batch, duplicating
@@ -1520,17 +1508,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
     }
 
-    document.getElementById('keywordsPromptCancelD').addEventListener('click', ()=>{
-      box.style.display = 'none';
-      document.getElementById('keywordsFieldRow').classList.remove('ai-field-highlight');
-      box.style.background = '#F3F0FD';
-    });
-    promptInput.addEventListener('input', ()=>{
-      const has = !isFieldEmpty(promptInput);
-      generateBtn.disabled = !has;
-      generateBtn.className = has ? 'btn btn-primary' : 'btn btn-disabled';
-    });
-    generateBtn.addEventListener('click', showResultStep);
     document.getElementById('keywordsPromptAnotherD').addEventListener('click', ()=>{
       idx = (idx + 1) % keywordBatchVariants.length;
       renderResultChips();
@@ -1543,7 +1520,13 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       renderMainKeywords();
       renderResultChips();
     });
-    document.getElementById('keywordsPromptDismissD').addEventListener('click', showInputStep);
+    // Closes the review — the seller's decided which suggestions to keep.
+    // Mirrors Description's Dismiss, which closes that field's review too.
+    document.getElementById('keywordsPromptDismissD').addEventListener('click', ()=>{
+      box.style.display = 'none';
+      document.getElementById('keywordsFieldRow').classList.remove('ai-field-highlight');
+      maybeShowSessionFeedbackAfterReview();
+    });
     document.getElementById('keywordsThumbsUpBtn').addEventListener('click', ()=>{
       document.getElementById('keywordsThumbsUpBtn').classList.add('thumb-selected');
       document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
@@ -1784,7 +1767,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       // the draft lands — no need to keep it open alongside it.
       if(currentMode === '245' && bulkPromptBox.classList.contains('open')) closeBulkAccordion();
       updateBulkGenerateState();
-      showSessionFeedback();
     }, 2000);
   }
   bulkPromptSubmit.addEventListener('click', ()=>{
@@ -1836,6 +1818,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     if(demoPhase === '246' && document.getElementById('aboutFieldRow').classList.contains('ai-field-highlight')){
       document.getElementById('aboutFieldRow').classList.remove('ai-field-highlight');
       document.getElementById('aboutDraftPopover').classList.remove('open');
+      maybeShowSessionFeedbackAfterReview();
     }
   });
 
@@ -2191,7 +2174,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     bulkRegenConfirm.style.display = 'none';
     document.getElementById('keywordsPromptBoxD').style.display = 'none';
     document.getElementById('keywordsPromptResultD').style.display = 'none';
-    document.getElementById('keywordsPromptInputStepD').style.display = 'block';
     document.getElementById('aboutDraftPopover').classList.remove('open');
     document.getElementById('aboutDismissUndo').classList.remove('show');
     document.getElementById('kwSuggestChips').style.display = 'none';
