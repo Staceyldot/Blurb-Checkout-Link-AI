@@ -617,6 +617,27 @@
     background-size:200% 100%; animation:skeleton-shimmer 3.2s ease-in-out infinite;
   }
 
+  /* Session-level AI feedback — appears once, after the seller has actually
+     used AI on this page, not after every individual suggestion. Answers
+     "how did AI do overall," not "was this one result good." */
+  .session-feedback-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--gray-subtler); border:1px solid var(--border-subtle); border-radius:8px;
+    padding:10px 14px; margin-top:20px; font-size:13px; color:var(--subtle);
+  }
+  .session-feedback-actions{display:flex; align-items:center; gap:18px;}
+  .session-feedback-btn{
+    border:none; background:none; padding:0; cursor:pointer;
+    font-family:var(--font-sans); font-size:13px; color:var(--subtle);
+  }
+  .session-feedback-btn:hover, .session-feedback-btn.selected{color:var(--bold); font-weight:600;}
+  .session-feedback-close{
+    border:none; background:none; padding:0; cursor:pointer; color:var(--disabled);
+    display:flex; align-items:center;
+  }
+  .session-feedback-close .material-symbols-rounded{font-size:18px;}
+  .session-feedback-thanks{font-size:13px; color:var(--subtle); font-style:italic;}
+
   /* Shows what prompt/guidance is driving the current suggestion, so
      "Suggest another" is visibly working from the same context rather than
      silently discarding whatever the seller typed. */
@@ -851,43 +872,28 @@
         <p class="hint" id="bulkFillHint" style="margin:0 0 8px;">The more detail you give, the better the results.</p>
         <textarea id="bulkPromptInput" placeholder="e.g. a cozy mystery set in a small-town bakery, playful tone" style="min-height:120px;"></textarea>
         <div id="bulkToneWrap" style="display:none; margin-top:12px;">
-          <p style="margin:0 0 8px; font-size:13px; color:var(--subtle);">Tone (optional)</p>
+          <p style="margin:0 0 8px; font-size:13px; color:var(--subtle); display:flex; align-items:center; gap:4px;">Tone (optional)
+            <span class="info-icon" tabindex="0">
+              <span class="material-symbols-rounded">info</span>
+              <span class="tooltip-popup" role="tooltip">Playful: light, fun, and a little cheeky. Warm: friendly and inviting, like talking to a friend. Literary: descriptive and evocative, with polished prose. Bold: confident and direct, straight to the point.</span>
+            </span>
+          </p>
           <div class="tone-row" id="bulkToneOptions">
             <button type="button" class="tone-option" data-tone="Playful">
               <span class="material-symbols-rounded">mood</span>
-              <span class="tone-option-label">Playful
-                <span class="info-icon" tabindex="0">
-                  <span class="material-symbols-rounded">info</span>
-                  <span class="tooltip-popup" role="tooltip">Light, fun, and a little cheeky.</span>
-                </span>
-              </span>
+              <span class="tone-option-label">Playful</span>
             </button>
             <button type="button" class="tone-option" data-tone="Warm">
               <span class="material-symbols-rounded">favorite</span>
-              <span class="tone-option-label">Warm
-                <span class="info-icon" tabindex="0">
-                  <span class="material-symbols-rounded">info</span>
-                  <span class="tooltip-popup" role="tooltip">Friendly and inviting, like talking to a friend.</span>
-                </span>
-              </span>
+              <span class="tone-option-label">Warm</span>
             </button>
             <button type="button" class="tone-option" data-tone="Literary">
               <span class="material-symbols-rounded">history_edu</span>
-              <span class="tone-option-label">Literary
-                <span class="info-icon" tabindex="0">
-                  <span class="material-symbols-rounded">info</span>
-                  <span class="tooltip-popup" role="tooltip">Descriptive and evocative, with polished prose.</span>
-                </span>
-              </span>
+              <span class="tone-option-label">Literary</span>
             </button>
             <button type="button" class="tone-option" data-tone="Bold">
               <span class="material-symbols-rounded">local_fire_department</span>
-              <span class="tone-option-label">Bold
-                <span class="info-icon" tabindex="0">
-                  <span class="material-symbols-rounded">info</span>
-                  <span class="tooltip-popup" role="tooltip">Confident and direct, straight to the point.</span>
-                </span>
-              </span>
+              <span class="tone-option-label">Bold</span>
             </button>
           </div>
         </div>
@@ -1025,6 +1031,18 @@
             <button type="button" class="popover-link-btn" id="kwSuggestRefreshBtn"><span class="material-symbols-rounded">refresh</span>Refresh suggestions</button>
           </div>
           <div class="chip-group mode-a-d hidden-mode" id="kwSuggestChips" style="margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <div class="session-feedback-bar" id="sessionFeedbackBar" style="display:none;">
+        <span>How did AI do drafting your listing?</span>
+        <div class="session-feedback-actions">
+          <button type="button" class="session-feedback-btn" data-rating="Bad">Bad</button>
+          <button type="button" class="session-feedback-btn" data-rating="Fine">Fine</button>
+          <button type="button" class="session-feedback-btn" data-rating="Good">Good</button>
+          <button type="button" class="session-feedback-close" id="sessionFeedbackClose" aria-label="Dismiss">
+            <span class="material-symbols-rounded">close</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1321,6 +1339,41 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     ]
   };
   let currentMode = null;
+  // Session-level AI feedback — shown once per mode, after the seller has
+  // actually used AI (not per individual suggestion). Resets on mode switch
+  // so demo walkthroughs don't carry a dismissed/rated state between iterations.
+  let sessionFeedbackDismissed = false;
+  function showSessionFeedback(){
+    if(sessionFeedbackDismissed) return;
+    document.getElementById('sessionFeedbackBar').style.display = 'flex';
+  }
+  function resetSessionFeedback(){
+    sessionFeedbackDismissed = false;
+    const bar = document.getElementById('sessionFeedbackBar');
+    bar.style.display = 'none';
+    bar.innerHTML = '<span>How did AI do drafting your listing?</span>'
+      + '<div class="session-feedback-actions">'
+      + '<button type="button" class="session-feedback-btn" data-rating="Bad">Bad</button>'
+      + '<button type="button" class="session-feedback-btn" data-rating="Fine">Fine</button>'
+      + '<button type="button" class="session-feedback-btn" data-rating="Good">Good</button>'
+      + '<button type="button" class="session-feedback-close" id="sessionFeedbackClose" aria-label="Dismiss"><span class="material-symbols-rounded">close</span></button>'
+      + '</div>';
+    wireSessionFeedbackBar();
+  }
+  function wireSessionFeedbackBar(){
+    document.querySelectorAll('.session-feedback-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const bar = document.getElementById('sessionFeedbackBar');
+        bar.innerHTML = '<span class="session-feedback-thanks">Thanks for the feedback.</span>';
+        sessionFeedbackDismissed = true;
+      });
+    });
+    document.getElementById('sessionFeedbackClose').addEventListener('click', ()=>{
+      document.getElementById('sessionFeedbackBar').style.display = 'none';
+      sessionFeedbackDismissed = true;
+    });
+  }
+  wireSessionFeedbackBar();
   // The raw picker value (246/245/244), before 246 is aliased to 245's logic
   // in currentMode — lets a specific spot diverge 246 without re-threading
   // every currentMode check in the file.
@@ -1854,10 +1907,6 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       if(!wasSelected) option.classList.add('selected');
     });
   });
-  // Info icon just shows a tooltip on hover/focus — clicking it shouldn't also select the tone.
-  document.querySelectorAll('#bulkToneOptions .info-icon').forEach(icon => {
-    icon.addEventListener('click', e => e.stopPropagation());
-  });
 
   // 245/244: each field resolves independently with its own shimmer, instead
   // of one instant swap or a single blocking spinner over everything.
@@ -1924,6 +1973,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       // the draft lands — no need to keep it open alongside it.
       if(currentMode === '245' && bulkPromptBox.classList.contains('open')) closeBulkAccordion();
       updateBulkGenerateState();
+      showSessionFeedback();
     }, 2000);
   }
   bulkPromptSubmit.addEventListener('click', ()=>{
@@ -2276,6 +2326,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     panelHasGeneratedOnce = false;
     previousDraftBtn.style.display = 'none';
     draftSwapConfirm.style.display = 'none';
+    showSessionFeedback();
   });
 
   // --- Mode switching across 244/245 ---
@@ -2357,6 +2408,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     document.getElementById('keywordsThumbsDownBtn').classList.remove('thumb-selected');
     bulkUndoSnapshot = null;
     setContextLine('aboutPromptContextLine', '');
+    resetSessionFeedback();
     if(!isA) inlineSparkleUnlocked = false;
     updateBulkGenerateState();
     updateInlineSparkleVisibility();
