@@ -1180,13 +1180,8 @@
           <button class="close" id="closeResults">✕</button>
         </div>
         <div class="drawer-body">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-            <button class="link-with-icon" id="previousDraftBtn" type="button" style="display:none; border:none; background:none; padding:0; font-weight:600; font-size:13px; color:var(--bold); cursor:pointer; align-items:center; gap:5px;">
-              <span class="material-symbols-rounded" style="font-size:16px;">history</span> Previous draft
-            </button>
-          </div>
           <div id="draftSwapConfirm" style="display:none; margin-bottom:14px; padding:12px 14px; border:1px solid var(--brand); border-radius:8px; background:#fff;">
-            <p style="font-size:14px; margin:0 0 10px; color:var(--bold);">Switch drafts? Your edits to the title and description here will be replaced.</p>
+            <p style="font-size:14px; margin:0 0 10px; color:var(--bold);">Switch drafts? Your edits to the description here will be replaced.</p>
             <div style="display:flex; gap:8px; justify-content:flex-end;">
               <button class="btn btn-outline-bold" id="draftSwapCancel" style="padding:6px 16px; font-size:14px; min-width:auto;">Cancel</button>
               <button class="btn btn-primary" id="draftSwapContinue" style="padding:6px 16px; font-size:14px; min-width:auto;">Switch</button>
@@ -1213,15 +1208,6 @@
           </div>
         </div>
         <div class="drawer-sticky-bottom">
-          <div class="prompt-pill-wrap">
-            <div class="prompt-pill-bar">
-              <span class="material-symbols-rounded ts-grad-icon">auto_awesome</span>
-              <input type="text" id="panelRefineInput" placeholder="Try something different...">
-              <button class="pill-action-btn" id="panelPillActionBtn" type="button" title="Regenerate">
-                <span class="material-symbols-rounded">refresh</span>
-              </button>
-            </div>
-          </div>
           <div class="drawer-footer">
             <div class="row">
               <button class="btn btn-outline-bold" id="cancelResults">Cancel</button>
@@ -1926,18 +1912,21 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
   });
 
-  function buildCheckboxCard(field, text, checkboxId, inputId, isTextarea){
+  function buildCheckboxCard(field, text, checkboxId, inputId, isTextarea, footerHtml){
     const card = document.createElement('div');
     card.className = 'suggestion-card selectable';
+    const footer = footerHtml || '';
     card.innerHTML = isTextarea
       ? `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
          <div class="suggestion-card-body">
            <textarea class="suggestion-field" id="${inputId}" style="height:220px;"></textarea>
            <div class="hint suggestion-count" style="text-align:right; margin-top:8px;"></div>
+           ${footer}
          </div>`
       : `<span class="material-symbols-rounded radio-icon" id="${checkboxId}">radio_button_unchecked</span>
          <div class="suggestion-card-body">
            <input type="text" class="suggestion-field" id="${inputId}">
+           ${footer}
          </div>`;
     const fieldEl = card.querySelector('.suggestion-field');
     fieldEl.value = text;
@@ -1957,6 +1946,7 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     }
     card.addEventListener('click', (e)=>{
       if(e.target.closest('.suggestion-field')) return;
+      if(e.target.closest('.field-own-actions')) return;
       panelState[checkedKey] = !panelState[checkedKey];
       applyCheckedState();
     });
@@ -1966,60 +1956,79 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
   function renderPanelTitleSuggestion(){
     const container = document.getElementById('titleCards');
     container.innerHTML = '';
+    // Title has no regenerate control of its own — one suggestion, edit
+    // directly if it's not quite right. Not worth refinement machinery for
+    // a 40-character field.
     container.appendChild(buildCheckboxCard('title', mockSuggestions.title[0], 'checkTitle', 'titleSuggestionInput', false));
   }
+  let panelAboutVariantIdx = 0;
   function renderPanelAboutSuggestion(){
     const container = document.getElementById('aboutCards');
     container.innerHTML = '';
-    container.appendChild(buildCheckboxCard('about', mockSuggestions.description[0], 'checkAbout', 'aboutSuggestionInput', true));
+    panelAboutVariantIdx = 0;
+    const footerHtml = `<div class="field-own-actions" style="display:flex; align-items:center; gap:14px; margin-top:8px;">
+      <button type="button" class="link-with-icon" id="aboutSuggestAnotherBtn" style="border:none; background:none; padding:0; font-size:12px; font-weight:600; color:var(--bold); cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+        <span class="material-symbols-rounded" style="font-size:14px;">refresh</span>Suggest another
+      </button>
+      <button type="button" class="link-with-icon" id="aboutPreviousDraftBtn" style="display:none; border:none; background:none; padding:0; font-size:12px; color:var(--subtle); cursor:pointer; align-items:center; gap:4px;">
+        <span class="material-symbols-rounded" style="font-size:14px;">history</span>Previous draft
+      </button>
+    </div>`;
+    container.appendChild(buildCheckboxCard('about', mockSuggestions.description[0], 'checkAbout', 'aboutSuggestionInput', true, footerHtml));
+    wireAboutOwnControls();
   }
 
-  // --- Previous draft: two-slot swap (current <-> previous), not a growing history ---
-  let previousPanelDraft = null;
-  let lastRenderedPanelTitle = '';
+  // --- Description's own Previous draft: two-slot swap (current <-> previous),
+  // scoped to Description only. Title never regenerates, so it has nothing
+  // to swap — editing directly is the seller's recourse there.
+  let previousAboutDraft = null;
   let lastRenderedPanelAbout = '';
-  const previousDraftBtn = document.getElementById('previousDraftBtn');
   const draftSwapConfirm = document.getElementById('draftSwapConfirm');
 
-  function currentPanelDraftValues(){
-    const titleInput = document.getElementById('titleSuggestionInput');
-    const aboutInput = document.getElementById('aboutSuggestionInput');
-    return { title: titleInput ? titleInput.value : '', about: aboutInput ? aboutInput.value : '' };
-  }
   function markPanelRendered(){
-    const v = currentPanelDraftValues();
-    lastRenderedPanelTitle = v.title;
-    lastRenderedPanelAbout = v.about;
+    const el = document.getElementById('aboutSuggestionInput');
+    lastRenderedPanelAbout = el ? el.value : '';
   }
-  function hasPanelUnsavedEdits(){
-    const v = currentPanelDraftValues();
-    return v.title !== lastRenderedPanelTitle || v.about !== lastRenderedPanelAbout;
+  function hasAboutUnsavedEdits(){
+    const el = document.getElementById('aboutSuggestionInput');
+    return (el ? el.value : '') !== lastRenderedPanelAbout;
   }
-  function updatePreviousDraftButton(){
-    previousDraftBtn.style.display = previousPanelDraft ? 'inline-flex' : 'none';
+  function updateAboutPreviousDraftButton(){
+    const btn = document.getElementById('aboutPreviousDraftBtn');
+    if(btn) btn.style.display = previousAboutDraft !== null ? 'inline-flex' : 'none';
   }
-  function doPanelDraftSwap(){
-    const current = currentPanelDraftValues();
-    const titleInput = document.getElementById('titleSuggestionInput');
+  function doAboutDraftSwap(){
     const aboutInput = document.getElementById('aboutSuggestionInput');
-    titleInput.value = previousPanelDraft.title;
-    aboutInput.value = previousPanelDraft.about;
+    const current = aboutInput.value;
+    aboutInput.value = previousAboutDraft;
     const countEl = aboutInput.closest('.suggestion-card-body').querySelector('.suggestion-count');
     if(countEl) countEl.textContent = aboutInput.value.length + '/1466';
-    previousPanelDraft = current; // whichever was showing becomes the new "previous"
+    previousAboutDraft = current; // whichever was showing becomes the new "previous"
     markPanelRendered();
   }
-  previousDraftBtn.addEventListener('click', ()=>{
-    if(!previousPanelDraft) return;
-    if(hasPanelUnsavedEdits()) draftSwapConfirm.style.display = 'block';
-    else doPanelDraftSwap();
-  });
+  function wireAboutOwnControls(){
+    document.getElementById('aboutSuggestAnotherBtn').addEventListener('click', ()=>{
+      previousAboutDraft = document.getElementById('aboutSuggestionInput').value;
+      panelAboutVariantIdx = (panelAboutVariantIdx + 1) % mockSuggestions.description.length;
+      const aboutInput = document.getElementById('aboutSuggestionInput');
+      aboutInput.value = mockSuggestions.description[panelAboutVariantIdx];
+      const countEl = aboutInput.closest('.suggestion-card-body').querySelector('.suggestion-count');
+      if(countEl) countEl.textContent = aboutInput.value.length + '/1466';
+      markPanelRendered();
+      updateAboutPreviousDraftButton();
+    });
+    document.getElementById('aboutPreviousDraftBtn').addEventListener('click', ()=>{
+      if(previousAboutDraft === null) return;
+      if(hasAboutUnsavedEdits()) draftSwapConfirm.style.display = 'block';
+      else doAboutDraftSwap();
+    });
+  }
   document.getElementById('draftSwapCancel').addEventListener('click', ()=>{
     draftSwapConfirm.style.display = 'none';
   });
   document.getElementById('draftSwapContinue').addEventListener('click', ()=>{
     draftSwapConfirm.style.display = 'none';
-    doPanelDraftSwap();
+    doAboutDraftSwap();
   });
 
   panelContinueBtn.addEventListener('click', ()=>{
@@ -2033,40 +2042,11 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
       KEYWORDS.forEach(kw => panelState.keywordsSelected.add(kw));
       renderPanelChips();
       markPanelRendered();
-      updatePreviousDraftButton();
+      previousAboutDraft = null;
+      updateAboutPreviousDraftButton();
       panelHasGeneratedOnce = true;
       showPanelStep(stepResults);
     }, 1200);
-  });
-
-  function resetAndRerenderPanelSuggestions(){
-    // Snapshot the draft that's about to be replaced so the seller can swap
-    // back to it, before regenerating overwrites it.
-    previousPanelDraft = currentPanelDraftValues();
-    panelState.titleChecked = true;
-    panelState.aboutChecked = true;
-    renderPanelTitleSuggestion();
-    renderPanelAboutSuggestion();
-    panelRefineInput.value = '';
-    markPanelRendered();
-    updatePreviousDraftButton();
-    draftSwapConfirm.style.display = 'none';
-  }
-  function regeneratePanel(){
-    showPanelStep(stepThinking);
-    setTimeout(()=>{
-      resetAndRerenderPanelSuggestions();
-      showPanelStep(stepResults);
-    }, 900);
-  }
-  const panelRefineInput = document.getElementById('panelRefineInput');
-  const panelPillActionBtn = document.getElementById('panelPillActionBtn');
-  panelPillActionBtn.addEventListener('click', regeneratePanel);
-  panelRefineInput.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      regeneratePanel();
-    }
   });
 
   function renderPanelChips(){
@@ -2113,9 +2093,9 @@ A witty, enemies-to-lovers contemporary romance for fans of Emily Henry. Pride a
     // Apply is the natural endpoint of this session — the current/previous
     // draft comparison no longer means anything once a decision's been made,
     // so the next "Optimize listing" open should start fresh.
-    previousPanelDraft = null;
+    previousAboutDraft = null;
     panelHasGeneratedOnce = false;
-    previousDraftBtn.style.display = 'none';
+    updateAboutPreviousDraftButton();
     draftSwapConfirm.style.display = 'none';
     showSessionFeedback();
   });
